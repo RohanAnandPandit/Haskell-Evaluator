@@ -18,3 +18,16 @@ def indexOfClosing(c, exp):
                 return index
         index += 1
     return None
+
+def closingQuote(exp):    
+    index = 0
+    insideString = False
+    for char in exp:
+        if (char == "\""):
+            if (insideString):
+                return index
+        if (char == "\""):
+            insideString = True
+        index += 1
+    return None
+    

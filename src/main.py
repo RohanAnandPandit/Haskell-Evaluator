@@ -17,7 +17,6 @@ def haskellIO():
         elif (exp == '$quit'):
             return
         elif (exp == "$reset"):
-            ##print('*')
             variables.clear()
         else:
             exp = tokenize(exp, operators + brackets)

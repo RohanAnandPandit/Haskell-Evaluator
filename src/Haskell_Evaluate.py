@@ -9,11 +9,11 @@ from functools import partial
 from utils import *
 
 operators = ['&&', '||',' ','++' ,'+', '*', '|', '-', ':', '<', '>','<=',
-              '>=','/','=', '==', '^', '/=', '`', '..'] # Haskell symbols
+              '>=','/','=', '==', '^', '/=', '`', '..', "\""] # Haskell symbols
 brackets = ['[', ']','(', ')']
 
 functions = {'fst' : 1, 'snd' : 1, 'pred' : 1, 'succ' : 1,'length' : 1,'head': 1, 'tail' : 1, 'even' : 1, 'odd' : 1, 'maximum' : 1,
-             'minimum' : 1, 'init' : 1, 'words' : 1, 'unwords':1, 'reverse' : 1,'take': 2, 'drop' : 2, 
+             'minimum' : 1, 'init' : 1, 'words' : 1, 'unwords':1, 'reverse' : 1, 'concat' : 1, 'take': 2, 'drop' : 2, 
              'div' : 2, 'mod' : 2,'take' : 2, 'elem' : 2, 'notElem' : 2, 'takeWhile':2, 'dropWhile':2, 'map':2, '&&' : 2, '||' : 2}
 
 
@@ -34,15 +34,15 @@ def isFloat(exp):
         return False
 
 def isTuple(exp):
-    lists = 0
+    brackets = 0
     for char in exp:
         if (char == ','):
-            if (lists == 0):
+            if (brackets == 0):
                 return True
         if (char in ['[', '(']):
-            lists += 1
+            brackets += 1
         elif (char in [']', ')']):
-            lists -= 1
+            brackets -= 1
     return False
             
 
@@ -107,7 +107,7 @@ def getData(exp, variables = None): # withVar tells whether variables should be 
         tup = tuple(exp)
         return exp
     elif (exp[0] in ["'", "\""] and exp[len(exp) - 1] in ["'", "\""]):
-        return str(exp[1 : len(exp) - 1])
+        return exp
     try: 
         return int(exp)
     except:
@@ -287,10 +287,14 @@ def simplifyConcat(exp, variables):
     while (i < l):
         chars = exp[i]
         if (chars == '++'):
-            value = getData(exp[i-1], variables) + getData(exp[i+1], variables)
+            left = getData(exp[i-1], variables)
+            right = getData(exp[i+1], variables)
+            value = left[1 : len(left) - 1] + right[1 : len(right) - 1]
+            if (type(value) == str):
+                value = "\"" + value + "\"" 
             ##print(value)
-            del exp[(i-1): i+2]
-            exp.insert(i-1, value)
+            del exp[i - 1 : i + 2]
+            exp.insert(i - 1, value)
             l -= 2
             i -= 1
         i += 1

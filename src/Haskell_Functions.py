@@ -25,10 +25,19 @@ def tail(l):
 def length(l):
     return len(l)
 
-def concat(*lists):
-    final = lists[0]
-    for l in lists[1:]:
-        final += l
+def concat(lists):
+    if (lists == []):
+        return []
+    if (type(lists[0]) == list):
+        final = []
+        for l in lists:
+            final += l
+    elif (type(lists[0]) == str):
+        final = ''
+        for l in lists:
+            final += l[1 : len(l) - 1]
+        return "\"" + final + "\"" 
+
     return final
 
 def init(l):

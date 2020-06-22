@@ -84,25 +84,31 @@ def checkOperators(exp):
             continue
     return False
 
+# NOTE: Pass a list of characters for exp
+# separators is a list of strings of at most length 2    
 def separateText(exp, separators):
     i = 0
     while (i < len(exp)):
         char = exp[i] # current character
-        if (''.join(exp[i:i+2]) in separators): # Checks two consecutive chars
+        if (''.join(exp[i : i + 2]) in separators): # Checks two consecutive chars
             # Concatenates three sections by recursively calling on remaining
-            return exp[0:i] + [''.join(exp[i:i+2])] + separateText(exp[i+2:], separators)
+            return exp[0:i] + [''.join(exp[i : i + 2])] + separateText(exp[i + 2 :], separators)
         
         elif (char in separators): # Now checks the single character
-            if (char in ["[", "("]):
+            if (char == "\""):
+                end = closingQuote(exp[i:]) 
+                return exp[0 : i] + [''.join(exp[i : i + end + 1])] + separateText(exp[i + end + 1 :], separators)
+            elif (char in ['[', '(']):
                 end = indexOfClosing(char, exp[i:]) 
                 return exp[0:i] + [char] + [''.join(exp[i + 1 : i + end])] + [closer[char]] + separateText(exp[i + end + 1 :], separators)
-            return exp[0:i] + [char] + separateText(exp[i+1:],separators)
+            else:
+                return exp[0:i] + [char] + separateText(exp[i + 1 :], separators)
+
         
-        else:
-            if (i > 0): # If char is not a symbol then
-                exp[i-1] += char # it is concatenated to the previous element
-                del exp[i] # and the char is deleted from the list
-                return separateText(exp, separators) # Function called on this new list
+        if (i > 0): # If char is not a symbol then
+            exp[i - 1] += char # it is concatenated to the previous element
+            del exp[i] # and the char is deleted from the list
+            return separateText(exp, separators) # Function called on this new list
         i += 1
     return exp
 
