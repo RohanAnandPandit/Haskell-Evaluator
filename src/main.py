@@ -21,6 +21,7 @@ def haskellIO():
         else:
             exp = tokenize(exp, operators + brackets)
             result = haskellEval(exp, variables)
-            print(result)
+            if (result != None):
+                print(result)
 haskellIO()    
 

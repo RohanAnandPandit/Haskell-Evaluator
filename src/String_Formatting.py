@@ -59,7 +59,7 @@ def getString(c, exp):
 def removeUnwantedSpaces(exp):
     exp = list(exp)
     i = 0
-    prev = ""
+    prev = " "
     l = len(exp)
     while (i < l):
         current = exp[i]

@@ -13,14 +13,13 @@ def OR(a, b):
 def head(l):
     if (len(l) == 0):
         return None
-    else:
-        return l[0]
+    return l[0]
+
         
 def tail(l):
     if (len(l) == 0):
         return None
-    else:
-        return l[1:]
+    return l[1:]
         
 def length(l):
     return len(l)
@@ -36,15 +35,15 @@ def concat(lists):
         final = ''
         for l in lists:
             final += l[1 : len(l) - 1]
-        return "\"" + final + "\"" 
+        return final 
+        #return "\"" + final + "\"" 
 
     return final
 
 def init(l):
     if (len(l) == 0):
         return None
-    else:
-        return l[0:len(l)-1]
+    return l[0:len(l)-1]
 
 def maximum(l):
     return max(l)
@@ -70,14 +69,12 @@ def reverse(l):
 def take(n, l):
     if (n > len(l)):
         return None
-    else: 
-        return l[:n] 
+    return l[:n] 
 
 def drop(n, l):
     if (n > len(l)):
         return None
-    else: 
-        return l[n:]
+    return l[n:]
 
 def map2(func, l):
     return list(map(func,l))
@@ -122,10 +119,10 @@ def mod(a, b):
     return a % b
 
 def succ(x):
-    return x+1
+    return x + 1
 
 def pred(x):
-    return x-1
+    return x - 1
 
 def foldr(func, u, xs):
     if (xs == []):

@@ -114,33 +114,23 @@ def getData(exp, variables = None): # withVar tells whether variables should be 
         try: 
             return float(exp)
         except:
-            return None
+            return exp
         
 
-def replaceData(exp):
-    exp = list(exp)
-    #if (type(exp) != list):
-    #    return exp
-    i = 0
-    while (i < len(exp)):
-        b = True
-        if (i < len(exp) - 1):
-            if (exp[i+1] == '='):
-                b = False
-        value = getData(exp[i], b)
-        if (value != None):
-            exp[i] = value
-        i += 1
-    return exp
-
+#exp is a list of strings starting with the name of the function
 def functionCallString(exp, variables):
-    parameters = functions[exp[0]]
     string = getData(exp[0]) + '('
-    for i in range(1, parameters + 1):
-        string += str(getData(exp[i * 2], variables))
-        if (i != parameters):
+    i = 1
+    noOfArgs = 0
+    while (i < len(exp)):
+        if (exp[i] == " "):
+            noOfArgs += 1
+            string += str(getData(exp[i + 1], variables))
             string += ','
-    return string + ')'
+            i += 2
+        else:
+            break
+    return (string[: len(string) - 1] + ')', noOfArgs)
         
         
 def simplifyBrackets(exp, variables):
@@ -181,18 +171,20 @@ def simplifyFunctions(exp, variables):
             continue
         string = exp[i]
         if (string in functions.keys()):
-            arguments = functions[string]
-            functionString = functionCallString(exp[i:], variables)
-            del exp[i:i+arguments+1]
+            (functionString, noOfArgs) = functionCallString(exp[i:], variables)
+            del exp[i : i + 2 * noOfArgs + 1]
             exp.insert(i, eval(functionString))
-            l -= 1 + arguments
+            l -= 2 * noOfArgs
             
         elif (string == '`'):
-            functionString = functionCallString([exp[i+1],exp[i-1],exp[i+3]], variables)
-            del exp[i-1:i+4]
-            exp.insert(i-1, eval(functionString))
+            functionName = exp[i + 1]
+            del exp[i : i + 3]
+            exp.insert(i - 1, functionName)
+            exp.insert(i, " ")
+            exp.insert(i + 2, " ")
             i -= 1
-            l -= 5
+            l -= 2
+            continue
         i += 1
 
 def simplifyAssignments(exp, variables):
@@ -201,9 +193,9 @@ def simplifyAssignments(exp, variables):
     while (i < l):
         chars = exp[i]
         if (chars == '='):
-            variables[exp[i-1]] = getData(exp[i+1], variables)
-            del exp[(i-1): i+2]
-            l -= 2
+            value = haskellEval(exp[i + 1:], variables)
+            variables[exp[i - 1]] = value
+            return value
         i += 1
 
 def simplifyExponents(exp, variables):
@@ -340,12 +332,15 @@ def simplifyOr(exp, variables):
             ##print(exp)
             l -= 2
         i += 1
-        
+
+# exp should be a list of tokens
 def haskellEval(exp, variables):
+    if ("=" in exp):
+        value = simplifyAssignments(exp, variables)
+        return value
     simplifyBrackets(exp, variables)
     simplifySquareBrackets(exp, variables)
     simplifyFunctions(exp, variables)
-    simplifyAssignments(exp, variables)
     simplifyExponents(exp, variables)
     simplifyDivision(exp, variables)
     simplifyMultiplication(exp, variables)
