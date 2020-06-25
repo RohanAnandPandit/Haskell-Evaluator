@@ -8,15 +8,7 @@ Created on Mon Oct 28 11:50:01 2019
 from functools import partial
 from utils import *
 
-operators = ['&&', '||',' ','++' ,'+', '*', '|', '-', ':', '<', '>','<=',
-              '>=','/','=', '==', '^', '/=', '`', '..', "\""] # Haskell symbols
-brackets = ['[', ']','(', ')']
-
-functions = {'fst' : 1, 'snd' : 1, 'pred' : 1, 'succ' : 1,'length' : 1,'head': 1, 'tail' : 1, 'even' : 1, 'odd' : 1, 'maximum' : 1,
-             'minimum' : 1, 'init' : 1, 'words' : 1, 'unwords':1, 'reverse' : 1, 'concat' : 1, 'take': 2, 'drop' : 2, 
-             'div' : 2, 'mod' : 2,'take' : 2, 'elem' : 2, 'notElem' : 2, 'takeWhile':2, 'dropWhile':2, 'map':2, '&&' : 2, '||' : 2}
-
-
+FUNCTION_NUMBER = 0
 def isInt(exp):
     try:        
         value = int(removeSpaces("".join(exp)))
@@ -50,10 +42,10 @@ def constructList(exp, variables):
     from String_Formatting import tokenize, splitAtCommas
 
     l = splitAtCommas(exp)
-    if (len(l) == 1 and ".." in exp):
-        return listComprehension(exp, variables)
+
     if (l == ['']):
         return []
+    
     l2 = []
     for elem in l:
         l2.append(haskellEval(tokenize(elem, operators + brackets), variables))
@@ -87,36 +79,25 @@ def evalBrackets(exp):
             return exp[0:i]
         i += 1
              
-def getData(exp, variables = None): # withVar tells whether variables should be replaced
-    functionMap = {'map':'map2', '&&' : 'AND', '||' : 'OR'}
-    
-    if (type(exp) in [list, tuple, int, float, bool]):
-        return exp
-    elif (exp in functions.keys()):
-        if (exp in functionMap.keys()):
-            return functionMap[exp]
-        return exp
-    elif (exp in ['True', 'False']): # Checks if input is a bool
-        return bool(exp)
-    elif (variables != None and exp in variables.keys()):
-        return variables[exp] # Returns value of variable
-    elif (exp[0] == "[" and exp[len(exp) - 1] == "]"):
-        l = constructList(exp[1 : len(exp) - 1], variables)
-        return l
-    elif (exp[0] == "(" and exp[len(exp) - 1] == ")"):
-        tup = tuple(exp)
-        return exp
-    elif (exp[0] in ["'", "\""] and exp[len(exp) - 1] in ["'", "\""]):
-        return exp
-    try: 
-        return int(exp)
-    except:
-        try: 
-            return float(exp)
-        except:
-            return exp
         
-
+'''
+def applyFunction(exp, variables):
+    func = "partial"+str(FUNCTION_NUMBER)
+    FUNCTION_NUMBER += 1
+    i = 1
+    noOfArgs = 0
+    while (i < len(exp)):
+        if (exp[i] == " "):
+            noOfArgs += 1
+            if (noOfArgs == 1):
+                eval(func +"= partial("+exp[0]+','+ str(getData(exp[i + 1])+')')
+            else:
+                eval(func +"= partial("+func+','+ str(getData(exp[i + 1])+')')
+            i += 2
+        else:
+            break
+    return func
+'''
 #exp is a list of strings starting with the name of the function
 def functionCallString(exp, variables):
     string = getData(exp[0]) + '('
@@ -325,19 +306,34 @@ def simplifyOr(exp, variables):
     while (i < l):
         chars = exp[i]
         if (chars == '||'):
-            value = getData(exp[i-1], variables) or getData(exp[i+1], variables)
-            ##print(value)
-            del exp[(i-1): i+2]
+            value = getData(exp[i - 1], variables) or getData(exp[i + 1], variables)
+            del exp[i - 1 : i + 2]
             exp.insert(i-1, value)
-            ##print(exp)
             l -= 2
+        i += 1
+
+def simplifyListComprehension(exp, variables):
+    i = 0
+    l = len(exp)
+    while (i < l):
+        if (exp[i] == ".."):
+            value = listComprehension(''.join(exp[i - 1 : i + 2]), variables)
+            del exp[i - 2 : i + 3]
+            exp.insert(i - 2, value)
+            i -= 2
+            l -= 4
         i += 1
 
 # exp should be a list of tokens
 def haskellEval(exp, variables):
+    if (exp == []):
+        return None
+    '''
     if ("=" in exp):
         value = simplifyAssignments(exp, variables)
         return value
+    '''
+    simplifyAssignments(exp, variables)
     simplifyBrackets(exp, variables)
     simplifySquareBrackets(exp, variables)
     simplifyFunctions(exp, variables)
@@ -350,10 +346,9 @@ def haskellEval(exp, variables):
     simplifyConcat(exp, variables)
     simplifyEquality(exp, variables)
     simplifyAnd(exp, variables)
-    simplifyOr(exp, variables)    
-        
-    if (exp == []):
-        return ''
+    simplifyOr(exp, variables)
+    simplifyListComprehension(exp, variables)
+
     return getData(exp[0], variables)
 
 

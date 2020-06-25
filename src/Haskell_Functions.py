@@ -4,6 +4,60 @@ Created on Mon Nov 18 15:43:13 2019
 
 @author: rohan
 """
+from functools import partial
+
+def space(func, arg):
+    #print(func)
+    return func.apply(arg)
+
+def index(arr, index):
+    return arr[index]
+
+def power(a, b):
+    return a ** b
+
+def divide(a, b):
+    return a / b
+
+def multiply(a, b):
+    return a * b
+
+def add(a, b):
+    return a + b
+
+def subtract(a, b):
+    return a - b
+
+def modulo(a, b):
+    return a % b
+
+def remainder(a, b):
+    return a % b
+
+def quotient(a, b):
+    return a // b
+
+def cons(a, b):
+    return tuple([a] + list(b))
+
+def concatenate(a, b):
+    return a + b
+
+def lessThan(a, b):
+    return a < b
+
+def lessThanOrEqual(a, b):
+    return a <= b
+
+def greaterThan(a, b):
+    return a > b
+
+def greaterThanOrEqual(a, b):
+    return a >= b
+
+def equals(a, b):
+    return a == b
+
 def AND(a, b):
     return (a and b)
 
@@ -24,6 +78,14 @@ def tail(l):
 def length(l):
     return len(l)
 
+def comma(a, b):
+    print("a =", a, "b =", b)
+    if (type(a) == type(b)):
+        return (a, b)
+    a = list(a)
+    a.append(b)
+    return tuple(a)
+    
 def concat(lists):
     if (lists == []):
         return []
@@ -76,8 +138,8 @@ def drop(n, l):
         return None
     return l[n:]
 
-def map2(func, l):
-    return list(map(func,l))
+def mapHaskell(func, l):
+    return list(map(func, list(l)))
 
 def words(string):
     return string.split(' ')

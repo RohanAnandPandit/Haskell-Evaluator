@@ -6,6 +6,7 @@ Created on Mon Jun 22 10:24:50 2020
 """
 from Haskell_Evaluate import operators, brackets, haskellEval
 from String_Formatting import tokenize
+from utils import *
 
 def haskellIO():
     variables = {}
