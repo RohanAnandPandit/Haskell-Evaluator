@@ -14,6 +14,11 @@ from Parser import Lexer
 
 def addBinaryExpr(operators, operands):
     (right, left) = (operands.pop(), operands.pop())
+    '''
+    if (left == None):
+        left = right
+        right = None
+    '''
     operands.push(BinaryExpr(operators.pop(), left, right))
     
 def checkOperators(current, operands, operators):

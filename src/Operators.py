@@ -10,13 +10,15 @@ from Haskell_Functions import *
 from utils import *
 
 operatorSymbols = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', 
-                   '&&', '||', '(', ')',',', '[', ']', ':' , 'fst', 'map']
+                   '&&', '||', '(', ')',',', '[', ']', ':' , '++', 'fst', 'map',
+                   'succ', 'length', 'pred']
 
 operatorStrings = ['SPACE' 'SLASH', 'ASTERISK', 'PLUS', 'MINUS', 'CARET',
                    'DOUBLE_EQUAL', 'LESS_THAN', 'LESS_THAN_OR_EQUAL',
                    'GREATER_THAN', 'GREATER_THAN_OR_EQUAL', 'DOUBLE_AMPERSAND',
                    'DOUBLE_BAR', 'LEFT_PARENTHESES', 'RIGHT_PARENTHESES', 'COMMA',
-                   'LEFT_BRACKET', 'RIGHT_BRACKET', 'COLON', 'FST', 'MAP']
+                   'LEFT_BRACKET', 'RIGHT_BRACKET', 'COLON', 'CONCAT', 'FST', 'MAP', 'SUCC',
+                   'LENGTH', 'PRED']
 
 class Associativity(Enum):
     LEFT = 0
@@ -44,6 +46,10 @@ left_bracket = HFunction(4, Associativity.RIGHT, None, 1, '[')
 right_bracket = HFunction(4, Associativity.LEFT, None, 1, ']')
 func_fst = HFunction(8, Associativity.LEFT, fst, 1, 'fst')
 func_map = HFunction(8, Associativity.LEFT, mapHaskell, 2, 'map')
+func_succ = HFunction(8, Associativity.LEFT, succ, 1, 'succ')
+func_length = HFunction(8, Associativity.LEFT, length, 1, 'length')
+func_pred = HFunction(8, Associativity.LEFT, succ, 1, 'pred')
+func_concatenate = HFunction(5, Associativity.LEFT, concatenate, 2, '++')
 
 class Operator(Enum):
     SPACE = apply
@@ -64,9 +70,13 @@ class Operator(Enum):
     COMMA = create_tuple
     LEFT_BRACKET = left_bracket
     RIGHT_BRACKET = right_bracket
+    DOUBLE_PLUS = func_concatenate
     COLON = colon
     FST = func_fst
-    MAP = func_fst
+    MAP = func_map
+    SUCC = func_succ
+    LENGTH = func_length
+    PRED = func_pred
     EQUAL = None 
     DOLLAR = None
     UNDERSCORE= None
@@ -76,7 +86,6 @@ class Operator(Enum):
     MOD= None
     REM= None
     QUOT= None
-    DOUBLE_PLUS= None
     ELEM= None
     NOT_ELEM= None
     
@@ -85,7 +94,8 @@ operators = [Operator.SPACE, Operator.SLASH, Operator.ASTERISK, Operator.PLUS,
              Operator.LESS_THAN_OR_EQUAL, Operator.GREATER_THAN, Operator.GREATER_THAN_OR_EQUAL,
              Operator.DOUBLE_AMPERSAND, Operator.DOUBLE_BAR, Operator.LEFT_PARENTHESES,
              Operator.RIGHT_PARENTHESES, Operator.COMMA, Operator.LEFT_BRACKET,
-             Operator.RIGHT_BRACKET, Operator.COLON, Operator.FST, Operator.MAP]
+             Operator.RIGHT_BRACKET, Operator.COLON, Operator.DOUBLE_PLUS, Operator.FST, Operator.MAP,
+             Operator.SUCC, Operator.LENGTH, Operator.PRED]
 
 def operatorIndex(op):
     for i in range(len(operators)):

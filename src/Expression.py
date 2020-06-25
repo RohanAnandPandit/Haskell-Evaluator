@@ -27,22 +27,22 @@ class BinaryExpr:
         buf = '( '
             
         if (self.leftExpr == None):
-            buf += 'None'
+            buf += '?'
         else:
-            buf += str(self.leftExpr.toString()) + ' '
+            buf += str(self.leftExpr.toString())
             
         if (self.operator == None):
-            buf += 'None'
+            buf += ' ? '
         else:
             char = str(self.operator.toString())
-            buf += char
+            buf += ' ' + char
             if (char != ' '):
                 buf += ' '
             
         if (self.rightExpr == None):
-            buf += 'None'
+            buf += '?'
         else:
-            buf += str(self.rightExpr.toString()) + ' '
+            buf += str(self.rightExpr.toString())
 
 
         buf += ')'

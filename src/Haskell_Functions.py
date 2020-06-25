@@ -79,7 +79,7 @@ def length(l):
     return len(l)
 
 def comma(a, b):
-    print("a =", a, "b =", b)
+    #print("a =", a, "b =", b)
     if (type(a) == type(b)):
         return (a, b)
     a = list(a)
@@ -98,7 +98,7 @@ def concat(lists):
         for l in lists:
             final += l[1 : len(l) - 1]
         return final 
-        #return "\"" + final + "\"" 
+        #return "\"" + final + "\""
 
     return final
 
@@ -138,8 +138,15 @@ def drop(n, l):
         return None
     return l[n:]
 
-def mapHaskell(func, l):
+def map2(func, l):
     return list(map(func, list(l)))
+
+def mapHaskell(func, l):
+    l = list(l)
+    res = []
+    for item in l:
+        res.append(func.apply(item))
+    return list(res)
 
 def words(string):
     return string.split(' ')
