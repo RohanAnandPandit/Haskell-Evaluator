@@ -5,11 +5,14 @@ Created on Mon Jun 22 11:24:28 2020
 @author: rohan
 """
 operators = ['&&', '||',' ','++' ,'+', '*', '|', '-', ':', '<', '>','<=',
-              '>=','/','=', '==', '^', '/=', '`', '..', "\"", '(', ')', ',', '[', ']', ' '] # Haskell symbols
+              '>=','/','=', '==', '^', '/=', '`', '..', "\"", '(', ')', ',',
+              '[', ']', ' '] # Haskell symbols
 
-functions = {'fst' : 1, 'snd' : 1, 'pred' : 1, 'succ' : 1,'length' : 1,'head': 1, 'tail' : 1, 'even' : 1, 'odd' : 1, 'maximum' : 1,
-             'minimum' : 1, 'init' : 1, 'words' : 1, 'unwords':1, 'reverse' : 1, 'concat' : 1, 'take': 2, 'drop' : 2, 
-             'div' : 2, 'mod' : 2,'take' : 2, 'elem' : 2, 'notElem' : 2, 'takeWhile':2, 'dropWhile':2, 'map':2, '&&' : 2, '||' : 2}
+functions = {'fst' : 1, 'snd' : 1, 'pred' : 1, 'succ' : 1, 'length' : 1,
+             'head': 1, 'tail' : 1, 'even' : 1, 'odd' : 1, 'maximum' : 1,
+             'minimum' : 1, 'init' : 1, 'words' : 1, 'unwords':1, 'reverse' : 1,
+             'concat' : 1, 'take': 2, 'drop' : 2, 'div' : 2, 'mod' : 2, 'take' : 2,
+             'elem' : 2, 'notElem' : 2, 'takeWhile':2, 'dropWhile' : 2, 'map' : 2}
 
 digitChar = ['0','1','2','3','4','5', '6', '7', '8','9'] 
 closer = {'[' : ']', '(' : ')'}
@@ -127,7 +130,7 @@ def removeSpaceAroundOperators(exp):
     return ''.join(exp)
 
 def getData(exp, variables = None): # withVar tells whether variables should be replaced
-    functionMap = {'map':'map2', '&&' : 'AND', '||' : 'OR'}
+    functionMap = {'map' : 'map2'}
     if (exp == ''):
         return None
     if (type(exp) in [list, tuple, int, float, bool]):
@@ -136,7 +139,8 @@ def getData(exp, variables = None): # withVar tells whether variables should be 
         from Operators import operatorFromString
         return operatorFromString(exp)
     elif (exp in ['True', 'False']): # Checks if input is a bool
-        return bool(exp)
+        boolMap = {'True' : True, 'False' : False}
+        return boolMap[exp]
     elif (variables != None and exp in variables.keys()):
         return variables[exp] # Returns value of variable
     elif (exp[0] == "[" and exp[-1] == "]"):
@@ -155,4 +159,13 @@ def getData(exp, variables = None): # withVar tells whether variables should be 
         except:
             return exp
 
-    
+def dimensionOfList(l):
+    dim = 0
+    while (type(l) == list):
+        dim += 1
+        if (len(l) > 0):
+            l = l[0]
+        else:
+            break
+    return dim
+#print(getData('False'))

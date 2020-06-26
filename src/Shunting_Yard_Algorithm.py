@@ -40,7 +40,7 @@ def printState(operands, operators):
     print("=================")
     print("OPERATORS")
     for op in operators.arr:
-        print("\"" + op.toString() + "\"")
+        print("'" + op.toString() + "'")
     print("=================")
     print()
 
@@ -50,12 +50,9 @@ def generateExpr(parser):
     token = parser.nextToken()
     while (token != None):
         if (isinstance(token, HFunction)):
-            if (token.name == '('):
+            if (token.name in ['(', '[']):
                 operands.push(generateExpr(parser))
-            elif (token.name == '['):
-                exp = generateExpr(parser)
-                operands.push(exp)
-            elif (token.name == ')' or token.name == ']'):
+            elif (token.name in  [')', ']']):
                 while (operators.peek() != None):
                     addBinaryExpr(operators, operands)
                 return operands.pop()

@@ -6,6 +6,7 @@ Created on Tue Jun 23 13:38:23 2020
 """
 from Operators import Operator, operatorToString
 from HFunction import HFunction
+from utils import *
 
 class Data:
     def __init__(self, value):
@@ -24,8 +25,13 @@ class BinaryExpr:
         self.rightExpr = right
         
     def toString(self):
+        if (self.operator.name in functions.keys()):
+            buf = '( ' + self.operator.name
+            for i in range(self.operator.noOfArgs):
+                buf += ' ?'
+            return buf + ' )'
+                
         buf = '( '
-            
         if (self.leftExpr == None):
             buf += '?'
         else:
@@ -43,9 +49,7 @@ class BinaryExpr:
             buf += '?'
         else:
             buf += str(self.rightExpr.toString())
-
-
-        buf += ')'
+        buf += ' )'
             
         return buf
 

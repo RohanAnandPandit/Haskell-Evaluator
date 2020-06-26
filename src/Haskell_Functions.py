@@ -5,9 +5,8 @@ Created on Mon Nov 18 15:43:13 2019
 @author: rohan
 """
 from functools import partial
-
+from utils import dimensionOfList
 def space(func, arg):
-    #print(func)
     return func.apply(arg)
 
 def index(arr, index):
@@ -43,6 +42,21 @@ def cons(a, b):
 def concatenate(a, b):
     return a + b
 
+def comprehension(a, b):
+    lis = []
+    if (type(a) == int):
+        if (a <= b):
+            end = b + 1
+            step = 1
+        else:
+            end = b - 1
+            step = -1
+        for i in range(a, end, step):
+            lis.append(i)
+    elif (type(a) == bool):
+        pass
+    return lis
+    
 def lessThan(a, b):
     return a < b
 
@@ -79,12 +93,12 @@ def length(l):
     return len(l)
 
 def comma(a, b):
-    #print("a =", a, "b =", b)
-    if (type(a) == type(b)):
-        return (a, b)
-    a = list(a)
-    a.append(b)
-    return tuple(a)
+    if (dimensionOfList(a) - 1 == dimensionOfList(b)):
+        a.append(b)
+        return a
+    else:
+        return [a, b]
+        
     
 def concat(lists):
     if (lists == []):
@@ -128,15 +142,15 @@ def notElem(item, l):
 def reverse(l):
     return l[::-1]
 
-def take(n, l):
-    if (n > len(l)):
+def take(a, b):
+    if (a > len(b)):
         return None
-    return l[:n] 
+    return b[:a] 
 
-def drop(n, l):
-    if (n > len(l)):
+def drop(a, b):
+    if (a > len(b)):
         return None
-    return l[n:]
+    return b[a:]
 
 def map2(func, l):
     return list(map(func, list(l)))
@@ -146,7 +160,7 @@ def mapHaskell(func, l):
     res = []
     for item in l:
         res.append(func.apply(item))
-    return list(res)
+    return res
 
 def words(string):
     return string.split(' ')
@@ -192,6 +206,12 @@ def succ(x):
 
 def pred(x):
     return x - 1
+
+def zipHaskell(a, b):
+    res = []
+    for i in range(min(len(a), len(b))):
+        res.append((a[i], b[i]))
+    return res
 
 def foldr(func, u, xs):
     if (xs == []):
