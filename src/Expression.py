@@ -8,7 +8,11 @@ from Operators import Operator, operatorToString
 from HFunction import HFunction
 from utils import *
 
-class Data:
+
+class Expression:
+    pass
+
+class Data(Expression):
     def __init__(self, value):
         self.value = value
     
@@ -18,7 +22,7 @@ class Data:
     def toString(self):
         return str(self.value)
         
-class BinaryExpr:
+class BinaryExpr(Expression):
     def __init__(self, operator, left, right):
         self.operator = operator
         self.leftExpr = left
@@ -57,8 +61,11 @@ class BinaryExpr:
         operator = self.operator
         if (self.leftExpr != None):
             operator = operator.apply(arg1 = self.leftExpr.simplify(), arg2 = None)
-        if (self.rightExpr != None):
-            operator = operator.apply(arg1 = None, arg2 = self.rightExpr.simplify())
+            if (self.rightExpr != None):
+                operator = operator.apply(arg1 = self.rightExpr.simplify())
+        else:
+            if (self.rightExpr != None):
+                operator = operator.apply(arg1 = None, arg2 = self.rightExpr.simplify())
         return operator
     
     

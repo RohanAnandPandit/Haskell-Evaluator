@@ -34,7 +34,7 @@ class StackQueue:
             return item
         return None
     
-    def front(self):
+    def seeFront(self):
         if (len(self.arr) > 0):
             item = self.arr[0]
             return item

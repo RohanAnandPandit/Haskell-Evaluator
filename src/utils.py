@@ -8,11 +8,12 @@ operators = ['&&', '||',' ','++' ,'+', '*', '|', '-', ':', '<', '>','<=',
               '>=','/','=', '==', '^', '/=', '`', '..', "\"", '(', ')', ',',
               '[', ']', ' '] # Haskell symbols
 
-functions = {'fst' : 1, 'snd' : 1, 'pred' : 1, 'succ' : 1, 'length' : 1,
+functions = {'id' : 1, 'fst' : 1, 'snd' : 1, 'pred' : 1, 'succ' : 1, 'length' : 1,
              'head': 1, 'tail' : 1, 'even' : 1, 'odd' : 1, 'maximum' : 1,
              'minimum' : 1, 'init' : 1, 'words' : 1, 'unwords':1, 'reverse' : 1,
              'concat' : 1, 'take': 2, 'drop' : 2, 'div' : 2, 'mod' : 2, 'take' : 2,
-             'elem' : 2, 'notElem' : 2, 'takeWhile':2, 'dropWhile' : 2, 'map' : 2}
+             'elem' : 2, 'notElem' : 2, 'takeWhile':2, 'dropWhile' : 2, 'map' : 2,
+             'zip' : 2, 'const' : 2, 'zipWith' : 3}
 
 digitChar = ['0','1','2','3','4','5', '6', '7', '8','9'] 
 closer = {'[' : ']', '(' : ')'}
@@ -159,9 +160,10 @@ def getData(exp, variables = None): # withVar tells whether variables should be 
         except:
             return exp
 
-def dimensionOfList(l):
+def dimensionOf(l):
     dim = 0
-    while (type(l) == list):
+    initialType = type(l)
+    while (type(l) == initialType and initialType in [list, tuple]):
         dim += 1
         if (len(l) > 0):
             l = l[0]

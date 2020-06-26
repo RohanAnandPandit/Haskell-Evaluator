@@ -53,29 +53,37 @@ class Lexer:
             for length in range(maxLength, 0, -1):
                 if (0 <= i - length + 1):
                     substring = ''.join(exp[i - length + 1 : i + 1])
-                    if (substring in operatorSymbols): # Checks two consecutive chars
+                    if (substring in operatorSymbols):
+                        isFunction = substring in functions.keys()
+                        isCloseBracket = substring in [')', ']']
                         if (current != ''):
                             tokens.insert(0, getData(current))
                             current = ''
-                            
-                        if (substring not in functions.keys() and substring not in  [')', ']']):
+                        
+                        if (not isFunction and not isCloseBracket):
                             if (len(tokens) > 0):
                                 if (isinstance(tokens[0], HFunction)):
                                     if (tokens[0].name == ' '):
                                         del tokens[0]    
-                                        
+                                      
                         if (length == 1): # Now checks the single character                    
                             if (char == ' '):
-                                if (len(tokens) > 0):
+                                if (len(tokens) > 0): 
                                     if (isinstance(tokens[0], HFunction) and tokens[0].name not in ['(', '[']):
                                         add = 1
                                         break
                                 else:
                                     add = 1
                                     break
-                                
+                        if (isFunction):
+                            tokens.insert(0, operatorFromString(')').value)
+    
                         op = operatorFromString(substring)
                         tokens.insert(0, op.value)
+                        
+                        if (isFunction):
+                            tokens.insert(0, operatorFromString('(').value)
+    
                         add = length
                         break
                     
