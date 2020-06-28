@@ -21,6 +21,7 @@ class HFunction:
         if (arg1 != None):
             if (self.noOfArgs == 1):
                 return self.func(arg1)
+            
             func = partial(self.func, arg1)
             noOfArgs -= 1
             name += ' ' + str(arg1)
@@ -32,6 +33,7 @@ class HFunction:
             func = partial(self.func, b = arg2)
             noOfArgs -= 1
             name += ' ' + str(arg2)
+            
         return HFunction(self.precedence, self.associativity, func, noOfArgs, name) 
     
     def simplify(self):
@@ -39,3 +41,23 @@ class HFunction:
     
     def toString(self):
         return self.name
+    
+
+class Composition:
+    def __init__(self, second, first):
+        self.first = first.simplify()
+        self.second = second.simplify()
+        self.precedence = self.first.precedence
+        self.associativity = self.first.associativity
+        self.noOfArgs = 1
+    
+    def apply(self, arg):
+        if (arg != None):
+            return self.second.apply(self.first.apply(arg))
+        return self
+    
+    def simplify(self):
+        return self
+    
+    def toString(self):
+        return self.second.toString() + '.' + self.first.toString()

@@ -4,25 +4,18 @@ Created on Mon Jun 22 10:24:50 2020
 
 @author: rohan
 """
-from Haskell_Evaluate import operators, brackets, haskellEval
-from String_Formatting import tokenize
-from utils import *
+from Shunting_Yard_Algorithm import Lexer, generateExpr
 
-def haskellIO():
-    variables = {}
-    result = ""
-    while (True):
-        exp = input("Prelude> ")
-        if (exp == ''):
-            pass
-        elif (exp == '$quit'):
-            return
-        elif (exp == "$reset"):
-            variables.clear()
-        else:
-            exp = tokenize(exp, operators + brackets)
-            result = haskellEval(exp, variables)
-            if (result != None):
-                print(result)
-haskellIO()    
+while (True):
+    exp = input(">>")
+    if (exp == "quit"):
+        break
+    lexer = Lexer(exp)
+    lexer.printTokens()
+    binExp = generateExpr(lexer)
+    print(binExp.toString())
+    try:
+        print("=", binExp.simplify().toString())
+    except:
+        print("=", binExp.simplify())
 

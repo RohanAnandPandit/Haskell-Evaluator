@@ -4,30 +4,11 @@ Created on Tue Jun 23 09:35:26 2020
 
 @author: rohan
 """
-from StackQueue import StackQueue
+from Stack import Stack
 from HFunction import HFunction
-from Operators import Operator, Associativity, operatorFromString, operatorToString
-from Haskell_Functions import *
-from Haskell_Evaluate import operators
+from Operators import Operator, Associativity, operatorFromString
 from Expression import Data, BinaryExpr
 from Parser import Lexer
-
-def addBinaryExpr(operators, operands):
-    (right, left) = (operands.pop(), operands.pop())
-    operands.push(BinaryExpr(operators.pop(), left, right))
-    
-def checkOperators(current, operands, operators):
-    topOperator = operators.peek()
-    while (topOperator != None):
-        if (topOperator.precedence > current.precedence
-            or (topOperator.precedence == current.precedence 
-                and topOperator.associativity == Associativity.LEFT)):
-            addBinaryExpr(operators, operands)
-        else:
-            break
-        topOperator = operators.peek()
-        
-    operators.push(current)
 
 def printState(operands, operators):
     print("=================")
@@ -47,10 +28,52 @@ def printState(operands, operators):
     print("=================")
     print()
 
+def addBinaryExpr(operators, operands):
+    (right, left) = (operands.pop(), operands.pop())
+    operands.push(BinaryExpr(operators.pop(), left, right))
+    
+def checkOperators(current, operands, operators):
+    topOperator = operators.peek()
+    # Checks if a BinaryExpr should be created using the operator on the top of the stack
+    while (topOperator != None):
+        if (topOperator.precedence > current.precedence
+            or (topOperator.precedence == current.precedence 
+                and topOperator.associativity == Associativity.LEFT)):
+            addBinaryExpr(operators, operands)
+        else:
+            break
+        topOperator = operators.peek()
+        
+    operators.push(current)
+
+def pushOperand(operand, operands, operators):
+        # If the top of the operands is None it will be replaced with the current value
+        if (operands.peek() == None):
+            operands.pop()
+            
+        operands.push(operand)
+        
+        # If there are no operators means the current value is the left operand and
+        # the right one is undecided yet so None is added 
+        if (operators.peek() == None):
+            operands.push(None)    
+
+def getList(expr):
+    # If None is returned means there was no operand or 
+    # operator which means it is an empty list
+    if (expr == None):
+        return Data([])
+    elif (isinstance(expr, Data)): 
+        # If the returned expression is Data then it is the only element in the list
+        return Data([expr.value])
+    # Otherwise the expression is a BinaryExpr so it will 
+    # be a tuple that needs to be list
+    return BinaryExpr(Operator.SPACE.value, Operator.LIST.value, expr)
+
 def generateExpr(parser):
     # Empty stacks will be created whenever the function is called again
-    operands = StackQueue()
-    operators = StackQueue()
+    operands = Stack()
+    operators = Stack()
     
     token = parser.nextToken()
     while (token != None):
@@ -60,31 +83,22 @@ def generateExpr(parser):
             if (token.name in ['(', '[']):
                 expr = generateExpr(parser)                    
                 if (token.name == '['):
-                    if (expr == None):
-                        expr = Data([])
-                    elif (isinstance(expr, Data)):
-                        expr = Data([expr.value])
-                    else:
-                        expr = BinaryExpr(Operator.SPACE.value, Operator.LIST.value, expr)
+                    expr = getList(expr) 
                 if (operands.peek() == None):
+                    # Removes a None value at the top
                     operands.pop()
-                operands.push(expr)
+                pushOperand(expr, operands, operators)
             elif (token.name in  [')', ']']):
+                # If a close bracket is reached the expression is built only 
+                #using the current values on the stacks so no more tokens are used
                 break
             else:
+                # Compares the current operator with the operators on the stack
                 checkOperators(token, operands, operators)
         else:
-            # If the top of the operands is None it will be replaced with the current value
-            if (operands.peek() == None):
-                operands.pop()
-                
-            operands.push(Data(token))
+            pushOperand(Data(token), operands, operators)
             
-            # If there are no operators means the current value is the left operand and
-            # the right one is undecided yet so None is added 
-            if (operators.peek() == None):
-                operands.push(None)
-        #printState(operands, operators)
+        printState(operands, operators)
         # Gets next token
         token = parser.nextToken()
     
@@ -98,20 +112,7 @@ def generateExpr(parser):
     if (result == None):
         result = operands.pop()
         
-    return result    
-
-
-exp = ''
-while (True):
-    exp = input(">>")
-    if (exp == "quit"):
-        break
-    lexer = Lexer(exp)
-    lexer.printTokens()
-    print()
-    binExp = generateExpr(lexer)
-    print(binExp.toString())
-    print("=", binExp.simplify())
+    return result
 
             
     

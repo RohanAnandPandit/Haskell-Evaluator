@@ -25,9 +25,10 @@ class Lexer:
         tokens = []
         for token in self.tokens:
             if (isinstance(token, HFunction)):
-                print(token.name, end = ' ')
+                tokens.append(token.name)
             else:
-                print(token, end = ' ')
+                tokens.append(token)
+        print(tokens)
     
     # NOTE: Pass a list of characters for exp
     # separators is a list of strings of at most length 2   
@@ -36,12 +37,14 @@ class Lexer:
         current = ''
         i = len(exp) - 1
         maxLength = max(list(map(len, operatorSymbols)))
-        
+        # String is iterated from right to left
         while (i >= 0):
-            #print(tokens)
-            add = 0
-            char = exp[i] # current character
+            self.tokens = tokens
+            operator = None
+            char = exp[i]
             
+            # If the current character is a double quote the corresponding quote is 
+            # found and the string between them is added as a token
             if (char == "\""):
                 j = i - 1
                 while (exp[j] != "\""):
@@ -49,73 +52,91 @@ class Lexer:
                 tokens.insert(0, ''.join(exp[j + 1 : i]))
                 i = j - 1
                 continue
-            
-            for length in range(maxLength, 0, -1):
-                if (0 <= i - length + 1):
-                    substring = ''.join(exp[i - length + 1 : i + 1])
-                    if (substring in operatorSymbols):
-                        isFunction = substring in functions.keys()
-                        isCloseBracket = substring in [')', ']']
-                        if (current != ''):
-                            tokens.insert(0, getData(current))
-                            current = ''
-                        
-                        if (not isFunction and not isCloseBracket):
-                            if (len(tokens) > 0):
-                                if (isinstance(tokens[0], HFunction)):
-                                    if (tokens[0].name == ' '):
-                                        del tokens[0]    
-                                      
-                        if (length == 1): # Now checks the single character                    
-                            if (char == ' '):
-                                if (len(tokens) > 0): 
-                                    if (isinstance(tokens[0], HFunction) and tokens[0].name not in ['(', '[']):
-                                        add = 1
-                                        break
-                                else:
-                                    add = 1
-                                    break
-                        if (isFunction):
-                            tokens.insert(0, operatorFromString(')').value)
-    
-                        op = operatorFromString(substring)
-                        tokens.insert(0, op.value)
-                        
-                        if (isFunction):
-                            tokens.insert(0, operatorFromString('(').value)
-    
-                        add = length
-                        break
-                    
-            if (add == 0):
-                current = char + current # it is concatenated to the previous element
-                add = 1
                 
-            i -= add
+                
+            # The substrings up to this index are checked to see if this is an 
+            # operator or function name
+            if (operator == None):
+                operator = self.searchOperator(exp, i, maxLength)
+                
+            if (operator != None):  
+                isFunction = operator in functionNames
+                putParentheses = isFunction
+                isCloseBracket = operator in [')', ']']
+    
+                # The backtick is not included as a token but it will 
+                # cause white space to be removed around a function name                
+                if (len(tokens) > 0 and isinstance(tokens[0], HFunction) 
+                    and tokens[0].name == '`'): 
+                    putParentheses = False
+                    del tokens[0] 
+                    
+                # When an operator is encountered the previously accumulating
+                # value is added as a token after converting to its actual type 
+                if (current != ''):
+                    tokens.insert(0, getData(current))
+                    current = ''           
+                    
+                # A space cannot be put before an operator except 
+                # for open brackets
+                if (operator == ' '):
+                    if (len(tokens) > 0): 
+                        if (isinstance(tokens[0], HFunction) 
+                        and tokens[0].name not in ['(', '[']):
+                            if (tokens[0].name == '`'):
+                                del tokens[0]
+                            i -= 1
+                            continue
+                    else:
+                        i -= 1
+                        continue  
+              
+                # If current operator is a symbol there shouldn't be a space after it
+                if (not isFunction and not isCloseBracket):
+                    if (len(tokens) > 0):
+                        if (isinstance(tokens[0], HFunction) and tokens[0].name == ' '):
+                            del tokens[0]
+                
+                # A function is naturally enclosed in brackets as an
+                # argument to the SPACE operator 
+                if (isFunction and putParentheses):
+                    putParentheses = True
+                    tokens.insert(0, operatorFromString(')').value)
+                
+                # The corresponding HFunction of the operator is added as a token
+                op = operatorFromString(operator)
+                tokens.insert(0, op.value)
+                
+                if (isFunction and putParentheses):
+                    tokens.insert(0, operatorFromString('(').value)
+                    
+            else:
+                # If there is no operator up to the current index then the current
+                # char is concatenated to the accumulating data
+                current = char + current
+                
+            # Index is shifted back
+            if (operator != None):
+                i -= len(operator)
+            else:
+                i -= 1
+                
+            #self.printTokens()  
             
+        # Remaining value of data is added
         if (current != ''):
             tokens.insert(0, getData(current))
             
-        i = 0
-        # Remove white spaces at front
-        while (i < len(tokens)):
-            if (isinstance(tokens[i], HFunction)):
-                if (tokens[i].name == ' '):
-                    i += 1
-                else:
-                    break
-            else:
-                break
+        # Remove white space at front
+        if (isinstance(tokens[i], HFunction) and tokens[i].name == ' '):
+            return tokens[1 : ]
             
-        return tokens[i :]
-'''
-elif (char in ['[', '(']):
-    end = indexOfClosing(char, exp[i:]) -
-    tokens.append(operatorFromString(char)) 
-    tokens.append(''.join(exp[i + 1 : i + end]))
-    tokens.append(operatorFromString(closer[char])) 
-    i += end + 1
-'''
-
-#p = Lexer("\"Rohan\" ++ \" Pandit\"")
-#p.printTokens()
+        return tokens
+    
+    def searchOperator(self, exp, i, maxLength):
+        for length in range(maxLength, 0, -1):
+            if (0 <= i - length + 1):
+                substring = ''.join(exp[i - length + 1 : i + 1])
+                if (substring in operatorSymbols):
+                    return substring
+        return None

@@ -4,9 +4,7 @@ Created on Tue Jun 23 13:38:23 2020
 
 @author: rohan
 """
-from Operators import Operator, operatorToString
-from HFunction import HFunction
-from utils import *
+from utils import functionNames
 
 
 class Expression:
@@ -29,10 +27,16 @@ class BinaryExpr(Expression):
         self.rightExpr = right
         
     def toString(self):
-        if (self.operator.name in functions.keys()):
+        if (self.operator.name in functionNames):
             buf = '( ' + self.operator.name
             for i in range(self.operator.noOfArgs):
-                buf += ' ?'
+                buf += ' '
+                if (i == 0 and self.leftExpr != None):
+                    buf += self.leftExpr.toString()
+                elif (i == 1 and self.rightExpr != None):
+                    buf += self.rightExpr.toString()
+                else:
+                    buf += '?'
             return buf + ' )'
                 
         buf = '( '
@@ -63,9 +67,11 @@ class BinaryExpr(Expression):
             operator = operator.apply(arg1 = self.leftExpr.simplify(), arg2 = None)
             if (self.rightExpr != None):
                 operator = operator.apply(arg1 = self.rightExpr.simplify())
-        else:
-            if (self.rightExpr != None):
-                operator = operator.apply(arg1 = None, arg2 = self.rightExpr.simplify())
+                return operator
+            
+        if (self.rightExpr != None):
+            operator = operator.apply(arg1 = None, arg2 = self.rightExpr.simplify())
+            
         return operator
     
     
