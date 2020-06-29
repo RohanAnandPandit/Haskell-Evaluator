@@ -4,7 +4,8 @@ Created on Sat Jun 27 13:25:30 2020
 
 @author: rohan
 """
-functionNames = ['fromJust', 'fromMaybe', 'isNothing']
+
+functionNamesMaybe = ['Just', 'fromJust', 'fromMaybe', 'isNothing']
 
 class Maybe:
     pass
@@ -18,7 +19,19 @@ class Just(Maybe):
         self.value = value
     
     def toString(self):
-        return 'Just ' + str(self.value)  
+        from utils import isPrimitive
+
+        value = self.value
+        if (not isPrimitive(value)):
+            value = value.simplify()
+        if (not isPrimitive(value)):
+            string = value.toString()
+        else:
+            string = str(value)
+        return 'Just ' + string
+
+def just(value):
+    return Just(value)
 
 def fromJust(maybe):
     if (isinstance(maybe, Just)):

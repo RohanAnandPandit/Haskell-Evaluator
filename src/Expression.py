@@ -18,7 +18,10 @@ class Data(Expression):
         return self.value
     
     def toString(self):
-        return str(self.value)
+        try:
+            return self.value.toString()
+        except:
+            return str(self.value)
         
 class BinaryExpr(Expression):
     def __init__(self, operator, left, right):
@@ -27,6 +30,11 @@ class BinaryExpr(Expression):
         self.rightExpr = right
         
     def toString(self):
+        from List import listString
+        
+        #if (self.operator.name == ':'):
+            #return listString(self.simplify())
+        
         if (self.operator.name in functionNames):
             buf = '( ' + self.operator.name
             for i in range(self.operator.noOfArgs):
@@ -63,8 +71,14 @@ class BinaryExpr(Expression):
 
     def simplify(self):
         operator = self.operator
+        
         if (self.leftExpr != None):
-            operator = operator.apply(arg1 = self.leftExpr.simplify(), arg2 = None)
+            if (operator.name == ':'):
+                leftExpr = self.leftExpr
+            else:
+                leftExpr = self.leftExpr.simplify()
+                
+            operator = operator.apply(arg1 = leftExpr, arg2 = None)
             if (self.rightExpr != None):
                 operator = operator.apply(arg1 = self.rightExpr.simplify())
                 return operator

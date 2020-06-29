@@ -4,7 +4,7 @@ Created on Sat Jun 27 16:34:38 2020
 
 @author: rohan
 """
-functionNames = ['isUpper', 'isDigit']
+functionNamesChar = ['isUpper', 'isDigit']
 
 def isUpper(a):
     c = a

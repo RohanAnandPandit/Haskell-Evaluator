@@ -42,22 +42,24 @@ class HFunction:
     def toString(self):
         return self.name
     
+    def clone(self):
+        return HFunction(self.precedence, self.associativity, self.func, self.noOfArgs, self.name)
 
 class Composition:
     def __init__(self, second, first):
         self.first = first.simplify()
         self.second = second.simplify()
-        self.precedence = self.first.precedence
-        self.associativity = self.first.associativity
-        self.noOfArgs = 1
-    
-    def apply(self, arg):
-        if (arg != None):
-            return self.second.apply(self.first.apply(arg))
-        return self
+        self.precedence = first.precedence
+        self.associaticity = first.associativity
+        self.name = second.toString() + '.' + first.toString()
     
     def simplify(self):
         return self
     
     def toString(self):
-        return self.second.toString() + '.' + self.first.toString()
+        return self.name
+    
+    def apply(self, arg1 = None):
+        if (arg1 != None):
+            return self.second.apply(self.first.apply(arg1))
+        return self

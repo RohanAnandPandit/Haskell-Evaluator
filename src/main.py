@@ -12,7 +12,7 @@ while (True):
         break
     lexer = Lexer(exp)
     lexer.printTokens()
-    binExp = generateExpr(lexer)
+    (binExp,_) = generateExpr(lexer)
     print(binExp.toString())
     try:
         print("=", binExp.simplify().toString())

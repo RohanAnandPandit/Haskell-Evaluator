@@ -34,7 +34,7 @@ func_notequal = HFunction(4, Associativity.LEFT, Operator_Functions.notEqual, 2,
 logical_or = HFunction(3, Associativity.RIGHT, Operator_Functions.OR, 2, '||')
 left_parentheses = HFunction(8, Associativity.RIGHT, None, 1, '(')
 right_parentheses = HFunction(8, Associativity.LEFT, None, 1, ')')
-create_tuple = HFunction(4, Associativity.RIGHT, Operator_Functions.comma, 2, ',')
+comma = HFunction(4, Associativity.RIGHT, Operator_Functions.cons, 2, ',')
 left_bracket = HFunction(8, Associativity.RIGHT, None, 1, '[')
 right_bracket = HFunction(8, Associativity.LEFT, None, 1, ']')
 func_dollar = HFunction(0, Associativity.RIGHT, Operator_Functions.space, 2, '$')
@@ -42,14 +42,16 @@ func_dot = HFunction(9, Associativity.RIGHT, Operator_Functions.dot, 2, '.')
 
 func_fst = HFunction(8, Associativity.LEFT, Prelude.fst, 1, 'fst')
 func_snd = HFunction(8, Associativity.LEFT, Prelude.snd, 1, 'snd')
-func_map = HFunction(8, Associativity.LEFT, Prelude.map, 2, 'map')
+func_not = HFunction(8, Associativity.LEFT, Prelude.notHaskell, 1, 'not')
+func_swap = HFunction(8, Associativity.LEFT, Prelude.swap, 1, 'swap')
+func_map = HFunction(8, Associativity.LEFT, Prelude.mapHaskell, 2, 'map')
 func_succ = HFunction(8, Associativity.LEFT, Prelude.succ, 1, 'succ')
 func_length = HFunction(8, Associativity.LEFT, Prelude.length, 1, 'length')
 func_pred = HFunction(8, Associativity.LEFT, Prelude.pred, 1, 'pred')
 func_take = HFunction(8, Associativity.LEFT, Prelude.take, 2, 'take')
 func_drop = HFunction(8, Associativity.LEFT, Prelude.drop, 2, 'drop')
-func_even = HFunction(8, Associativity.LEFT, Prelude.take, 1, 'even')
-func_odd = HFunction(8, Associativity.LEFT, Prelude.drop, 1, 'odd')
+func_even = HFunction(8, Associativity.LEFT, Prelude.even, 1, 'even')
+func_odd = HFunction(8, Associativity.LEFT, Prelude.odd, 1, 'odd')
 func_max = HFunction(8, Associativity.LEFT, Prelude.maximum, 1, 'maximum')
 func_min = HFunction(8, Associativity.LEFT, Prelude.minimum, 1, 'minimum')
 func_elem = HFunction(8, Associativity.LEFT, Prelude.elem, 2, 'elem')
@@ -75,6 +77,10 @@ func_tail = HFunction(8, Associativity.LEFT, Prelude.tail, 1, 'tail')
 func_concat = HFunction(8, Associativity.LEFT, Prelude.concat, 1, 'concat')
 func_sum = HFunction(8, Associativity.LEFT, Prelude.sum, 1, 'sum')
 func_product = HFunction(8, Associativity.LEFT, Prelude.product, 1, 'product')
+func_flip = HFunction(8, Associativity.LEFT, Prelude.flip, 1, 'flip')
+func_last = HFunction(8, Associativity.LEFT, Prelude.last, 1, 'last')
+func_just = HFunction(8, Associativity.LEFT, Prelude.just, 1, 'Just')
+func_fromjust = HFunction(8, Associativity.LEFT, Prelude.fromJust, 1, 'fromJust')
 
 class Operator(Enum):
     SPACE = apply
@@ -92,7 +98,7 @@ class Operator(Enum):
     DOUBLE_BAR = logical_or
     LEFT_PARENTHESES = left_parentheses
     RIGHT_PARENTHESES = right_parentheses
-    COMMA = create_tuple
+    COMMA = comma
     LEFT_BRACKET = left_bracket
     RIGHT_BRACKET = right_bracket
     DOUBLE_PLUS = func_concatenate
@@ -136,6 +142,12 @@ class Operator(Enum):
     PERIOD = func_dot
     SUM = func_sum
     PRODUCT = func_product
+    FLIP = func_flip
+    LAST = func_last
+    SWAP = func_swap
+    JUST = func_just
+    FROM_JUST = func_fromjust
+    NOT = func_not
 
 operatorSymbols = operators + functionNames
 operators = {' ' : Operator.SPACE,
@@ -168,18 +180,21 @@ operators = {' ' : Operator.SPACE,
              'const' : Operator.CONST,
              'mod' : Operator.MOD,
              'rem' : None,
+             'not' : Operator.NOT,
              'fst' : Operator.FST,
              'snd' : Operator.SND,
+             'swap' : Operator.SWAP,
              'div' : Operator.DIV,
              'succ' : Operator.SUCC,
              'pred' : Operator.PRED,
              'null' : None,
              'even' : Operator.EVEN,
              'odd' : Operator.ODD,
+             'flip' : Operator.FLIP,
              'length' : Operator.LENGTH,
              'head' : Operator.HEAD,
              'tail' : Operator.TAIL,
-             'last' : None,
+             'last' : Operator.LAST,
              'concat' : Operator.CONCAT,
              'init' : None,
              'maximum' : Operator.MAXIMUM,
@@ -209,7 +224,9 @@ operators = {' ' : Operator.SPACE,
              'concatMap' : Operator.CONCAT_MAP,
              'splitAt' : Operator.SPLIT_AT,
              'span' : None,
-             'replicate' : Operator.REPLICATE}
+             'replicate' : Operator.REPLICATE,
+             'fromJust' : Operator.FROM_JUST,
+             'Just' : Operator.JUST}
 
 
 def operatorIndex(op):

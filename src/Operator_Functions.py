@@ -5,7 +5,10 @@ Created on Sat Jun 27 16:19:04 2020
 @author: rohan
 """
 from utils import dimensionOf
-from HFunction import Composition
+from HFunction import HFunction, Composition
+from List import Nil, Cons, head
+from Expression import Data, BinaryExpr
+from Stack import Stack
 
 def space(a, b):
     (func, arg) = (a, b)
@@ -58,34 +61,43 @@ def AND(a, b):
 
 def OR(a, b):
     return (a or b)
-
+'''
 def cons(a, b):
     (x, xs) = (a, b)
     return [x] + xs
+'''
+def cons(a, b):
+    (x, xs) = (a, b)
+    return Cons(x, xs)
 
 def concatenate(a, b):
     return a + b
 
-def comma(a, b):
-    diff = dimensionOf(b) - dimensionOf(a)
-    if (diff == 1):
-        b = list(b)
-        b = [a] + b
-        return tuple(b)
-    elif (diff == 0):
-        return (a, b)
-
 def comprehension(a, b):
-    lis = []
+    from Operators import Operator
+    from Shunting_Yard_Algorithm import addBinaryExpr
+
+    operands = Stack()
+    operators = Stack()
+    if (isinstance(b, Cons)):
+        b = head(b)
     if (type(a) == int):
         if (a <= b):
+            start = a
             end = b + 1
             step = 1
         else:
+            start = a
             end = b - 1
             step = -1
-        for i in range(a, end, step):
-            lis.append(i)
+
+        for i in range(start, end, step):
+            operands.push(i)
+            operators.push(Operator.COLON.value)
+        operands.push(Data(Nil()))
+        while (operators.peek() != None):
+            addBinaryExpr(operators, operands)
+        expr = operands.pop()
     elif (type(a) == bool):
         pass
-    return lis
+    return expr.simplify()

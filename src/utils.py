@@ -4,14 +4,18 @@ Created on Mon Jun 22 11:24:28 2020
 
 @author: rohan
 """
-import Modules.List as List, Modules.Maybe as Maybe, Modules.Char as Char
+import List, Maybe, Char, Tuple
 import Prelude
 
 operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
              '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
              '$', '.']
 
-functionNames = Prelude.functionNames + List.functionNames + Maybe.functionNames + Char.functionNames
+functionNames = Prelude.functionNamesPrelude 
+functionNames += List.functionNamesList 
+functionNames += Maybe.functionNamesMaybe 
+functionNames += Char.functionNamesChar
+functionNames += Tuple.functionNamesTuple
 
 closer = {'[' : ']', '(' : ')'}
 
@@ -132,7 +136,7 @@ def getData(exp, variables = None): # withVar tells whether variables should be 
     functionMap = {'map' : 'map2'}
     if (exp == ''):
         return None
-    if (type(exp) in [list, tuple, int, float, bool]):
+    if (isPrimitive(exp) and type(exp) != str):
         return exp
     elif (exp in functionNames):
         from Operators import operatorFromString
@@ -140,16 +144,6 @@ def getData(exp, variables = None): # withVar tells whether variables should be 
     elif (exp in ['True', 'False']): # Checks if input is a bool
         boolMap = {'True' : True, 'False' : False}
         return boolMap[exp]
-    elif (variables != None and exp in variables.keys()):
-        return variables[exp] # Returns value of variable
-    elif (exp[0] == "[" and exp[-1] == "]"):
-        l = constructList(exp[1 :-1], variables)
-        return l
-    elif (exp[0] == "(" and exp[-1] == ")"):
-        tup = tuple(exp)
-        return exp
-    elif (exp[0] in ["'", "\""] and exp[-1] in ["'", "\""]):
-        return exp[1 : -1]
     try: 
         return int(exp)
     except:
@@ -168,4 +162,7 @@ def dimensionOf(l):
         else:
             break
     return dim
+
+def isPrimitive(expr):
+    return type(expr) in [int, float, bool, str]
 #print(getData('False'))

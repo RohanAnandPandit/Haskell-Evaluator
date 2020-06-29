@@ -4,12 +4,14 @@ Created on Mon Nov 18 15:43:13 2019
 
 @author: rohan
 """
-from Modules.List import *
-from Modules.Maybe import *
-from Modules.Char import *
+from List import *
+from Maybe import *
+from Char import *
+from Tuple import *
+from HFunction import HFunction
 
-functionNames = ['id', 'const', 'mod', 'rem', 'quot', 'fst', 'snd', 'div', 'succ',
-                 'pred', 'null', 'even', 'odd']
+functionNamesPrelude = ['id', 'const', 'mod', 'rem', 'quot', 'div', 'succ',
+                 'pred', 'null', 'even', 'odd', 'flip', 'not']
 def id(x):
     return x
 
@@ -25,11 +27,6 @@ def rem(a, b):
 def quot(a, b):
     return a // b
 
-def fst(tup):
-    return tup[0]
-
-def snd(tup):
-    return tup[1]
 
 def div(a, b):
     return a // b
@@ -48,3 +45,12 @@ def even(n):
 
 def odd(n):
     return n & 1 == 1
+
+def flip(a):
+    hfunc = a.simplify()
+    return HFunction(hfunc.precedence, hfunc.associativity, lambda x, y : hfunc.func(y, x),
+                     hfunc.noOfArgs, 'flip ' + hfunc.toString())
+
+def notHaskell(a):
+    return not a
+    
