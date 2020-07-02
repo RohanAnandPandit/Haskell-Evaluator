@@ -8,7 +8,7 @@ from enum import Enum
 from HFunction import HFunction
 import Prelude
 import Operator_Functions
-from utils import operators, functionNames
+#from utils import operators, functionNames
 
 class Associativity(Enum):
     LEFT = 0
@@ -28,17 +28,22 @@ less_than_or_equal = HFunction(4, Associativity.NONE, Operator_Functions.lessTha
 greater_than_or_equal = HFunction(4, Associativity.NONE, Operator_Functions.greaterThanOrEqual, 2, '>=')
 colon = HFunction(5, Associativity.RIGHT, Operator_Functions.cons, 2, ':')
 logical_and = HFunction(3, Associativity.RIGHT, Operator_Functions.AND, 2, '&&')
-func_concatenate = HFunction(5, Associativity.LEFT, Operator_Functions.concatenate, 2, '++')
-func_comprehension = HFunction(5, Associativity.LEFT, Operator_Functions.comprehension, 2, '..')
-func_notequal = HFunction(4, Associativity.LEFT, Operator_Functions.notEqual, 2, '/=')
+concatenate = HFunction(5, Associativity.LEFT, Operator_Functions.concatenate, 2, '++')
+comprehension = HFunction(5, Associativity.LEFT, Operator_Functions.comprehension, 2, '..')
+notequal = HFunction(4, Associativity.LEFT, Operator_Functions.notEqual, 2, '/=')
 logical_or = HFunction(3, Associativity.RIGHT, Operator_Functions.OR, 2, '||')
 left_parentheses = HFunction(8, Associativity.RIGHT, None, 1, '(')
 right_parentheses = HFunction(8, Associativity.LEFT, None, 1, ')')
-comma = HFunction(4, Associativity.RIGHT, Operator_Functions.cons, 2, ',')
+comma = HFunction(4, Associativity.LEFT, Operator_Functions.comma, 2, ',')
 left_bracket = HFunction(8, Associativity.RIGHT, None, 1, '[')
 right_bracket = HFunction(8, Associativity.LEFT, None, 1, ']')
-func_dollar = HFunction(0, Associativity.RIGHT, Operator_Functions.space, 2, '$')
-func_dot = HFunction(9, Associativity.RIGHT, Operator_Functions.dot, 2, '.')
+dollar = HFunction(0, Associativity.RIGHT, Operator_Functions.space, 2, '$')
+dot = HFunction(9, Associativity.RIGHT, Operator_Functions.dot, 2, '.')
+index = HFunction(9, Associativity.LEFT, Operator_Functions.index, 2, '!!')
+sequence = HFunction(1, Associativity.LEFT, Operator_Functions.sequence, 2, '>>')
+chain = HFunction(1, Associativity.LEFT, Operator_Functions.chain, 2, '>>=')
+backtick = HFunction(5, Associativity.LEFT, None, 1, '`')
+equals = HFunction(2, Associativity.RIGHT, Operator_Functions.assign, 2, '=')
 
 func_fst = HFunction(8, Associativity.LEFT, Prelude.fst, 1, 'fst')
 func_snd = HFunction(8, Associativity.LEFT, Prelude.snd, 1, 'snd')
@@ -56,7 +61,7 @@ func_max = HFunction(8, Associativity.LEFT, Prelude.maximum, 1, 'maximum')
 func_min = HFunction(8, Associativity.LEFT, Prelude.minimum, 1, 'minimum')
 func_elem = HFunction(8, Associativity.LEFT, Prelude.elem, 2, 'elem')
 func_notelem = HFunction(8, Associativity.LEFT, Prelude.notElem, 2, 'notElem')
-func_zip = HFunction(8, Associativity.LEFT, Prelude.zip, 2, 'zip')
+func_zip = HFunction(8, Associativity.LEFT, Prelude.zipHaskell, 2, 'zip')
 func_div = HFunction(8, Associativity.LEFT, Prelude.div, 2, 'div')
 func_mod = HFunction(8, Associativity.LEFT, Prelude.mod, 2, 'mod')
 func_zipwith = HFunction(8, Associativity.LEFT, Prelude.zipWith, 3, 'zipWith')
@@ -65,24 +70,29 @@ func_dropwhile = HFunction(8, Associativity.LEFT, Prelude.dropWhile, 2, 'dropWhi
 func_list = HFunction(8, Associativity.LEFT, list, 1, 'list')
 func_id = HFunction(8, Associativity.LEFT, Prelude.id, 1, 'id')
 func_const = HFunction(8, Associativity.LEFT, Prelude.const, 2, 'const')
-func_index = HFunction(8, Associativity.LEFT, Operator_Functions.index, 2, '!!')
 func_lookup = HFunction(8, Associativity.LEFT, Prelude.lookup, 2, 'lookup')
 func_concatmap = HFunction(8, Associativity.LEFT, Prelude.concatMap, 2, 'concatMap')
 func_splitat = HFunction(8, Associativity.LEFT, Prelude.splitAt, 2, 'splitAt')
 func_replicate = HFunction(8, Associativity.LEFT, Prelude.replicate, 2, 'replicate')
 func_span = HFunction(8, Associativity.LEFT, Prelude.span, 2, 'span')
-func_backtick = HFunction(5, Associativity.LEFT, None, 1, '`')
 func_head = HFunction(8, Associativity.LEFT, Prelude.head, 1, 'head')
 func_tail = HFunction(8, Associativity.LEFT, Prelude.tail, 1, 'tail')
 func_concat = HFunction(8, Associativity.LEFT, Prelude.concat, 1, 'concat')
-func_sum = HFunction(8, Associativity.LEFT, Prelude.sum, 1, 'sum')
+func_sum = HFunction(8, Associativity.LEFT, Prelude.sumHaskell, 1, 'sum')
 func_product = HFunction(8, Associativity.LEFT, Prelude.product, 1, 'product')
 func_flip = HFunction(8, Associativity.LEFT, Prelude.flip, 1, 'flip')
 func_last = HFunction(8, Associativity.LEFT, Prelude.last, 1, 'last')
 func_just = HFunction(8, Associativity.LEFT, Prelude.just, 1, 'Just')
 func_fromjust = HFunction(8, Associativity.LEFT, Prelude.fromJust, 1, 'fromJust')
+func_getchar = HFunction(8, Associativity.LEFT, Prelude.getChar, 0, 'getChar')
+func_putchar = HFunction(8, Associativity.LEFT, Prelude.putChar, 1, 'putChar')
+func_getline = HFunction(8, Associativity.LEFT, Prelude.getLine, 0, 'getLine')
+func_putstr = HFunction(8, Associativity.LEFT, Prelude.putStr, 1, 'putStr')
+func_putstrln = HFunction(8, Associativity.LEFT, Prelude.putStrLn, 1, 'putStrLn')
+func_print = HFunction(8, Associativity.LEFT, Prelude.printHaskell, 1, 'print')
 
 class Operator(Enum):
+    EQUAL = equals
     SPACE = apply
     SLASH = division
     ASTERISK = multiply
@@ -101,11 +111,11 @@ class Operator(Enum):
     COMMA = comma
     LEFT_BRACKET = left_bracket
     RIGHT_BRACKET = right_bracket
-    DOUBLE_PLUS = func_concatenate
-    DOUBLE_PERIOD = func_comprehension
+    DOUBLE_PLUS = concatenate
+    DOUBLE_PERIOD = comprehension
     COLON = colon
-    NOT_EQUAL = func_notequal
-    BACKTICK = func_backtick
+    NOT_EQUAL = notequal
+    BACKTICK = backtick
     FST = func_fst
     SND = func_snd
     MAP = func_map
@@ -129,7 +139,7 @@ class Operator(Enum):
     LIST = func_list
     ID = func_id
     CONST = func_const
-    DOUBLE_EXCLAMATION = func_index
+    DOUBLE_EXCLAMATION = index
     LOOKUP = func_lookup
     SPLIT_AT = func_splitat
     CONCAT_MAP = func_concatmap
@@ -138,8 +148,8 @@ class Operator(Enum):
     HEAD = func_head
     TAIL = func_tail
     CONCAT = func_concat
-    DOLLAR = func_dollar
-    PERIOD = func_dot
+    DOLLAR = dollar
+    PERIOD = dot
     SUM = func_sum
     PRODUCT = func_product
     FLIP = func_flip
@@ -148,9 +158,21 @@ class Operator(Enum):
     JUST = func_just
     FROM_JUST = func_fromjust
     NOT = func_not
+    SEQUENCE = sequence
+    CHAIN = chain
+    GET_CHAR = func_getchar
+    PUT_CHAR = func_putchar
+    GET_LINE = func_getline
+    PUT_STR = func_putstr
+    PUT_STRLN = func_putstrln
+    PRINT = func_print
 
-operatorSymbols = operators + functionNames
-operators = {' ' : Operator.SPACE,
+class Op:
+    def __init__(self, hfunc):
+        self.value = hfunc
+        
+operatorsDict = {'=' : Operator.EQUAL,
+             ' ' : Operator.SPACE,
              '/' : Operator.SLASH,
              '*' : Operator.ASTERISK,
              '+' : Operator.PLUS,
@@ -176,6 +198,8 @@ operators = {' ' : Operator.SPACE,
              '`' : Operator.BACKTICK,
              '$' : Operator.DOLLAR,
              '.' : Operator.PERIOD,
+             '>>': Operator.SEQUENCE,
+             '>>=' : Operator.CHAIN,
              'id' : Operator.ID,
              'const' : Operator.CONST,
              'mod' : Operator.MOD,
@@ -226,7 +250,13 @@ operators = {' ' : Operator.SPACE,
              'span' : None,
              'replicate' : Operator.REPLICATE,
              'fromJust' : Operator.FROM_JUST,
-             'Just' : Operator.JUST}
+             'Just' : Operator.JUST,
+             'getChar' : Operator.GET_CHAR,
+             'putChar' : Operator.PUT_CHAR,
+             'getLine' : Operator.GET_LINE,
+             'putStr' : Operator.PUT_STR,
+             'putStrLn' : Operator.PUT_STRLN,
+             'print' : Operator.PRINT}
 
 
 def operatorIndex(op):
@@ -236,7 +266,7 @@ def operatorIndex(op):
     return None
     
 def operatorFromString(string):
-    return operators[string]
+    return operatorsDict[string]
 
 def operatorToString(op):
     return operatorSymbols[operatorIndex(op)]

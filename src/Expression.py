@@ -53,13 +53,10 @@ class BinaryExpr(Expression):
         else:
             buf += str(self.leftExpr.toString())
             
-        if (self.operator == None):
-            buf += ' ? '
-        else:
-            char = str(self.operator.toString())
-            buf += ' ' + char
-            if (char != ' '):
-                buf += ' '
+        string = self.operator.name
+        buf += ' ' + string
+        if (string != ' '):
+            buf += ' '
             
         if (self.rightExpr == None):
             buf += '?'
@@ -71,7 +68,9 @@ class BinaryExpr(Expression):
 
     def simplify(self):
         operator = self.operator
-        
+        if (operator.noOfArgs == 0):
+            operator.apply()
+            
         if (self.leftExpr != None):
             if (operator.name == ':'):
                 leftExpr = self.leftExpr
@@ -79,8 +78,10 @@ class BinaryExpr(Expression):
                 leftExpr = self.leftExpr.simplify()
                 
             operator = operator.apply(arg1 = leftExpr, arg2 = None)
+            
             if (self.rightExpr != None):
-                operator = operator.apply(arg1 = self.rightExpr.simplify())
+                rightExpr = self.rightExpr.simplify()
+                operator = operator.apply(arg1 = rightExpr)
                 return operator
             
         if (self.rightExpr != None):

@@ -4,51 +4,45 @@ Created on Mon Jun 29 10:19:03 2020
 
 @author: rohan
 """
+from IO import printHaskell
 
 functionNamesTuple = ['fst', 'snd', 'swap']
 
 class Tuple:
-    def __init__(self, expr):
-        self.expr = expr
+    def __init__(self, tup):
+        self.tup = tup
        
     def simplify(self):
-        self.expr = self.expr.simplify()
         return self
     
     def toString(self):
-        from List import listString
+        from utils import isPrimitive, closer
+        from IO import printHaskell
         
-        return listString(self.expr.simplify(), '(')
+        string = '('
+        for item in self.tup:
+            value = item
+            if (not isPrimitive(value)):
+                value = value.simplify()
+            char = ''
+            if (type(value) == str):
+                char = "\""
+            string += char + printHaskell(value) + char
+            string += ', '
+
+        return string[ : -2] + ')'
 
 def fst(tup):
-    from List import Cons
-
-    tup.simplify()
-    expr = tup.expr
-    if (isinstance(expr, Cons)):
-        return expr.item
-    
-    return None
+    if (type(tup) != tuple):
+        tup = tup.tup
+    return tup[0]
 
 def snd(tup):
-    from List import Cons
+    if (type(tup) != tuple):
+        tup = tup.tup
+    return tup[1]
 
-    tup.simplify()
-    expr = tup.expr
-    if (isinstance(expr, Cons)):
-        expr = expr.list
-        if (isinstance(expr, Cons)):
-            return expr.item
-        
-    return None
-
-def swap(tup):
-    tup.simplify()
-    expr = tup.expr
-    first = expr.item
-    second = expr.list.item
-    temp = first
-    expr.item = second
-    expr.list.item = temp
-    
+def swap(a):
+    tup = a
+    tup.tup = (tup.tup[1], tup.tup[0])
     return tup

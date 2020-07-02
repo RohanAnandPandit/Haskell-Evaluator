@@ -4,18 +4,21 @@ Created on Mon Jun 22 11:24:28 2020
 
 @author: rohan
 """
-import List, Maybe, Char, Tuple
+import List, Maybe, Char, Tuple, IO
 import Prelude
+
+state = {}
 
 operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
              '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
-             '$', '.']
+             '$', '.', '>>', '>>=', '=']
 
 functionNames = Prelude.functionNamesPrelude 
 functionNames += List.functionNamesList 
 functionNames += Maybe.functionNamesMaybe 
 functionNames += Char.functionNamesChar
 functionNames += Tuple.functionNamesTuple
+functionNames += IO.functionNamesIO
 
 closer = {'[' : ']', '(' : ')'}
 
@@ -132,11 +135,32 @@ def removeSpaceAroundOperators(exp):
         i += 1
     return ''.join(exp)
 
+def stringToList(string):
+    from List import List, Nil
+    from Operators import Operator
+    from Expression import Data
+    from Shunting_Yard_Algorithm import addBinaryExpr
+    from Stack import Stack
+    
+    chars = Stack()
+    operators = Stack()
+    for char in string:
+        chars.push(Data(char))
+        operators.push(Operator.COLON.value)
+    chars.push(Data(Nil()))
+    while (operators.peek() != None):
+        addBinaryExpr(operators, chars)
+    return List(chars.pop())
+        
+    
+    
 def getData(exp, variables = None): # withVar tells whether variables should be replaced
     functionMap = {'map' : 'map2'}
     if (exp == ''):
         return None
-    if (isPrimitive(exp) and type(exp) != str):
+    elif (variables != None and exp in variables.keys()):
+        return variables[exp]
+    elif (isPrimitive(exp) and type(exp) != str):
         return exp
     elif (exp in functionNames):
         from Operators import operatorFromString
@@ -164,5 +188,4 @@ def dimensionOf(l):
     return dim
 
 def isPrimitive(expr):
-    return type(expr) in [int, float, bool, str]
-#print(getData('False'))
+    return type(expr) in [int, float, bool, str, tuple]

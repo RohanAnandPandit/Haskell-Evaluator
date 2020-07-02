@@ -5,13 +5,14 @@ Created on Mon Jun 22 10:20:56 2020
 @author: rohan
 """
 
-from utils import *
-from Operators import operatorFromString, operatorSymbols
+from utils import operators, functionNames, getData
+import Operators
+from Operators import operatorFromString
 from HFunction import HFunction 
 
 class Lexer:
-    def __init__(self, exp):
-        self.tokens = self.parse(list(exp), operators)
+    def __init__(self, exp, state):
+        self.tokens = self.parse(list(exp), state)
         self.index = 0
     
     def nextToken(self):
@@ -32,11 +33,15 @@ class Lexer:
     
     # NOTE: Pass a list of characters for exp
     # separators is a list of strings of at most length 2   
-    def parse(self, exp, operators):
+    def parse(self, exp, state):
+        from Shunting_Yard_Algorithm import convertToList
+        
+        operatorSymbols = functionNames + operators
         tokens = []
         current = ''
         i = len(exp) - 1
         maxLength = max(list(map(len, operatorSymbols)))
+        isAssignment = False
         # String is iterated from right to left
         while (i >= 0):
             self.tokens = tokens
@@ -45,19 +50,22 @@ class Lexer:
             
             # If the current character is a double quote the corresponding quote is 
             # found and the string between them is added as a token
-            if (char == "\""):
+            if (char in ["\""] and not isAssignment):
                 j = i - 1
-                while (exp[j] != "\""):
+                while (exp[j] != char):
                     j -= 1
-                tokens.insert(0, ''.join(exp[j + 1 : i]))
+                string = convertToList(exp[j + 1 : i])
+                string.type = 'string'
+                tokens.insert(0, string)
                 i = j - 1
                 continue
                 
                 
             # The substrings up to this index are checked to see if this is an 
             # operator or function name
-            if (operator == None):
-                operator = self.searchOperator(exp, i, maxLength)
+            operator = self.searchOperator(exp, i, maxLength, operatorSymbols)
+            if (operator == '='):
+                isAssignment = True
                 
             if (operator != None):  
                 isFunction = operator in functionNames
@@ -74,7 +82,7 @@ class Lexer:
                 # When an operator is encountered the previously accumulating
                 # value is added as a token after converting to its actual type 
                 if (current != ''):
-                    tokens.insert(0, getData(current))
+                    tokens.insert(0, getData(current, state))
                     current = ''           
                     
                 # A space cannot be put before an operator except 
@@ -125,15 +133,15 @@ class Lexer:
             
         # Remaining value of data is added
         if (current != ''):
-            tokens.insert(0, getData(current))
+            tokens.insert(0, getData(current, state))
             
         # Remove white space at front
-        if (isinstance(tokens[i], HFunction) and tokens[i].name == ' '):
+        if (i >= 0 and isinstance(tokens[i], HFunction) and tokens[i].name == ' '):
             return tokens[1 : ]
             
         return tokens
     
-    def searchOperator(self, exp, i, maxLength):
+    def searchOperator(self, exp, i, maxLength, operatorSymbols):
         for length in range(maxLength, 0, -1):
             if (0 <= i - length + 1):
                 substring = ''.join(exp[i - length + 1 : i + 1])

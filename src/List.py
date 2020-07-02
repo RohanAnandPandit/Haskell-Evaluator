@@ -12,16 +12,18 @@ functionNamesList = ['length', 'head', 'tail', 'last', 'concat', 'init', 'maximu
                  'foldl', 'foldr', 'and', 'or', 'any', 'all', 'filter', 'sum',
                  'product', 'lookup', 'concatMap', 'splitAt', 'span', 'replicate'] 
 class List:
-    def __init__(self, expr):
+    def __init__(self, expr, listType = None):
         self.expr = expr
+        self.type = listType
        
     def simplify(self):
-        return self.expr.simplify()
+        self.expr = self.expr.simplify()
+        return self
     
     def toString(self):
-        return listString(self.expr.simplify(), '[')
+        return listString(self.type, self.expr.simplify(), '[')
 
-       
+      
 class Nil:
     
     def toString(self):
@@ -50,27 +52,26 @@ class Cons:
         return self
 
         
-def listString(expr, char):
+def listString(listType, expr, char):
     from utils import isPrimitive, closer
+    from IO import printHaskell
     
-    string = char
+    string = ''
     while (not isinstance(expr, Nil)):
         value = expr.item
         if (not isPrimitive(expr.item)):
             value = expr.item.simplify()
-        if (isPrimitive(value)):
-            string += str(value)
-        else:
-            string += str(value.toString()) 
-            
-        string += ', '
+        string += printHaskell(value)
+        if (listType != 'string'):
+            string += ', '
         expr = expr.list
-        
-    return string[ : -2] + closer[char]
+    if (listType == 'string'):
+        return "\"" + string + "\""
+    return char + string[ : -2] + closer[char]
  
 def length(a):
     xs = a
-    xs = xs.simplify()
+    xs = xs.simplify().expr
     if (isinstance(xs, Nil)):
         return 0
     elif (isinstance(xs, Cons)):
@@ -80,8 +81,8 @@ def head(l):
     from utils import isPrimitive
     
     xs = l
-    xs = xs.simplify()
-    if (length(xs) == 0): 
+    xs = xs.simplify().expr
+    if (isinstance(xs, Nil)): 
         return None
     if (isPrimitive(xs.item)):
         return xs.item
@@ -89,24 +90,25 @@ def head(l):
 
 
 def tail(l):
-    if (length(l) == 0):
+    xs = l
+    xs.simplify().expr
+    if (isinstance(xs, Nil)):
         return None
-    if (isinstance(l, Cons)):
-        return l.list
-    else:
-        return l.simplify().list
+    
+    return List(l.list)
 
 def last(a):
     from utils import isPrimitive
     
-    l = a
-    while (not isinstance(l, Nil)):
-        if (not isinstance(l, Cons)):
-            l = l.simplify()
-        l = l.list
-    if (isPrimitive(l.item)):
-        return l.item
-    return l.item.simplify()
+    xs = a
+    xs = xs.simplify().expr
+    if (isinstance(xs, Nil)):
+        return None
+    while (not isinstance(xs.list, Nil)):
+        xs = xs.list
+    if (isPrimitive(xs.item)):
+        return xs.item
+    return xs.item.simplify()
 
 def concat(lists):
     if (lists == []):
@@ -162,9 +164,10 @@ def notElem(a, b):
 def reverse(a):
     return a[::-1]
 
-def take(a, b):    
-    (n, xs) = (a, b)
-    xs = xs.simplify()
+def take(a, b):
+    (n, l) = (a, b)
+    listType = l.type
+    xs = l.simplify().expr
     initialList = xs
     while (n > 1 and not isinstance(xs, Nil)):
         item = xs.item
@@ -172,20 +175,21 @@ def take(a, b):
         n -= 1
     if (not isinstance(xs, Nil)):
         xs.list = Nil()
-    return initialList
+    return List(initialList, listType)
 
 def drop(a, b):
     from Expression import Data
     
     (n, xs) = (a, b)
-    xs = xs.simplify()
+    listType = xs.type
+    xs = xs.simplify().expr
     
     while (n > 0 and not isinstance(xs, Nil)):
         item = xs.item
         xs = xs.list
         n -= 1
 
-    return xs
+    return List(xs, listType)
 
 def mapHaskell(a, b):
     from Operators import Operator
@@ -194,7 +198,7 @@ def mapHaskell(a, b):
     
     (func, xs) = (a, b)
     
-    xs = xs.simplify()
+    xs = xs.simplify().expr
     initialList = xs
 
     while (not isinstance(xs, Nil)):
@@ -202,7 +206,8 @@ def mapHaskell(a, b):
             xs.item = xs.item.simplify()
         xs.item = func.apply(xs.item) 
         xs = xs.list
-    return initialList
+        
+    return List(initialList)
 
 def words(string):
     return string.split(' ')
@@ -234,12 +239,23 @@ def dropWhile(a, b):
     return l[i:]
 
 
-def zip(a, b):
+def zipHaskell(a, b):
+    from Shunting_Yard_Algorithm import convertToList
+    from Tuple import Tuple
+    
     (xs, ys) = (a, b)
-    res = []
-    for i in range(min(len(xs), len(ys))):
-        res.append((xs[i], ys[i]))
-    return res
+    xs = xs.simplify().expr
+    ys = ys.simplify().expr
+    if (isinstance(xs, Nil)):
+        return ys
+    elif (isinstance(ys, Nil)):
+        return xs
+    pairs = []
+    while (not isinstance(xs, Nil) and not isinstance(ys, Nil)):
+        pairs.append(Tuple((xs.item, ys.item))) 
+        xs = xs.list
+        ys = ys.list
+    return convertToList(pairs)
 
 def unzip(a):
     pairs = a
@@ -305,7 +321,7 @@ def filter(a, b):
             res.append(x)
     return res
 
-def sum(a):
+def sumHaskell(a):
     from utils import isPrimitive
     
     xs = a
@@ -343,7 +359,6 @@ def lookup(a, b):
         key = key.simplify()
     while (not isinstance(pairs, Nil)):
         tup = pairs.item
-        tup = tup.simplify()
         (first, second) = (fst(tup), snd(tup))
         if (not isPrimitive(first)):
             first = first.simplify()

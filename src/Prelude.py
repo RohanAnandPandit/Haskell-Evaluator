@@ -8,10 +8,11 @@ from List import *
 from Maybe import *
 from Char import *
 from Tuple import *
+from IO import *
 from HFunction import HFunction
 
 functionNamesPrelude = ['id', 'const', 'mod', 'rem', 'quot', 'div', 'succ',
-                 'pred', 'null', 'even', 'odd', 'flip', 'not']
+                        'pred', 'null', 'even', 'odd', 'flip', 'not']
 def id(x):
     return x
 
@@ -53,4 +54,3 @@ def flip(a):
 
 def notHaskell(a):
     return not a
-    
