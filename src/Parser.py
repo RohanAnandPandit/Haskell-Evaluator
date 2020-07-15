@@ -4,17 +4,28 @@ Created on Mon Jun 22 10:20:56 2020
 
 @author: rohan
 """
-
-from utils import operators, functionNames, getData
-import Operators
+import utils
+from utils import getData, Variable
 from Operators import operatorFromString
 from HFunction import HFunction 
 
 class Lexer:
-    def __init__(self, exp, state):
-        self.tokens = self.parse(list(exp), state)
+    def __init__(self, string, state, operators, functionNames):
+        self.tokens = []
+        self.string = string
+        self.state = state
         self.index = 0
-    
+        self.operators = operators
+        self.functionNames = functionNames
+        #self.parse(list(string), state)
+        self.curr = 0
+        #self.operatorSymbols =  functionNames + operators
+        self.acc = ''
+        self.isFunction = False
+        self.isAssignment = False
+        self.inWhereClause = False
+        self.parse(string, state)
+        
     def nextToken(self):
         if (self.index >= len(self.tokens)):
             return None
@@ -25,126 +36,112 @@ class Lexer:
     def printTokens(self):
         tokens = []
         for token in self.tokens:
-            if (isinstance(token, HFunction)):
-                tokens.append(token.name)
-            else:
-                tokens.append(token)
+            tokens.append(str(token))
         print(tokens)
-    
-    # NOTE: Pass a list of characters for exp
-    # separators is a list of strings of at most length 2   
-    def parse(self, exp, state):
-        from Shunting_Yard_Algorithm import convertToList
         
-        operatorSymbols = functionNames + operators
-        tokens = []
-        current = ''
-        i = len(exp) - 1
-        maxLength = max(list(map(len, operatorSymbols)))
-        isAssignment = False
-        # String is iterated from right to left
-        while (i >= 0):
-            self.tokens = tokens
-            operator = None
-            char = exp[i]
+    def addSpace(self):
+        if (len(self.tokens) > 0):
+            lastToken = self.tokens[-1]
+            if (not isinstance(lastToken, HFunction) or not lastToken.name in self.operators
+                or lastToken.name in (')', ']')):
+                self.tokens.append(operatorFromString(' ').value)  
+                if (not self.isAssignment):
+                    self.isFunction = True
+                        
+    def addString(self):
+        from Shunting_Yard_Algorithm import convertToList
+        string = ''
+        start = self.curr
+        while (True):
+            char = self.string[self.curr]
+            if (char == '"' and string[-1] != '\\'):
+                break
+            string += char
+            if (len(string) > 1):
+                if (string[-2 : ] == '\\n'):
+                    string = string[ : -2] + '\n'
+                elif (string[-2 : ] == '\\"'):
+                    string = string[ : -2] + '"'
+                elif (string[-2 : ] == '\\\\'):
+                    string = string[ : -2] + '\\'  
+            self.curr += 1
+
             
-            # If the current character is a double quote the corresponding quote is 
-            # found and the string between them is added as a token
-            if (char in ["\""] and not isAssignment):
-                j = i - 1
-                while (exp[j] != char):
-                    j -= 1
-                string = convertToList(exp[j + 1 : i])
-                string.type = 'string'
-                tokens.insert(0, string)
-                i = j - 1
+        charList = convertToList(self.string[start : self.curr]).simplify({}, False)
+        self.tokens.append(charList)
+        self.curr += 1
+    
+    def addOperator(self, op):
+        if (op == ' '):
+            self.addSpace()
+            return
+        elif (op == '\\'):
+            self.addFunction('\\')
+            return
+
+        if (op not in ['[', '(']):
+            if (len(self.tokens) > 0 and isinstance(self.tokens[-1], HFunction) 
+                and self.tokens[-1].name == ' '):
+                del self.tokens[-1]
+                
+        if (op == '='):
+            if (operatorFromString(' ').value in self.tokens and not self.inWhereClause):
+                self.isAssignment = True
+                self.isFunction = True
+                op = '->'
+                self.tokens.insert(0, operatorFromString(' ').value)
+                self.tokens.insert(0, operatorFromString(')').value)
+                self.tokens.insert(0, operatorFromString('\\').value)
+                self.tokens.insert(0, operatorFromString('(').value) 
+                
+        if (op != '`'):
+            self.tokens.append(operatorFromString(op).value)
+    
+    def addFunction(self, func):
+        self.tokens.append(operatorFromString('(').value)
+        self.tokens.append(operatorFromString(func).value)
+        self.tokens.append(operatorFromString(')').value)
+        if (func == '\\'):
+            self.addSpace()
+            self.tokens.append(Variable('None'))
+            self.addSpace()
+    
+    def addData(self):
+        if (self.acc != ''):
+            self.tokens.append(getData(self.acc, self.state))            
+            self.acc = ''
+        
+    def parse(self, string, state):
+        while (self.curr < len(self.string)):
+            if (len(self.tokens) > 0 and self.tokens[-1] == '--'):
+                del self.tokens[-1]
+                return
+                
+            op = self.searchOperator(utils.operators)
+            if (op != None):
+                if (op == 'where'):
+                    self.inWhereClause = True
+                if (op == '.' and '0' <= string[self.curr] <= '9'):
+                    self.acc += '.'
+                else:
+                    self.addData()
+                    self.addOperator(op)
                 continue
-                
-                
-            # The substrings up to this index are checked to see if this is an 
-            # operator or function name
-            operator = self.searchOperator(exp, i, maxLength, operatorSymbols)
-            if (operator == '='):
-                isAssignment = True
-                
-            if (operator != None):  
-                isFunction = operator in functionNames
-                putParentheses = isFunction
-                isCloseBracket = operator in [')', ']']
-    
-                # The backtick is not included as a token but it will 
-                # cause white space to be removed around a function name                
-                if (len(tokens) > 0 and isinstance(tokens[0], HFunction) 
-                    and tokens[0].name == '`'): 
-                    putParentheses = False
-                    del tokens[0] 
                     
-                # When an operator is encountered the previously accumulating
-                # value is added as a token after converting to its actual type 
-                if (current != ''):
-                    tokens.insert(0, getData(current, state))
-                    current = ''           
-                    
-                # A space cannot be put before an operator except 
-                # for open brackets
-                if (operator == ' '):
-                    if (len(tokens) > 0): 
-                        if (isinstance(tokens[0], HFunction) 
-                        and tokens[0].name not in ['(', '[']):
-                            if (tokens[0].name == '`'):
-                                del tokens[0]
-                            i -= 1
-                            continue
-                    else:
-                        i -= 1
-                        continue  
-              
-                # If current operator is a symbol there shouldn't be a space after it
-                if (not isFunction and not isCloseBracket):
-                    if (len(tokens) > 0):
-                        if (isinstance(tokens[0], HFunction) and tokens[0].name == ' '):
-                            del tokens[0]
-                
-                # A function is naturally enclosed in brackets as an
-                # argument to the SPACE operator 
-                if (isFunction and putParentheses):
-                    putParentheses = True
-                    tokens.insert(0, operatorFromString(')').value)
-                
-                # The corresponding HFunction of the operator is added as a token
-                op = operatorFromString(operator)
-                tokens.insert(0, op.value)
-                
-                if (isFunction and putParentheses):
-                    tokens.insert(0, operatorFromString('(').value)
-                    
+            if (string[self.curr] == '"'):
+                self.curr += 1
+                self.addString()
             else:
-                # If there is no operator up to the current index then the current
-                # char is concatenated to the accumulating data
-                current = char + current
-                
-            # Index is shifted back
-            if (operator != None):
-                i -= len(operator)
-            else:
-                i -= 1
-                
-            #self.printTokens()  
+                self.acc += string[self.curr]
+                self.curr += 1
+      
+        self.addData()
             
-        # Remaining value of data is added
-        if (current != ''):
-            tokens.insert(0, getData(current, state))
-            
-        # Remove white space at front
-        if (i >= 0 and isinstance(tokens[i], HFunction) and tokens[i].name == ' '):
-            return tokens[1 : ]
-            
-        return tokens
-    
-    def searchOperator(self, exp, i, maxLength, operatorSymbols):
-        for length in range(maxLength, 0, -1):
-            if (0 <= i - length + 1):
-                substring = ''.join(exp[i - length + 1 : i + 1])
-                if (substring in operatorSymbols):
+    def searchOperator(self, operators):
+        for length in range(5, 0, -1):
+            if (self.curr + length - 1 < len(self.string)):
+                substring = self.string[self.curr : self.curr + length]
+                if (substring in operators): 
+                    self.curr += length
                     return substring
         return None

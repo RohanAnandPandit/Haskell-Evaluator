@@ -10,9 +10,11 @@ from Char import *
 from Tuple import *
 from IO import *
 from HFunction import HFunction
+from Tuple import Tuple, fst, snd
 
 functionNamesPrelude = ['id', 'const', 'mod', 'rem', 'quot', 'div', 'succ',
-                        'pred', 'null', 'even', 'odd', 'flip', 'not']
+                        'pred', 'null', 'even', 'odd', 'flip', 'not', 'uncurry',
+                        'curry']
 def id(x):
     return x
 
@@ -48,9 +50,27 @@ def odd(n):
     return n & 1 == 1
 
 def flip(a):
-    hfunc = a.simplify()
-    return HFunction(hfunc.precedence, hfunc.associativity, lambda x, y : hfunc.func(y, x),
-                     hfunc.noOfArgs, 'flip ' + hfunc.toString())
+    hfunc = a.clone()
+    hfunc.name = 'flip ' + hfunc.name
+    func = hfunc.func
+    hfunc.func = lambda x, y : func(y, x)
+    return hfunc
 
 def notHaskell(a):
     return not a
+
+def uncurry(a):
+    hfunc = a.clone()
+    hfunc.name = 'uncurry ' + hfunc.name
+    func = hfunc.func
+    hfunc.func = lambda tup: func(fst(tup), snd(tup))
+    hfunc.noOfArgs = 1
+    return hfunc
+
+def curry(a):
+    hfunc = a.clone()
+    hfunc.name = 'curry ' + hfunc.name
+    func = hfunc.func
+    hfunc.func = lambda x, y: func(Tuple((x, y)))
+    hfunc.noOfArgs = 2
+    return hfunc

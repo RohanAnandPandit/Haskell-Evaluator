@@ -12,25 +12,26 @@ class Tuple:
     def __init__(self, tup):
         self.tup = tup
        
-    def simplify(self):
+    def simplify(self, state, simplifyVariables):
+        from utils import isPrimitive
+        for i in range(len(self.tup)):
+            if (not isPrimitive(self.tup[i])):
+                self.tup[i] = self.tup[i].simplify(state, simplifyVariables)
         return self
     
-    def toString(self):
-        from utils import isPrimitive, closer
-        from IO import printHaskell
+    def __str__(self):
+        from utils import isPrimitive
         
-        string = '('
+        string = ''
         for item in self.tup:
             value = item
-            if (not isPrimitive(value)):
-                value = value.simplify()
             char = ''
             if (type(value) == str):
                 char = "\""
-            string += char + printHaskell(value) + char
+            string += char + str(value) + char 
             string += ', '
 
-        return string[ : -2] + ')'
+        return '(' + string[ : -2] + ')'
 
 def fst(tup):
     if (type(tup) != tuple):

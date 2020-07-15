@@ -9,9 +9,11 @@ import Prelude
 
 state = {}
 
+builtInState = {'True' : True, 'False' : False, 'otherwise' : True, 'None' : None}
+
 operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
              '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
-             '$', '.', '>>', '>>=', '=']
+             '$', '.', '>>', '>>=', '=', '->', '--', '\\', 'where']
 
 functionNames = Prelude.functionNamesPrelude 
 functionNames += List.functionNamesList 
@@ -24,7 +26,20 @@ closer = {'[' : ']', '(' : ')'}
 
 brackets = ['[', ']','(', ')']
 
-
+class Variable:
+    def __init__(self, name):
+        self.name = name
+    
+    def simplify(self, state, simplifyVariables):
+        if (self.name in builtInState.keys()):
+            return builtInState[self.name]
+        if (simplifyVariables):
+            return state[self.name]
+        return self
+    
+    def __str__(self):
+        return self.name
+    
 def indexOfClosing(c, exp):
     closer = {'[' : ']', '(' : ')'}
     index = 0
@@ -83,9 +98,6 @@ def removeSpaces(exp):
         if (char != " "):
             l.append(char)
     return ''.join(l)
-
-
-
             
 def getString(c, exp):
     index = 0
@@ -96,7 +108,6 @@ def getString(c, exp):
         if (char == c):
             count += 1
         index += 1
-            
      
 def removeUnwantedSpaces(exp):
     exp = list(exp)
@@ -155,26 +166,17 @@ def stringToList(string):
     
     
 def getData(exp, variables = None): # withVar tells whether variables should be replaced
-    functionMap = {'map' : 'map2'}
     if (exp == ''):
         return None
-    elif (variables != None and exp in variables.keys()):
-        return variables[exp]
     elif (isPrimitive(exp) and type(exp) != str):
         return exp
-    elif (exp in functionNames):
-        from Operators import operatorFromString
-        return operatorFromString(exp)
-    elif (exp in ['True', 'False']): # Checks if input is a bool
-        boolMap = {'True' : True, 'False' : False}
-        return boolMap[exp]
     try: 
         return int(exp)
     except:
         try: 
             return float(exp)
         except:
-            return exp
+            return Variable(exp)
 
 def dimensionOf(l):
     dim = 0
@@ -188,4 +190,22 @@ def dimensionOf(l):
     return dim
 
 def isPrimitive(expr):
-    return type(expr) in [int, float, bool, str, tuple]
+    return type(expr) in [int, float, bool, str, tuple, None]
+
+def specialMin(a, b):
+    if (a == None):
+        return b
+    if (b == None):
+        return a
+    return min(a, b)
+
+def haskellEval(exp, state):  
+    from Parser import Lexer
+    from Shunting_Yard_Algorithm import generateExpr    
+    lexer = Lexer(exp, state, operators, functionNames)
+    print("tokens : ", end = '')
+    lexer.printTokens() 
+    (binExp, returnType) = generateExpr(lexer)
+    print("expression : ", str(binExp))     
+    print("result : ", end = '')
+    return binExp.simplify(state, True) 

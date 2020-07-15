@@ -5,386 +5,467 @@ Created on Tue Jun 23 20:381 2020
 @author: rohan
 """
 from Maybe import Just, Nothing
+from Tuple import Tuple
 
 functionNamesList = ['length', 'head', 'tail', 'last', 'concat', 'init', 'maximum',
                  'minimum', 'elem', 'notElem', 'reverse', 'take', 'drop', 'map',
                  'words', 'unwords', 'takeWhile', 'dropWhile', 'zip', 'unzip',
-                 'foldl', 'foldr', 'and', 'or', 'any', 'all', 'filter', 'sum',
-                 'product', 'lookup', 'concatMap', 'splitAt', 'span', 'replicate'] 
+                 'foldl', 'foldr', 'foldl1', 'foldr1', 'and', 'or', 'any', 'all', 'filter', 'sum',
+                 'product', 'lookup', 'concatMap', 'splitAt', 'span', 'replicate',
+                 'iterate', 'repeat', 'zipWith', 'zip3', 'zipWith3', 'cycle']
 class List:
-    def __init__(self, expr, listType = None):
-        self.expr = expr
-        self.type = listType
-       
-    def simplify(self):
-        self.expr = self.expr.simplify()
-        return self
-    
-    def toString(self):
-        return listString(self.type, self.expr.simplify(), '[')
-
+    pass
       
-class Nil:
-    
-    def toString(self):
+class Nil(List):
+    def __init__(self, listType = None):
+        self.type = listType
+        
+    def __str__(self):
         return '[]'
     
-    def simplify(self):
+    def simplify(self, a, b):
         return self
         
-class Cons:
-    def __init__(self, itemExpr, listExpr):
+class Cons(List):
+    def __init__(self, itemExpr, listExpr, listType = None):
         self.item = itemExpr
-        self.list = listExpr
+        self.tail = listExpr 
+        self.type = listType
         
-    def toString(self):
-        string = self.list.toString()
-        sep = ', '
-        if (string == '[]'):
-            sep = ''
-        try:
-            value = self.item.toString()
-        except:
-            value = str(self.item)
-        return '[' + value + sep + self.list.toString()[1 : -1] + ']'
+    def __str__(self):
+        if (type(self.item) == str):
+            tail = str(self.tail)
+            return '\"' + self.item + tail[1 : -1] + '\"'
     
-    def simplify(self):
+        tail = str(self.tail)
+        sep = ', '
+        if (tail == '[]'):
+            sep = ''
+        value = str(self.item)
+        if (isinstance(self.item, Iterator)):
+            value = value[1 : -1]
+            if (tail != '[]'):
+                value += ','
+        return '[' + value + sep + tail[1 : -1] + ']'
+
+    def apply(self, arg1 = None, arg2 = None):
+        if (isinstance(self.item, Iterator)):
+            self.item.apply(arg1, arg2)
+        return self
+    
+    def simplify(self, state, simplifyVariables):
+        from utils import isPrimitive
+        
+        if (not isPrimitive(self.item)):
+            self.item = self.item.simplify(state, simplifyVariables)
         return self
 
+class Iterator(List):
+    def __init__(self, cycleList = None, func = None, item = None, iterations = None,
+                 iteratorType = None, step = None, end = None, mapFunc = None, current = None):
+        self.type = iteratorType
+        self.func = func
+        self.item = item
+        self.iterations = iterations
+        self.list = cycleList
+        self.current = current
+        if (current == None):
+            self.current = self.list
+        self.step = step
+        self.end = end
+        self.mapFunc = mapFunc
+        if (mapFunc == None):
+            from utils import state
+            func_id = state['id']
+            self.mapFunc = func_id
+    
+    def getHead(self):
+        if (self.type in ('comprehension', 'general')):
+            return self.mapFunc.apply(self.item)
+        else:
+            return self.mapFunc.apply(self.current.item)
+               
+    def getTail(self):
+        if (self.iterations == 0):
+            return Nil()
+        iterations = None
+        if (self.iterations != None):
+            iterations = self.iterations - 1
+        if (self.type == 'comprehension'):
+            return Iterator(item = self.func.apply(self.item), iteratorType = self.type, step = self.step,
+                            func = self.func, iterations = iterations, mapFunc = self.mapFunc)
+        elif (self.type == 'general'):
+            return Iterator(item = self.func.apply(self.item), iteratorType = self.type, 
+                            func = self.func, iterations = iterations, mapFunc = self.mapFunc)
+        elif (self.type == 'cycle'):
+            current = tail(self.current)
+            if isinstance(current, Nil):
+                current = self.list
+            return Iterator(mapFunc = self.mapFunc, cycleList = self.list,
+                            current = current, iteratorType = self.type, iterations = iterations)
+            
+    def simplify(self, a, b):
+        return self
+
+    def apply(self, arg1 = None, arg2 = None):
+        if (arg1 != None):
+            self.start = arg1
+        if (arg2 != None):
+            self.end = arg2
+            self.iterations = int(abs((self.end - self.item) / self.step))
+        return self
+
+    def setRange(self, n):
+        self.iterations = n
+    
+    def __str__(self):
+        if (self.iterations != None):
+            tail = str(self.getTail())[1 : -1]
+            sep = ', '
+            if (tail == ''):
+                sep = ''
+            return '[' + str(self.getHead()) + sep + tail + ']'
+        if (self.type in ('comprehension', 'general')):
+            return '[' + str(self.getHead()) + '..' + ']'   
+        if (self.type == 'cycle'):
+            return str(self.list)[ : -1] + '...]'
         
-def listString(listType, expr, char):
-    from utils import isPrimitive, closer
-    from IO import printHaskell
-    
-    string = ''
-    while (not isinstance(expr, Nil)):
-        value = expr.item
-        if (not isPrimitive(expr.item)):
-            value = expr.item.simplify()
-        string += printHaskell(value)
-        if (listType != 'string'):
-            string += ', '
-        expr = expr.list
-    if (listType == 'string'):
-        return "\"" + string + "\""
-    return char + string[ : -2] + closer[char]
- 
-def length(a):
-    xs = a
-    xs = xs.simplify().expr
+def length(a, l = 0):
+    xs = tail(a)
+    if (isinstance(a, Nil)):
+        return l
+    elif (isinstance(a, Cons)):
+        if (isinstance(a.item, Iterator)):
+            return length(xs, l + a.item.iterations)
+        return length(xs, l + 1)
+
+def head(a):    
+    if (isinstance(a, Nil)):
+        return None
+    if (isinstance(a, Cons)):
+        if (isinstance(a.item, Iterator)):
+            return a.item.getHead()
+        return a.item
+
+def tail(a):
+    if (isinstance(a, Nil)):
+        return None
+    if (isinstance(a, Cons)):  
+        if (isinstance(a.item, Iterator)):
+            iterator = a.item.getTail()
+            if (isinstance(iterator, Nil)):
+                return a.tail
+            return Cons(iterator, a.tail)
+        return a.tail
+
+def last(a):    
+    (x, xs) = (head(a), tail(a)) 
+    if (isinstance(a, Nil)):
+        return None
     if (isinstance(xs, Nil)):
-        return 0
-    elif (isinstance(xs, Cons)):
-        return 1 + length(xs.list)
-    
-def head(l):
+        return x 
+    return last(xs)
+
+def concat(a):
+    from Operators import operatorFromString
+
+    return foldl(operatorFromString('++').value, Nil(), a)
+
+def init(a):
+    (x, xs) = (head(a), tail(a)) 
+    if (isinstance(a, Nil)):
+        return None
+    elif (isinstance(a, Cons)):
+        if (isinstance(xs, Nil)):
+            return Nil()
+        return Cons(x, init(xs))  
+
+def maximum(a, m = None):
     from utils import isPrimitive
     
-    xs = l
-    xs = xs.simplify().expr
-    if (isinstance(xs, Nil)): 
-        return None
-    if (isPrimitive(xs.item)):
-        return xs.item
-    return xs.item.simplify()
+    (x, xs) = (head(a), tail(a))
 
+    if (isinstance(a, Nil)):
+        return m
+    if (not isPrimitive(x)):
+        x = x.simplify()
+    if (isinstance(a, Cons)):
+        if (m == None):
+            m = x
+        return maximum(xs, max(x, m))
+    elif (isinstance(a, Iterator)):
+        if (m == None):
+            m = x
+        if (a.iterations == None):
+            if (a.type == 'comprehension' and a.step <= 0):
+                return maximum(a.tail, max(x, m))
+            return None
+        return maximum(xs, max(x, m))
 
-def tail(l):
-    xs = l
-    xs.simplify().expr
-    if (isinstance(xs, Nil)):
-        return None
-    
-    return List(l.list)
-
-def last(a):
+def minimum(a, m = None):
     from utils import isPrimitive
     
-    xs = a
-    xs = xs.simplify().expr
-    if (isinstance(xs, Nil)):
-        return None
-    while (not isinstance(xs.list, Nil)):
-        xs = xs.list
-    if (isPrimitive(xs.item)):
-        return xs.item
-    return xs.item.simplify()
+    (x, xs) = (head(a), tail(a))
 
-def concat(lists):
-    if (lists == []):
-        return []
-    if (type(lists[0]) == list):
-        res = []
-    elif (type(lists[0]) == str):
-        res = ''
+    if (isinstance(a, Nil)):
+        return m
+    if (not isPrimitive(x)):
+        x = x.simplify()
+    if (isinstance(a, Cons)):
+        if (m == None):
+            m = x
+        return minimum(xs, min(x, m))
+    elif (isinstance(a, Iterator)):
+        if (m == None):
+            m = x
+        if (a.iterations == None):
+            if (a.type == 'comprehension' and a.step >= 0):
+                return minimum(a.tail, max(x, m))
+            return None
+        return minimum(xs, min(x, m))
+
+def elem(a, b):    
+    value = a
+    (x, xs) = (head(b), tail(b))
+    if (isinstance(b, Nil)):
+        return False
+    elif (isinstance(b, Cons)):
+        if (isinstance(b.item, Iterator)):
+            if (b.item.iterations == None and b.item.type == 'general'):
+                return None
+            check = ((value - x) % b.item.step == 0 and x <= value 
+                     and (b.item.end == None or value <= b.item.end))
+            return check or elem(value, b.tail)
         
-    for l in lists:
-        res += l
-        
-    return res
+        return x == value or elem(value, xs)
 
-def init(l):
-    if (len(l) == 0):
-        return None
-    return l[0:-1]
 
-def maximum(l):
-    return max(l)
+def notElem(a, b): 
+    return not elem(a, b)
 
-def minimum(l):
-    return min(l)
-
-def elem(a, b):
-    from utils import isPrimitive
+def reverse(a, l = Nil()):
+    if (isinstance(a, Nil)):
+        return l
+    (x, xs) = (head(a), tail(a))
+    return reverse(xs, Cons(x, l))
     
-    (value, xs) = (a, b)
-    xs = xs.simplify()
-    while (not isinstance(xs, Nil)):
-        item = xs.item
-        if (not isPrimitive(item)):
-            item = item.simplify()
-        if (item == value):
-            return True
-        xs = xs.list
-    return False
-
-def notElem(a, b):
-    (value, l) = (a, b)
-    while (not isinstance(l, Nil)):
-        if (not isinstance(l, Cons)):
-            l = l.simplify()
-        item = l.item
-        if (type(item) not in [int, float, bool, str]):
-            item = item.simplify()
-        if (item == value):
-            return False
-        l = l.list
-    return True
-
-def reverse(a):
-    return a[::-1]
 
 def take(a, b):
-    (n, l) = (a, b)
-    listType = l.type
-    xs = l.simplify().expr
-    initialList = xs
-    while (n > 1 and not isinstance(xs, Nil)):
-        item = xs.item
-        xs = xs.list
-        n -= 1
-    if (not isinstance(xs, Nil)):
-        xs.list = Nil()
-    return List(initialList, listType)
+    n = a
+    (x, xs) = (head(b), tail(b))
+    if (n <= 0 or isinstance(b, Nil)):
+        return Nil()
+    if (isinstance(b, Cons)):
+        return Cons(x, take(n - 1, xs))
+        
 
-def drop(a, b):
-    from Expression import Data
-    
-    (n, xs) = (a, b)
-    listType = xs.type
-    xs = xs.simplify().expr
-    
-    while (n > 0 and not isinstance(xs, Nil)):
-        item = xs.item
-        xs = xs.list
-        n -= 1
-
-    return List(xs, listType)
+def drop(a, b):    
+    n = a
+    if (n <= 0 or isinstance(b, Nil)):
+        return b
+    return drop(n - 1, tail(b))
 
 def mapHaskell(a, b):
-    from Operators import Operator
-    from Expression import BinaryExpr
-    from utils import isPrimitive
+    from Operator_Functions import dot
     
-    (func, xs) = (a, b)
-    
-    xs = xs.simplify().expr
-    initialList = xs
-
-    while (not isinstance(xs, Nil)):
-        if (not isPrimitive(xs.item)):
-            xs.item = xs.item.simplify()
-        xs.item = func.apply(xs.item) 
-        xs = xs.list
+    func = a
+    (x, xs) = (head(b), tail(b))
+    if (isinstance(b, Nil)):
+        return b
+    if (isinstance(b, Cons)):
+        if (isinstance(b.item, Iterator)):
+            b.item.mapFunc = dot(func, b.item.mapFunc)
+            return b
+        return Cons(func.apply(x), mapHaskell(func, xs))
         
-    return List(initialList)
 
-def words(string):
-    return string.split(' ')
+def words(a):
+    if (isinstance(a, Nil)):
+        return Cons(Nil(), Nil())
+    x,xs = head(a), tail(a)
+    if (x == ' '):
+        return Cons(Nil(), words(xs))
+    w = words(xs)
+    y, ys = head(w), tail(w)
+    return Cons(Cons(x, y), ys)
+    
 
-def unwords(string):
-    s = ""
-    for word in string:
-        s += word + ' '
-    return s
+def unwords(a):
+    from Operator_Functions import concatenate
+    if (isinstance(a, Nil)):
+        return None
+    x,xs = head(a), tail(a)
+    if (isinstance(xs, Nil)):
+        return x
+    return concatenate(x, Cons(' ', unwords(xs)))
 
 def takeWhile(a, b):
-    (func, l) = (a, b)
-    res = []
-    for item in l:
-        if (func.apply(item)):
-            res.append(item)
-        else:
-            break
-    return res
+    from utils import isPrimitive
+    
+    func = a
+    if (isinstance(b, Nil)):
+        return Nil()
+    (x, xs) = (head(b), tail(b))
+    if (not isPrimitive(x)):
+        x = x.simplify()
+    if (isinstance(b, Cons)):
+        if (func.apply(x)):
+            return Cons(x, takeWhile(func, xs))
+        return Nil()
 
 def dropWhile(a, b):
-    (func, l) = (a, b)
-    i = 0
-    for item in l:
-        if (func.apply(item)):
-            i += 1
-        else:
-            break
-    return l[i:]
+    (func, xs) = (a, b)
+    if (isinstance(xs, Nil)):
+        return Nil()
+    elif (isinstance(xs, Cons)):
+        if (func.apply(xs.item)):
+            return dropWhile(func, tail(xs))
+        return xs 
 
 
 def zipHaskell(a, b):
-    from Shunting_Yard_Algorithm import convertToList
-    from Tuple import Tuple
+    from Operators import operatorFromString
+    return zipWith(operatorFromString(',').value, a, b)
+   
+def zip3(a, b, c):
+    if (isinstance(a, Nil) or isinstance(b, Nil) or isinstance(c, Nil)):
+        return Nil()
+    x, xs = head(a), tail(a)
+    y, ys = head(b), tail(b)
+    z, zs = head(c), tail(c)
+    return Cons(Tuple((x, y, z)), zip3(xs, ys, zs))    
     
-    (xs, ys) = (a, b)
-    xs = xs.simplify().expr
-    ys = ys.simplify().expr
-    if (isinstance(xs, Nil)):
-        return ys
-    elif (isinstance(ys, Nil)):
-        return xs
-    pairs = []
-    while (not isinstance(xs, Nil) and not isinstance(ys, Nil)):
-        pairs.append(Tuple((xs.item, ys.item))) 
-        xs = xs.list
-        ys = ys.list
-    return convertToList(pairs)
-
 def unzip(a):
+    from Tuple import Tuple, fst, snd
     pairs = a
-    xs = ys = []
-    for (x, y) in pairs:
-        xs.append(x)
-        ys.append(y)
-    return (xs, ys)
+    if (isinstance(pairs, Nil)):
+        return Tuple((Nil(), Nil()))
+    elif (isinstance(pairs, Cons)):
+        tup = unzip(tail(pairs))
+        (left, right) = pairs.item.tup
+        return Tuple((Cons(left, fst(tup)), Cons(right, snd(tup)))) 
     
     
 def zipWith(a, b, c):
-    (func, xs, ys) = (a, b, c)
-    res = []
-    for i in range(min(len(xs), len(ys))):
-        res.append(func.apply(xs[i], ys[i]))
-    return res
+    func = a
+    if (isinstance(b, Nil) or isinstance(c, Nil)):
+        return Nil()
+    x, xs = head(b), tail(b)
+    y, ys = head(c), tail(c)
+    return Cons(func.apply(x, y), zipWith(func, xs, ys))
+
+def zipWith3(a, b, c, d):
+    func = a
+    if (isinstance(b, Nil) or isinstance(c, Nil) or isinstance(d, Nil)):
+        return Nil()
+    x, xs = head(b), tail(b)
+    y, ys = head(c), tail(c)
+    z, zs = head(d), tail(d)
+    return Cons(func.apply(x, y).apply(z), zipWith3(func, xs, ys, zs))    
     
-def foldr(func, u, xs):
-    if (xs == []):
+def foldr(a, b, c):
+    func, u, xs = a, b, c
+    if (isinstance(xs, Nil)):
         return u
     else:
         return func.apply(head(xs), foldr(func, u, tail(xs)))
+    
+def foldr1(func, xs):
+    if (isinstance(xs, Nil)):
+        return None
+    return foldr(func, head(xs), tail(xs))
 
-def foldl(func, u, xs):
-    if (xs == []):
+def foldl(a, b, c):
+    func, u, xs = a, b, c
+    if (isinstance(xs, Nil)):
         return u
-    else:
-        return foldl(func, func.apply(u, head(xs)), tail(xs))
+    return foldl(func, func.apply(u, head(xs)), tail(xs))
+
+def foldl1(func, b):
+    if (isinstance(b, Nil)):
+        return None
+    x, xs = head(b), tail(b)
+    return foldl(func, x, xs)
 
 def andHaskell(a): 
-    bools = a
-    for b in bools:
-        if (not b):
-            return False
-    return True
+    from Operators import operatorFromString
+    return foldl(operatorFromString('&&').value, True, a)
 
 def orHaskell(a):
-    bools = a
-    for b in bools:
-        if (b):
-            return True
-    return False
+    from Operators import operatorFromString
+    return foldl(operatorFromString('||').value, False, a)
 
-def any(a):
-    bools = a
-    for b in bools:
-        if (func.apply(b)):
-            return True
-    return False
+def anyHaskell(a, b):
+    func = a
+    if isinstance(b, Nil):
+        return False
+    x, xs = head(b), tail(b)
+    if (func.apply(x)):
+        return True
+    return allHaskell(func, xs)
 
-def all(a, b):
-    (func, bools) = (a, b)
-    for b in bools:
-        if (not func.apply(b)):
-            return False
-    return True
+def allHaskell(a, b):
+    func = a
+    if isinstance(b, Nil):
+        return True
+    x, xs = head(b), tail(b)
+    if (not func.apply(x)):
+        return False
+    return allHaskell(func, xs)
 
-def filter(a, b):
-    (pred, xs) = (a, b)
-    res = []
-    for x in xs:
-        if (pred.apply(x)):
-            res.append(x)
-    return res
+def filterHaskell(a, b):
+    func = a
+    if isinstance(b, Nil):
+        return b
+    x, xs = head(b), tail(b)
+    if (func.apply(x)):
+        return Cons(x, filterHaskell(func, xs))
+    return filterHaskell(func, xs)
 
 def sumHaskell(a):
-    from utils import isPrimitive
-    
-    xs = a
-    xs = xs.simplify()
-    total = 0
-    while (not isinstance(xs, Nil)):
-        item = xs.item
-        if (not isPrimitive(item)):
-            item = item.simplify()
-        total += item
-        xs = xs.list
-    return total
+    from Operators import operatorFromString
+    return foldl(operatorFromString('+').value, 0, a)
 
 def product(a):
-    from utils import isPrimitive
-    
-    xs = a
-    xs = xs.simplify()
-    prod = 1
-    while (not isinstance(xs, Nil)):
-        item = xs.item
-        if (not isPrimitive(item)):
-            item = item.simplify()
-        prod *= item  
-        xs = xs.list
-    return total
+    from Operators import operatorFromString
+    return foldl(operatorFromString('*').value, 0, a)
 
 def lookup(a, b):
-    from utils import isPrimitive
     from Prelude import fst, snd
-    
-    (key, pairs) = (a, b)
-    pairs = pairs.simplify()
-    if (not isPrimitive(key)):
-        key = key.simplify()
-    while (not isinstance(pairs, Nil)):
-        tup = pairs.item
-        (first, second) = (fst(tup), snd(tup))
-        if (not isPrimitive(first)):
-            first = first.simplify()
-        if (first == key):
-            return Just(second)
-        pairs = pairs.list
-    return Nothing()
+    if isinstance(b, Nil):
+        return Nothing()
+    tup, pairs = head(b), tail(b)
+    if (fst(tup) == a):
+        return Just(snd(tup))
+    return lookup(a, pairs)
 
 def concatMap(a, b):
-    return concat(map(a, b))
+    (func, xs) = (a, b)
+    return concat(mapHaskell(func, xs))
 
 def splitAt(a, b):
     (n, xs) = (a, b)
-    return (xs[ : n], xs[n : ])
+    return Tuple((take(n, xs), drop(n, xs)))
 
 def span(a, b):
-    (p, xs) = (a, b)
-    left = right = []
-    i = 0
-    while (p.apply(xs[i])):
-        i += 1
-    return (xs[ : i], xs[i : ])
+    (func, xs) = (a, b)
+    return Tuple((takeWhile(func, xs), dropWhile(func, xs)))
 
-def replicate(a, b):
+def replicate(a, b, l = Nil()):
     (n, x) = (a, b)
-    res = []
-    for i in range(n):
-        res.append(x)
-    return res
+    if (n == 0):
+        return l
+    return replicate(n - 1, x, Cons(x, l))
+
+def iterate(a, b):
+    (func, value) = (a, b)
+    return Cons(Iterator(func = func, item = value, iteratorType = 'general'), Nil())
+
+def repeat(a):
+    import Operators
+    iterator = Iterator(func = Operators.func_id, item = a, iteratorType = 'general')
+    return Cons(iterator, Nil())
+
+def cycle(a):
+    iterator = Iterator(cycleList = a, iteratorType = 'cycle')
+    return Cons(iterator, Nil())

@@ -11,14 +11,14 @@ class Maybe:
     pass
 
 class Nothing(Maybe):
-    def toString(self):
+    def __str__(self):
         return 'Nothing'
 
 class Just(Maybe):
     def __init__(self, value):
         self.value = value
     
-    def toString(self):
+    def __str__(self):
         from utils import isPrimitive
 
         value = self.value

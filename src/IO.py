@@ -4,11 +4,10 @@ Created on Mon Jun 29 11:20:51 2020
 
 @author: rohan
 """
-from List import mapHaskell
 
 functionNamesIO = ['getChar', 'getLine', 'putChar', 'putStr', 'putStrLn', 'print']
 
-WORLD = ['','']# (input, out)
+WORLD = ['', '']# (input, out)
 
 def getChar():
     getLine()
@@ -18,24 +17,27 @@ def putChar(a):
 
 def getLine():
     from utils import stringToList
+    from Shunting_Yard_Algorithm import convertToList
     
     string = input()
-    WORLD[0] = string
+    WORLD[0] = convertToList(string)
+    return WORLD[0]
     
 def putStr(a):
-    from Operators import Operator
+    from Operator_Functions import concatenate
     
     string = printHaskell(a)
     print(string, end = '')
-    WORLD[1] += string
+    WORLD[1] = concatenate(WORLD[1], a)
 
 def putStrLn(a):
     putStr(a)
     putStr("\n")
 
-def printHaskell(a):
-    from utils import isPrimitive
-    
-    if (isPrimitive(a)):
-        return str(a)
-    return a.toString()
+def printHaskell(a):    
+    if (a == None):
+        return ''
+    #try:
+    return str(a)
+    #except:
+        #print(a.name)
