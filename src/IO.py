@@ -4,40 +4,28 @@ Created on Mon Jun 29 11:20:51 2020
 
 @author: rohan
 """
+from Types import Char, Int
+functionNamesIO = ['input', 'printLn', 'print']
 
-functionNamesIO = ['getChar', 'getLine', 'putChar', 'putStr', 'putStrLn', 'print']
+def printLn(a):
+    a = str(a.simplify())
+    if (len(a) > 0 and a[0] == '"'):
+        a = a[1:-1]
+    print(a)
+    return Int(None)
 
-WORLD = ['', '']# (input, out)
+def printHaskell(a):
+    a = str(a)
+    if (len(a) > 0 and a[0] == '"'):
+        a = a[1:-1]
+    print(a, end = '')
+    return Int(None)
 
-def getChar():
-    getLine()
-                
-def putChar(a):
-    putStr(a)
-
-def getLine():
-    from utils import stringToList
+def show(a):
     from Shunting_Yard_Algorithm import convertToList
-    
-    string = input()
-    WORLD[0] = convertToList(string)
-    return WORLD[0]
-    
-def putStr(a):
-    from Operator_Functions import concatenate
-    
-    string = printHaskell(a)
-    print(string, end = '')
-    WORLD[1] = concatenate(WORLD[1], a)
+    return convertToList(list(map(Char, str(a.simplify())))).simplify()
 
-def putStrLn(a):
-    putStr(a)
-    putStr("\n")
-
-def printHaskell(a):    
-    if (a == None):
-        return ''
-    #try:
-    return str(a)
-    #except:
-        #print(a.name)
+def inputHaskell(question):
+    from Shunting_Yard_Algorithm import convertToList
+    inp = input(str(question)[1:-1])
+    return  convertToList(list(map(Char, str(inp)))).simplify()

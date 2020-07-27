@@ -4,23 +4,22 @@ Created on Tue Jun 23 13:38:23 2020
 
 @author: rohan
 """
-from utils import functionNames, isPrimitive, Variable
-from IO import printHaskell
+from utils import functionNames
+from HFunction import HFunction
 
 class Expression:
     pass
 
-class Data(Expression):
-    def __init__(self, value):
+class UnaryExpr(Expression):
+    def __init__(self, operator, value):
+        self.operator = operator
         self.value = value
     
-    def simplify(self, state, simplifyVariables):
-        if (isPrimitive(self.value)):           
-            return self.value
-        return self.value.simplify(state, simplifyVariables)
+    def simplify(self, simplifyVariables = True):
+        return self.operator.apply(self.value)
     
     def __str__(self):
-        return str(self.value)
+        return str(self.operator) + str(self.value)
         
 class BinaryExpr(Expression):
     def __init__(self, operator, left, right): 
@@ -29,7 +28,7 @@ class BinaryExpr(Expression):
         self.rightExpr = right
         
     def __str__(self):        
-        if (self.operator.name in functionNames):
+        if (self.operator.name in functionNames or self.operator.name == '\\'):
             buf = '(' + self.operator.name
             for i in range(self.operator.noOfArgs):
                 buf += ' '
@@ -42,58 +41,54 @@ class BinaryExpr(Expression):
             return buf + ')'
                 
         buf = '('
-        if (self.leftExpr == None):
+        if self.leftExpr == None:
             buf += '?'
         else:
-            buf += printHaskell(self.leftExpr)
-            
+            buf += str(self.leftExpr)
         string = self.operator.name
         buf += ' ' + string
-        if (string != ' '):
+        if string != ' ':
             buf += ' '
-            
-        if (self.rightExpr == None):
+        if self.rightExpr == None:
             buf += '?'
         else:
-            buf += printHaskell(self.rightExpr)
+            buf += str(self.rightExpr)
         buf += ')'
-            
         return buf
 
-    def simplify(self, state, simplifyVariables):
-        simplifyLeftVariables = simplifyRightVariables = simplifyVariables
-        if (self.operator.name in ('=', '->', 'where')):
+    def simplifyRightExpr(self, leftExpr):
+        return not (self.operator.name in ('=', '->', 'where', '|', '.') 
+                    or self.operator.name == ' ' 
+                    and isinstance(leftExpr, HFunction) 
+                    and leftExpr.name in ('while', 'for', 'struct', 'enum', 
+                                          'oper', 'class', 'interface', 'def',
+                                          'switch'))
+
+    def simplify(self, simplifyVariables = True):
+        simplifyRightVariables = simplifyLeftVariables = simplifyVariables
+        if (self.operator.name in ('=', 'where', '|')):
             simplifyRightVariables = simplifyLeftVariables = False
-            
-            
+
         operator = self.operator
-        if (operator.noOfArgs == 0):
+        if operator.noOfArgs == 0:
             operator.apply()
-            
-        if (self.leftExpr != None):
-            if (self.operator.name == ':' and not isinstance(self.leftExpr, Variable)):
+        if self.leftExpr != None:
+            if self.operator.name in (':', '->', '='):
                 leftExpr = self.leftExpr
             else:
-                leftExpr = self.leftExpr.simplify(state, simplifyLeftVariables)
-                 
-            operator = operator.apply(arg1 = leftExpr, arg2 = None)
-
+                leftExpr = self.leftExpr.simplify(simplifyLeftVariables)
+            operator = operator.apply(leftExpr)
             if (self.rightExpr != None):
-                if (self.operator.name in ('->', 'where')):
-                    rightExpr = self.rightExpr
-                else:
-                    rightExpr = self.rightExpr.simplify(state, simplifyRightVariables)
-                operator = operator.apply(arg2 = rightExpr)   
-                
-                return operator
-            
-        if (self.rightExpr != None):
-            if (self.operator.name in ('->', 'where')):
                 rightExpr = self.rightExpr
-            else:
-                rightExpr = self.rightExpr.simplify(state, simplifyRightVariables)
-            operator = operator.apply(arg1 = None, arg2 = rightExpr)
-            
+                if self.simplifyRightExpr(leftExpr):
+                    rightExpr = self.rightExpr.simplify(simplifyRightVariables)
+                operator = operator.apply(rightExpr)       
+                return operator
+        if self.rightExpr != None:
+            rightExpr = self.rightExpr
+            if self.simplifyRightExpr:
+                rightExpr = self.rightExpr.simplify(simplifyRightVariables)
+            operator = operator.apply(arg1 = None, arg2 = rightExpr)  
         return operator
     
     

@@ -4,41 +4,206 @@ Created on Mon Jun 22 11:24:28 2020
 
 @author: rohan
 """
-import List, Maybe, Char, Tuple, IO
+import List, Maybe, Char, IO
 import Prelude
+from Types import Variable, Int, Float, Bool, Alias, EnumValue, Object, Structure
+from List import Nil, Cons, head, tail
+from Tuple import functionNamesTuple, Tuple
 
-state = {}
 
-builtInState = {'True' : True, 'False' : False, 'otherwise' : True, 'None' : None}
+builtInState = {'otherwise' : Bool(True)}
 
+frameStack = [builtInState]
+enumNames = []
+typeNames = []
+structNames = []
 operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
              '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
-             '$', '.', '>>', '>>=', '=', '->', '--', '\\', 'where']
+             '$', ';', '>>', '>>=', '=', '->', '--', '\\',  'where', '|', '@',
+             '<-', '<<', '&', '}', '¦', 'then', 'else', '#', '{', '=>', '~',
+             ',,', '\n', '.', 'extends', ';;', 'implements']
 
-functionNames = Prelude.functionNamesPrelude 
+functionNames = Prelude.functionNamesPrelude
 functionNames += List.functionNamesList 
 functionNames += Maybe.functionNamesMaybe 
 functionNames += Char.functionNamesChar
-functionNames += Tuple.functionNamesTuple
+functionNames += functionNamesTuple
 functionNames += IO.functionNamesIO
+functionNames += ['eval', 'read', 'for', 'while']
 
 closer = {'[' : ']', '(' : ')'}
 
 brackets = ['[', ']','(', ')']
 
-class Variable:
-    def __init__(self, name):
-        self.name = name
-    
-    def simplify(self, state, simplifyVariables):
-        if (self.name in builtInState.keys()):
-            return builtInState[self.name]
-        if (simplifyVariables):
-            return state[self.name]
-        return self
-    
-    def __str__(self):
-        return self.name
+def stringToList(string):
+    from List import List, Nil
+    from Operators import Operator
+    from Expression import Data
+    from Shunting_Yard_Algorithm import addBinaryExpr
+    from Stack import Stack
+    chars = Stack()
+    operators = Stack()
+    for char in string:
+        chars.push(Data(char))
+        operators.push(Operator.COLON.value)
+    chars.push(Data(Nil()))
+    while operators.peek() != None:
+        addBinaryExpr(operators, chars)
+    return List(chars.pop())
+        
+
+def getData(exp):
+    if exp == '':
+        return None
+    if isPrimitive(exp):
+        return exp
+    try: 
+        x = int(exp) 
+        if x == float(exp):
+            return Int(x)
+    except:
+        pass
+    try:
+        x = float(exp)
+        return Float(x)
+    except:
+        pass
+    if exp == 'True':
+        return Bool(True)
+    elif exp == 'False':
+        return Bool(False)
+    if exp in enumNames:
+        return builtInState[exp]
+    if exp == '?':
+        return Int(None)
+    elif exp == '_' : 
+        return Int(0)
+    from Types import Variable
+    return Variable(exp)
+
+def isPrimitive(expr):
+    return type(expr) in [Int, Float, Bool, Char, EnumValue]
+
+def haskellEval(exp):  
+    from Parser import Lexer
+    from Shunting_Yard_Algorithm import generateExpr  
+    if isinstance(exp, Cons):
+        exp = str(exp)[1:-1]
+    lexer = Lexer(exp)
+    print("tokens : ", end = '')
+    lexer.printTokens() 
+    binExp, returnType = generateExpr(lexer)
+    #binExp = optimise(binExp)
+    print("expression : ", str(binExp)) 
+    print("result : ", end = '')
+    return binExp.simplify() 
+
+def patternMatch(expr1, expr2):
+    from Operator_Functions import equals
+    from Expression import BinaryExpr
+    if expr1 == expr2 == None:
+        return True
+    if isinstance(expr1, Variable):
+        return True
+    if isinstance(expr1, Alias):
+        return patternMatch(expr1.expr, expr2)
+    if isPrimitive(expr1) and isPrimitive(expr2):
+        return equals(expr1, expr2).value
+    if isinstance(expr1, Nil) and isinstance(expr2, Nil):
+        return True
+    if isinstance(expr1, Cons) and isinstance(expr2, Cons):
+        return patternMatch(head(expr1), head(expr2)) and patternMatch(tail(expr1), tail(expr2))
+    if (isinstance(expr1, BinaryExpr) and isinstance(expr2, BinaryExpr)
+        and expr1.operator.name == ':'):
+        return patternMatch(expr1.leftEpxr, expr2.leftExpr) and patternMatch(expr1.rightExpr, expr2.rightExpr)
+    if isinstance(expr1, Tuple) and isinstance(expr2, Tuple):
+        if len(expr1.tup) != len(expr2.tup):
+            return False
+        for i in range(len(expr1.tup)):
+            if not patternMatch(expr1.tup[i], expr2.tup[i]):
+                return False
+        return True
+    if isinstance(expr1, BinaryExpr) and isinstance(expr2, Structure):
+        if expr1.leftExpr.name == expr2.type.name:
+            return patternMatch(expr1.rightExpr, Tuple(expr2.values))
+    if isinstance(expr1, BinaryExpr) and isinstance(expr2, Object):
+        return expr1.leftExpr.name == expr2.classType.name
+    return False
+   
+def optimise(expr):
+    from Expression import BinaryExpr
+    from Operator_Functions import equals
+    if isinstance(expr, BinaryExpr):
+        expr.leftExpr = optimise(expr.leftExpr)
+        expr.rightExpr = optimise(expr.rightExpr)
+        if expr.operator.name in ('+', '||'):
+            if equals(expr.leftExpr, Int(0)).value:
+                if expr.rightExpr != None:
+                    return expr.rightExpr
+            elif equals(expr.rightExpr, Int(0)).value:
+                if expr.leftExpr != None:
+                    return expr.leftExpr
+        elif expr.operator.name == '-':
+                if equals(expr.rightExpr, Int(0)).value:
+                    if (expr.leftExpr != None):
+                        return expr.leftExpr
+        elif expr.operator.name == '*':
+            if equals(expr.leftExpr, Int(0)).value:
+                if expr.rightExpr != None:
+                    return Int(0) 
+            elif equals(expr.rightExpr, Int(0)).value:
+                if expr.leftExpr != None:
+                    return Int(0)
+            elif equals(expr.leftExpr, Int(1)).value:
+                if expr.rightExpr != None:
+                    return expr.rightExpr
+            elif equals(expr.rightExpr, Int(1)).value:
+                if expr.leftExpr != None:
+                    return expr.leftExpr
+        elif expr.operator.name == '&&':
+            if equals(expr.leftExpr, Int(0)).value:
+                if expr.rightExpr != None:
+                    return Bool(False)
+            elif equals(expr.rightExpr, Int(0)).value:
+                if expr.leftExpr != None:
+                    return Bool(False)
+        elif expr.operator.name == '/':
+            if equals(expr.leftExpr, Int(0)).value:
+                if expr.rightExpr != None:
+                    return Int(0)
+            elif equals(expr.rightExpr, Int(1)).value:
+                if expr.leftExpr != None:
+                    return expr.leftExpr
+        elif expr.operator.name == '^':
+            if equals(expr.leftExpr, Int(1)).value:
+                if expr.rightExpr != None:
+                    return Int(1)
+            elif equals(expr.leftExpr, Int(0)).value:
+                if expr.rightExpr != None:
+                    return Int(0)
+            elif equals(expr.rightExpr, Int(1)).value:
+                if expr.leftExpr != None:
+                    return expr.leftExpr
+        elif expr.operator.name == '++':
+            if isinstance(expr.leftExpr, Nil):
+                if expr.rightExpr != None:
+                    return expr.rightExpr
+            elif isinstance(expr.rightExpr, Nil):
+                if expr.leftExpr != None:
+                    return expr.leftExpr
+        elif expr.operator.name == ' ':
+            pass
+    return expr
+
+def replaceVariables(expr):
+    from Expression import BinaryExpr
+    if isinstance(expr, Variable):
+        return expr.simplify()
+    if isinstance(expr, BinaryExpr):
+        return BinaryExpr(expr.operator,
+                          replaceVariables(expr.leftExpr),
+                          replaceVariables(expr.rightExpr))
+    return expr
     
 def indexOfClosing(c, exp):
     closer = {'[' : ']', '(' : ')'}
@@ -146,37 +311,13 @@ def removeSpaceAroundOperators(exp):
         i += 1
     return ''.join(exp)
 
-def stringToList(string):
-    from List import List, Nil
-    from Operators import Operator
-    from Expression import Data
-    from Shunting_Yard_Algorithm import addBinaryExpr
-    from Stack import Stack
-    
-    chars = Stack()
-    operators = Stack()
-    for char in string:
-        chars.push(Data(char))
-        operators.push(Operator.COLON.value)
-    chars.push(Data(Nil()))
-    while (operators.peek() != None):
-        addBinaryExpr(operators, chars)
-    return List(chars.pop())
-        
-    
-    
-def getData(exp, variables = None): # withVar tells whether variables should be replaced
-    if (exp == ''):
-        return None
-    elif (isPrimitive(exp) and type(exp) != str):
-        return exp
-    try: 
-        return int(exp)
-    except:
-        try: 
-            return float(exp)
-        except:
-            return Variable(exp)
+
+def specialMin(a, b):
+    if (a == None):
+        return b
+    if (b == None):
+        return a
+    return min(a, b)
 
 def dimensionOf(l):
     dim = 0
@@ -189,23 +330,3 @@ def dimensionOf(l):
             break
     return dim
 
-def isPrimitive(expr):
-    return type(expr) in [int, float, bool, str, tuple, None]
-
-def specialMin(a, b):
-    if (a == None):
-        return b
-    if (b == None):
-        return a
-    return min(a, b)
-
-def haskellEval(exp, state):  
-    from Parser import Lexer
-    from Shunting_Yard_Algorithm import generateExpr    
-    lexer = Lexer(exp, state, operators, functionNames)
-    print("tokens : ", end = '')
-    lexer.printTokens() 
-    (binExp, returnType) = generateExpr(lexer)
-    print("expression : ", str(binExp))     
-    print("result : ", end = '')
-    return binExp.simplify(state, True) 

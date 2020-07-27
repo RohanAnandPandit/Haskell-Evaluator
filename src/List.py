@@ -6,6 +6,7 @@ Created on Tue Jun 23 20:381 2020
 """
 from Maybe import Just, Nothing
 from Tuple import Tuple
+from Types import Int, Char, Bool
 
 functionNamesList = ['length', 'head', 'tail', 'last', 'concat', 'init', 'maximum',
                  'minimum', 'elem', 'notElem', 'reverse', 'take', 'drop', 'map',
@@ -23,7 +24,7 @@ class Nil(List):
     def __str__(self):
         return '[]'
     
-    def simplify(self, a, b):
+    def simplify(self, simplifyVariables = True):
         return self
         
 class Cons(List):
@@ -33,9 +34,9 @@ class Cons(List):
         self.type = listType
         
     def __str__(self):
-        if (type(self.item) == str):
+        if (type(self.item) == Char):
             tail = str(self.tail)
-            return '\"' + self.item + tail[1 : -1] + '\"'
+            return '\"' + str(self.item)[1:-1] + tail[1:-1] + '\"'
     
         tail = str(self.tail)
         sep = ', '
@@ -53,12 +54,8 @@ class Cons(List):
             self.item.apply(arg1, arg2)
         return self
     
-    def simplify(self, state, simplifyVariables):
-        from utils import isPrimitive
-        
-        if (not isPrimitive(self.item)):
-            self.item = self.item.simplify(state, simplifyVariables)
-        return self
+    def simplify(self, simplifyVariables = True):
+        return Cons(self.item.simplify(), self.tail.simplify())
 
 class Iterator(List):
     def __init__(self, cycleList = None, func = None, item = None, iterations = None,
@@ -75,8 +72,8 @@ class Iterator(List):
         self.end = end
         self.mapFunc = mapFunc
         if (mapFunc == None):
-            from utils import state
-            func_id = state['id']
+            from utils import builtInState
+            func_id = builtInState['id']
             self.mapFunc = func_id
     
     def getHead(self):
@@ -104,7 +101,7 @@ class Iterator(List):
             return Iterator(mapFunc = self.mapFunc, cycleList = self.list,
                             current = current, iteratorType = self.type, iterations = iterations)
             
-    def simplify(self, a, b):
+    def simplify(self, simplifyVariables = True):
         return self
 
     def apply(self, arg1 = None, arg2 = None):
@@ -169,7 +166,7 @@ def last(a):
 def concat(a):
     from Operators import operatorFromString
 
-    return foldl(operatorFromString('++').value, Nil(), a)
+    return foldl(operatorFromString('++'), Nil(), a)
 
 def init(a):
     (x, xs) = (head(a), tail(a)) 
@@ -224,7 +221,8 @@ def minimum(a, m = None):
             return None
         return minimum(xs, min(x, m))
 
-def elem(a, b):    
+def elem(a, b):  
+    from Operator_Functions import equals
     value = a
     (x, xs) = (head(b), tail(b))
     if (isinstance(b, Nil)):
@@ -236,12 +234,11 @@ def elem(a, b):
             check = ((value - x) % b.item.step == 0 and x <= value 
                      and (b.item.end == None or value <= b.item.end))
             return check or elem(value, b.tail)
-        
-        return x == value or elem(value, xs)
+        return Bool(equals(x, value).value or elem(value, xs).value)
 
 
 def notElem(a, b): 
-    return not elem(a, b)
+    return Bool(not elem(a, b).value)
 
 def reverse(a, l = Nil()):
     if (isinstance(a, Nil)):
@@ -253,20 +250,20 @@ def reverse(a, l = Nil()):
 def take(a, b):
     n = a
     (x, xs) = (head(b), tail(b))
-    if (n <= 0 or isinstance(b, Nil)):
+    if (n.value <= 0 or isinstance(b, Nil)):
         return Nil()
     if (isinstance(b, Cons)):
-        return Cons(x, take(n - 1, xs))
+        return Cons(x, take(Int(n.value - 1), xs))
         
 
 def drop(a, b):    
     n = a
-    if (n <= 0 or isinstance(b, Nil)):
+    if (n.value <= 0 or isinstance(b, Nil)):
         return b
-    return drop(n - 1, tail(b))
+    return drop(Int(n.value - 1), tail(b))
 
 def mapHaskell(a, b):
-    from Operator_Functions import dot
+    from Operator_Functions import compose
     
     func = a
     (x, xs) = (head(b), tail(b))
@@ -274,7 +271,7 @@ def mapHaskell(a, b):
         return b
     if (isinstance(b, Cons)):
         if (isinstance(b.item, Iterator)):
-            b.item.mapFunc = dot(func, b.item.mapFunc)
+            b.item.mapFunc = compose(func, b.item.mapFunc)
             return b
         return Cons(func.apply(x), mapHaskell(func, xs))
         
@@ -309,7 +306,7 @@ def takeWhile(a, b):
     if (not isPrimitive(x)):
         x = x.simplify()
     if (isinstance(b, Cons)):
-        if (func.apply(x)):
+        if (func.apply(x).value):
             return Cons(x, takeWhile(func, xs))
         return Nil()
 
@@ -318,14 +315,14 @@ def dropWhile(a, b):
     if (isinstance(xs, Nil)):
         return Nil()
     elif (isinstance(xs, Cons)):
-        if (func.apply(xs.item)):
+        if (func.apply(xs.item).value):
             return dropWhile(func, tail(xs))
         return xs 
 
 
 def zipHaskell(a, b):
     from Operators import operatorFromString
-    return zipWith(operatorFromString(',').value, a, b)
+    return zipWith(operatorFromString(','), a, b)
    
 def zip3(a, b, c):
     if (isinstance(a, Nil) or isinstance(b, Nil) or isinstance(c, Nil)):
@@ -389,18 +386,18 @@ def foldl1(func, b):
 
 def andHaskell(a): 
     from Operators import operatorFromString
-    return foldl(operatorFromString('&&').value, True, a)
+    return foldl(operatorFromString('&&'), Bool(1), a)
 
 def orHaskell(a):
     from Operators import operatorFromString
-    return foldl(operatorFromString('||').value, False, a)
+    return foldl(operatorFromString('||'), Bool(0), a)
 
 def anyHaskell(a, b):
     func = a
     if isinstance(b, Nil):
         return False
     x, xs = head(b), tail(b)
-    if (func.apply(x)):
+    if (func.apply(x).value):
         return True
     return allHaskell(func, xs)
 
@@ -409,7 +406,7 @@ def allHaskell(a, b):
     if isinstance(b, Nil):
         return True
     x, xs = head(b), tail(b)
-    if (not func.apply(x)):
+    if (not func.apply(x).value):
         return False
     return allHaskell(func, xs)
 
@@ -418,24 +415,25 @@ def filterHaskell(a, b):
     if isinstance(b, Nil):
         return b
     x, xs = head(b), tail(b)
-    if (func.apply(x)):
+    if (func.apply(x).value):
         return Cons(x, filterHaskell(func, xs))
     return filterHaskell(func, xs)
 
 def sumHaskell(a):
     from Operators import operatorFromString
-    return foldl(operatorFromString('+').value, 0, a)
+    return foldl(operatorFromString('+'), Int(0), a)
 
 def product(a):
     from Operators import operatorFromString
-    return foldl(operatorFromString('*').value, 0, a)
+    return foldl(operatorFromString('*'), Int(0), a)
 
 def lookup(a, b):
     from Prelude import fst, snd
+    from Operator_Functions import equals
     if isinstance(b, Nil):
         return Nothing()
     tup, pairs = head(b), tail(b)
-    if (fst(tup) == a):
+    if (equals(fst(tup), a).value):
         return Just(snd(tup))
     return lookup(a, pairs)
 
