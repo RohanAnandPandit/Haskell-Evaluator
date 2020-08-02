@@ -61,38 +61,12 @@ class Iterator(List):
     def __init__(self, var, collection):
         self.var = var
         self.collection = collection.simplify()
-        if isinstance(self.collection, (Cons, Range)):
-            self.curr = self.collection
-        else:
-            self.curr = 0
-    
-    def next(self):
-        from utils import patternMatch
-        from Operator_Functions import assign
-        if isinstance(self.collection, (Cons, Range)):
-            if isinstance(self.curr, Nil):
-                return None
-            item = head(self.curr)
-            self.curr = tail(self.curr)
-            if patternMatch(self.var, item):
-                assign(self.var, item)
-                return item
-            return self.next()
-        if isinstance(self.collection, Tuple):
-            if self.curr >= len(self.collection.tup):
-                return None
-            item = self.collection.tup[self.curr]
-            self.curr += 1
-            if patternMatch(self.var, item):
-                assign(self.var, item)
-                return item
-            return self.next()
-                           
+            
     def simplify(self, simplifyVariables = True):
         return self
 
     def __str__(self):
-        return str(self.var) + ' in ' + str(self.collection)
+        return '(' + str(self.var) + ' in ' + str(self.collection) + ')'
 
 class Range:
     def __init__(self, start, end, step):

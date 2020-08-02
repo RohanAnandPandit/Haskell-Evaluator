@@ -345,17 +345,17 @@ def forLoop(n, expr):
             
     elif isinstance(n, Iterator):
         frameStack.append({})
-        while n.next() != None:
+        var, collection = n.var, n.collection
+        while not isinstance(collection, Nil):
+            assign(var, head(collection))
             expr.simplify()
-            if utils.continueLoop:
-                utils.continueLoop = False
-                break
             if utils.breakLoop:
                 utils.breakLoop = False
-                return Int(0)
+                break
+            collection = tail(collection)
         from utils import unassignVariables
         unassignVariables(n.var)
-        frameStack[-2].update(frameStack[-1]) 
+        frameStack[-2].update(frameStack[-1])
         frameStack.pop(-1)
         
     elif isinstance(n, BinaryExpr):
@@ -387,12 +387,9 @@ def whileLoop(cond, expr):
     while cond.simplify().value:
         expr.simplify()
         import utils
-        if utils.continueLoop:
-            utils.continueLoop = False
-            break
         if utils.breakLoop:
             utils.breakLoop = False
-            return Int(0)
+            break
     return Int(0)
 
 def breakCurrentLoop():
