@@ -4,6 +4,7 @@ Created on Sat Jun 27 16:19:04 2020
 
 @author: rohan
 """
+import utils
 from utils import frameStack, builtInState, functionNames, getData, enumNames, isPrimitive, typeNames, structNames
 from HFunction import HFunction, Composition, Function, Lambda
 from List import List, Nil, Cons, Iterator, head, tail
@@ -15,11 +16,23 @@ def assign(a, b, state = None):
     if (state == None):
         state = frameStack[-1]
     var, value = a, b
-
     if isPrimitive(var) or isinstance(var, Nil):
         return 
     elif isinstance(var, Variable):
-        state[var.name] = b.simplify()
+        value = b.simplify()
+        if utils.functional_mode:
+            if var.name in state.keys():
+                raise Exception('Cannot assign variable', var.name, 'in FUNCTIONAL-MODE.')
+        if utils.static_mode:
+            if var.name in state.keys():
+                varType = type(state[var.name])
+                valType = type(value)
+                if varType != valType:
+                    raise Exception('Cannot assign variable', var.name, 'of type',
+                                    str(varType), 'with value of type',  str(valType),
+                                    'in STATIC-MODE.')
+
+        state[var.name] = value
     elif isinstance(var, Alias):
         assign(var.var, value, state)
         assign(var.expr, value, state)
@@ -183,41 +196,42 @@ def concatenate(a, b):
     x, xs = head(left), tail(left)
     return Cons(x, concatenate(xs, right))
  
-def comprehension(a, b):    
-    if type(a) in [Int, Float, Tuple]:
-        step = 1
-        if isinstance(a, Tuple):
-            a.tup = a.tup[1 : ]
-            if len(a.tup) == 1:
-                start = fst(a)
-            else:
-                first, second = fst(a), snd(a)
-                start = first
-                step = second - first
-        else:            
-            start = a
-        end = b
-        func_succ = builtInState['succ']
-        hfunc = func_succ.clone()
-        hfunc.func = lambda x: x + step
-        iterations = None
-        if (end != None):
-            iterations =  int(abs((end - start) / step))
-        iterator = Iterator(func = hfunc, item = start, iterations = iterations, 
-                        iteratorType = 'comprehension', step = step, end = end)
-        return Cons(iterator, Nil()) 
- 
-    elif type(a) == Bool:
-        pass
+def iterator(a, b):
+    var, collection = a, b
+    return Iterator(var, collection)
 
-def sequence(a, b): 
+def range_specifier(a):
+    from List import Range
+    options = a.tup
+    if len(options) == 1:
+        start = Int(0)
+        end = options[0]
+        step = Int(1)
+    elif len(options) == 2:
+        start = options[0]
+        end = options[1]
+        step = Int(1)
+    elif len(options) == 3:
+        start = options[0]
+        end = options[1]
+        step = options[2]
+    return Range(start, end, step)
+        
+        
+def comprehension(a, b):
+    from List import Range
+    start, end = a, b
+    return Range(start, end, Int(1))
+
+def sequence(a, b):
+    a.simplify()
+    import utils
+    if not (utils.breakLoop or utils.continueLoop):
+        b.simplify()
     return Int(0)
     
 def chain(a, b):
     return b.apply(a.simplify())
-
-def collect(*args):
-    return args
 
 def createLambda(args, expr):
     arguments = []
@@ -254,17 +268,16 @@ def createStruct(name, fields):
     functionNames.append(name)
     return struct
 
-def createOperator(symbol, tup):
+def createOperator(symbol, precedence, associativity, func):
     from utils import operators
     from Operators import operatorsDict, Op, Associativity
     associativityMap = {'left' : Associativity.LEFT, 'right' : Associativity.LEFT,
                 'none' : Associativity.NONE}
-    expr = tup.tup[0]
-    precedence = tup.tup[1].value
-    associativity = associativityMap[tup.tup[2].name]
+    precedence = precedence.value
+    associativity = associativityMap[associativity.name]
     symbol = str(symbol)[1:-1]
     operators.append(symbol) 
-    func = expr.simplify().apply(None, None)
+    func = func.simplify().apply(None, None)
     func.name = symbol
     func.precedence = precedence
     func.associativity = associativity
@@ -292,9 +305,12 @@ def createInterface(name, declarationsExpr):
     functionNames.append(name)
     return interface
         
-def where(func, exp):
-    func.whereClause = exp
-    return func
+def where(expr1, expr2):
+    frameStack.append({})
+    expr2.simplify()
+    value = expr1.simplify()
+    frameStack.pop(-1)
+    return value
 
 def alias(var, expr):
     return Alias(var, expr)
@@ -312,15 +328,85 @@ def bitwise_and(x, y):
     return Int(x.value & y.value)
 
 def access(obj, field):       
-    return obj.state[field.name].simplify()
+    return obj.state[field.name]
 
 def forLoop(n, expr):
-    for i in range(n.simplify().value):
-        expr.simplify()
+    import utils
+    if isinstance(n, Int) or isinstance(n, BinaryExpr) and n.operator.name != ';':
+        n = n.simplify()
+        for i in range(n.value):
+            expr.simplify()
+            if utils.continueLoop:
+                utils.continueLoop = False
+                break
+            if utils.breakLoop:
+                utils.breakLoop = False
+                return Int(0)
+            
+    elif isinstance(n, Iterator):
+        frameStack.append({})
+        while n.next() != None:
+            expr.simplify()
+            if utils.continueLoop:
+                utils.continueLoop = False
+                break
+            if utils.breakLoop:
+                utils.breakLoop = False
+                return Int(0)
+        from utils import unassignVariables
+        unassignVariables(n.var)
+        frameStack[-2].update(frameStack[-1]) 
+        frameStack.pop(-1)
+        
+    elif isinstance(n, BinaryExpr):
+        init, n = n.leftExpr, n.rightExpr
+        cond, after = n.leftExpr, n.rightExpr
+        state = {}
+        frameStack.append(state)
+        init.simplify()
+        variables = list(state.keys())
+        while cond.simplify().value:
+            expr.simplify()
+            import utils
+            if utils.continueLoop:
+                utils.continueLoop = False
+                break
+            if utils.breakLoop:
+                utils.breakLoop = False
+                return Int(0)
+            after.simplify()
+        from utils import unassignVariables
+        for var in variables:
+            frameStack[-1].pop(var)
+        frameStack[-2].update(frameStack[-1])
+        frameStack.pop(-1)
+        
     return Int(0)
 
 def whileLoop(cond, expr):
     while cond.simplify().value:
+        expr.simplify()
+        import utils
+        if utils.continueLoop:
+            utils.continueLoop = False
+            break
+        if utils.breakLoop:
+            utils.breakLoop = False
+            return Int(0)
+    return Int(0)
+
+def breakCurrentLoop():
+    import utils
+    utils.breakLoop = True
+    return Int(0)
+
+def continueCurrentLoop():
+    import utils
+    utils.continueLoop = True
+    return Int(0)
+    
+def ifStatement(cond, expr):
+    if cond.simplify().value:
         expr.simplify()
     return Int(0)
 
@@ -343,19 +429,50 @@ def definition(name):
     state[name] = None
 
 def switch(value, expr):
-    from Types import Conditional
     cases = []
     while True:
-        if not isinstance(expr, BinaryExpr):
-            cases.insert(0, expr)
+        if not (isinstance(expr, BinaryExpr) and expr.operator.name == '\n'):
+            cases.append(expr)
             break
-        cases.insert(0, expr.rightExpr)
-        expr = expr.leftExpr
-    for i in range(len(cases)):
-        case = cases[i]
-        if i == len(cases) - 1 or equals(value.simplify(), case.cond.simplify()).value:
+        cases.insert(0, expr.leftExpr)
+        expr = expr.rightExpr
+    for case in cases:
+        if (isinstance(case.cond, Variable) and case.cond.name == 'default' 
+            or equals(value.simplify(), case.cond.simplify()).value):
             case.ret.simplify()
             break
     return Int(0)
         
+def cascade(value, expr):
+    cases = []
+    while True:
+        if not (isinstance(expr, BinaryExpr) and expr.operator.name == '\n'):
+            cases.append(expr)
+            break
+        cases.append(expr.leftExpr)
+        expr = expr.rightExpr
+    followThrough = False
+    for case in cases:
+        if (isinstance(case.cond, Variable) and case.cond.name == 'default' 
+            or equals(value.simplify(), case.cond.simplify()).value
+            or followThrough):
+            case.ret.simplify()
+            followThrough = True
+            import utils
+            if utils.breakLoop:
+                utils.breakLoop = False 
+                break
+    return Int(0)
+
+def evaluate_in_scope(assign, expr):
+    state = {}
+    frameStack.append(state)
+    assign.simplify()
+    variables = list(state.keys())
+    expr.simplify()
+    for var in variables:
+        state.pop(var)
+    frameStack[-2].update(state)
+    frameStack.pop(-1)
+            
         

@@ -18,8 +18,10 @@ class Variable:
             while (curr >= 0):
                 frame = frameStack[curr]
                 if (self.name in frame.keys()):
-                    return frame[self.name].simplify()
+                    value = frame[self.name]
+                    return value.simplify()
                 curr -= 1
+        #raise Exception('Variable', self.name, 'is not defined') 
         return self
     
     def __str__(self):
@@ -101,7 +103,11 @@ class Collection:
     
     def simplify(self, simplifyVariables = True):
         if len(self.items) == 2:
-            return self.operator.apply(self.items[0].simplify(), self.items[1].simplify())
+            left = self.items[0]
+            if left: left = left.simplify()
+            right = self.items[1]
+            if right: right = right.simplify()
+            return self.operator.apply(left, right)
         for i in range(len(self.items) - 1): 
             if (not self.operator.apply(self.items[i].simplify(),
                                         self.items[i + 1].simplify()).value):
@@ -120,7 +126,7 @@ class Conditional:
         self.ret = ret 
     
     def simplify(self, simplifyVariables = True):
-        if (self.cond.simplify().value):
+        if self.cond.simplify().value:
             return self.ret.simplify()
         return None
 
@@ -187,6 +193,7 @@ class Structure:
     def __init__(self, struct, values):
         self.type = struct
         self.values = values 
+        self.state = dict(zip(self.type.fields, values))
             
     def simplify(self, a = True):
         return self

@@ -1,139 +1,176 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jun 22 10:20:56 2020
+Created on Tue Jun 23 09:35:26 2020
 
 @author: rohan
 """
-import utils
-from utils import getData, operators
-from Types import Variable, Char
-from Operators import operatorFromString
-from HFunction import HFunction, Function, Lambda
+from Stack import Stack
+from HFunction import HFunction, Lambda, Function
+from Operators import Associativity, operatorFromString
+from Expression import UnaryExpr, BinaryExpr
+from List import Nil, Cons, Iterator
+from Tuple import Tuple
+from Types import Int, Collection, Conditional, Else, Alias
 
-class Lexer:
-    def __init__(self, string):
-        self.tokens = []
-        self.string = string
-        self.index = 0
-        self.curr = 0
-        self.acc = ''
-        self.parse()
-        
-    def nextToken(self):
-        value = self.peek()
-        self.index += 1
-        return value
-    
-    def peek(self): 
-        if self.index >= len(self.tokens):
-            return None
-        value = self.tokens[self.index]
-        return value
-        
-    def printTokens(self):
-        tokens = []
-        for token in self.tokens:
-            tokens.append(str(token))
-        print(tokens)
-        
-    def addSpace(self, op):
-        if len(self.tokens) > 0:
-            lastToken = self.tokens[-1]
-            if op == '\n' and isinstance(lastToken, HFunction) and lastToken.name == ' ':
-                del self.tokens[-1]
-            if (not isinstance(lastToken, (HFunction, Function, Lambda)) 
-                or not lastToken.name in operators
-                or lastToken.name in (')', ']', '}')):
-                self.tokens.append(operatorFromString(op)) 
-                        
-    def addString(self):
-        from Shunting_Yard_Algorithm import convertToList
-        characters = []
-        while (True):
-            char = self.string[self.curr]
-            if (char == '"'):
-                if (len(characters) == 0):
-                    break
-                elif (characters[-1] != '\\'):
-                    break
-            if (len(characters) > 1):
-                if (characters[-1] == '\\'):
-                    del characters[-1]
-                    if (char == 'n'):
-                        char = '\n'
-                    elif (char == '"'):
-                        char = '"'
-                    elif (char == '\\'):
-                        char = '\\'
-            characters.append(Char(char))
-            self.curr += 1            
-        charList = convertToList(characters).simplify()
-        self.tokens.append(charList)
-        self.curr += 1
-    
-    def addOperator(self, op):
-        self.curr += len(op)
-        if op in (' ', '\n'):
-            self.addSpace(op)
-            return
-        elif op == '\\':
-            self.tokens.append(Variable('\\'))
-            self.addSpace(' ')
-            return
 
-        if op not in ('[', '(', '{'):
-            if (len(self.tokens) > 0 and isinstance(self.tokens[-1], (HFunction, Function)) 
-                and self.tokens[-1].name in  (' ', '\n')):
-                del self.tokens[-1] 
-        self.tokens.append(operatorFromString(op))
-    
-    def addData(self):
-        if self.acc != '':
-            self.tokens.append(getData(self.acc)) 
-            self.acc = ''
+def printState(operands, operators):
+    print("=================")
+    print("OPERANDS")
+    for operand in operands.arr:
+        if operand == None:
+            print('None')
+            continue
+        print(operand)
+    print("=================")
+    print("OPERATORS")
+    for op in operators.arr:
+        if op == None:
+            print('None')
+            continue
+        print("'" + str(op) + "'")
+    print("=================")
+    print()
+
+def createExpression(operators, operands):
+    operator = operators.pop()
+    if (operator.noOfArgs == 1):
+         UnaryExpr(operator, operands.pop())
+    (right, left) = (operands.pop(), operands.pop())
+    if operator.name == '=>':
+        expr = Conditional(left, right)
+    elif operator.name == '|':
+        expr = Else(left, right)
+    elif operator.name == '@':
+        expr = Alias(left, right)    
+    elif operator.name == ':':
+        expr = Cons(left, right)
+    elif operator.name == 'in':
+        expr = Iterator(left, right)
+    else:
+        if operator.name == '-' and left == None:
+            left = Int(0)
+        expr = BinaryExpr(operator, left, right)
+    operands.push(expr)
+
+def createCollection(operators, operands):
+    operator = operators.pop()    
+    right, left = operands.pop(), operands.pop()
+    if isinstance(left, Collection):
+        if (left.operator.name == operator.name):
+            left.items.append(right)
+            expr = left
+        else:
+            expr = Collection([left, right], operator)
+    else:
+        expr = Collection([left, right], operator)
+    operands.push(expr)
+
+def addOperator(current, operands, operators):
+    topOperator = operators.peek()
+    # Checks if a BinaryExpr should be created using the operator on the top of the stack
+    while topOperator != None:
+        if (topOperator.precedence > current.precedence
+            or topOperator.precedence == current.precedence 
+                and topOperator.associativity == Associativity.LEFT):
+            createExpression(operators, operands)
+        elif current.associativity == topOperator.associativity == Associativity.NONE:
+            createCollection(operators, operands)
+        else:
+            break
+        topOperator = operators.peek()
+    operators.push(current)
+
+def pushOperand(operand, operands, operators):
+        # If the top of the operands is None it will be replaced with the current value
+        if operands.peek() == None:
+            operands.pop()
+        operands.push(operand)
+        # If there are no operators means the current value is the left operand and
+        # the right one is undecided yet so None is added 
+        if operators.peek() == None:
+            operands.push(None)  
+        #print(operands.arr)
+
+def parse(lexer):
+    # Empty stacks will be created whenever the function is called again
+    operands = Stack()
+    operators = Stack()
+    token = lexer.nextToken()
+    while token != None:
+        if isinstance(token, (HFunction, Lambda, Function)):
+            # If a bracket has been opened the expression within them is generated by 
+            # recursively calling the function with the same Lexer object 
+            if token.name == '(':
+                expr = parse(lexer)
+                pushOperand(expr, operands, operators)
+            elif token.name == ')':
+                break
+            elif token.name == '[':
+                if isinstance(lexer.peek(), HFunction) and lexer.peek().name == ']':
+                    lexer.nextToken()
+                    pushOperand(Nil(), operands, operators)
+                else:
+                    if operands.peek() == None:
+                        operands.pop()
+                    lexer.tokens.insert(lexer.index, Collection([], operatorFromString(':')))
+                    collection = parse(lexer)
+                    pushOperand(convertToList(collection.items), operands, operators)
+            elif token.name == '{':
+                if isinstance(lexer.peek(), HFunction) and lexer.peek().name == '}':
+                    lexer.nextToken()
+                    pushOperand(Tuple([]), operands, operators)
+                else:
+                    if operands.peek() == None:
+                        operands.pop() 
+                    lexer.tokens.insert(lexer.index, Collection([], operatorFromString(',')))
+                    collection = parse(lexer)
+                    pushOperand(Tuple(collection.items), operands, operators)
+            elif token.name in  ('}', ']', ','):
+                # If a close bracket is reached the expression is built only 
+                # using the current values on the stacks so no more tokens are used
+                if operands.peek() == None:
+                    operands.pop()
+                # Dealing with any remaining operators
+                while operators.peek() != None:
+                    if operators.peek().associativity == Associativity.NONE:
+                        createCollection(operators, operands)
+                    else:
+                        createExpression(operators, operands)
+
+                right, left = operands.pop(), operands.pop() 
+                left.items.append(right)
+                operands.push(left)
+                if token.name in ('}', ']'):
+                    return operands.pop()
+                else:
+                    lexer.tokens.insert(lexer.index, Collection([], left.operator))
+                    expr = parse(lexer) 
+                    operands.push(Collection(operands.pop().items + expr.items, left.operator))
+                    return operands.pop()
+            else:
+                if token.name == '`':
+                    token = lexer.nextToken().simplify()
+                    lexer.nextToken()
+                # Compares the current operator with the operators on the stack
+                addOperator(token, operands, operators)
+        else:
+            pushOperand(token, operands, operators)
+        #printState(operands, operators)
+        # Gets next token
+        token = lexer.nextToken()
+    # Dealing with any remaining operators
+    while operators.peek() != None:
+        if operators.peek().associativity == Associativity.NONE:
+            createCollection(operators, operands)
+        else:
+            createExpression(operators, operands)
+    result = operands.pop()
+    # If the brackets contained only an operand the top of the stack would be none
+    # and the actual value would be below it
+    if result == None:
+        result = operands.pop()   
         
-    def parse(self):
-        while self.curr < len(self.string):
-            if self.string[self.curr] == '\t':
-                self.curr += 1
-                continue
-            if self.string[self.curr] == '#':
-                self.curr += 1
-                while self.string[self.curr] not in ('#', '\n'):
-                    self.curr += 1
-                    if self.curr == len(self.string):
-                        return
-                self.curr += 1
-                continue
-            op = self.searchOperator(utils.operators)
-            if (op != None and not (op == '.' and '0' <= self.string[self.curr + 1] <= '9')):
-                self.addData()
-                self.addOperator(op)
-                continue
-                    
-            if self.string[self.curr] == '"':
-                self.curr += 1
-                self.addString()
-                continue
-            elif self.string[self.curr] == "'":
-                if self.curr + 1 < len(self.string):
-                    char = self.string[self.curr + 1]
-                    if (self.curr + 2 < len(self.string) 
-                        and self.string[self.curr + 2] == "'" and  char != "'" ):
-                        self.tokens.append(Char(char))
-                        self.curr += 3
-                        continue
-            self.acc += self.string[self.curr]
-            self.curr += 1
-      
-        self.addData()
-        self.addSpace(' ')
-        del self.tokens[-1]
+    return result
+
             
-    def searchOperator(self, operators):
-        for length in range(11, 0, -1):
-            if self.curr + length - 1 < len(self.string):
-                substring = self.string[self.curr : self.curr + length]
-                if substring in operators: 
-                    return substring
-        return None
+    

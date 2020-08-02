@@ -29,8 +29,8 @@ greater_than_or_equal = HFunction(4, Associativity.NONE, Operator_Functions.grea
 colon = HFunction(5, Associativity.RIGHT, Operator_Functions.cons, 2, ':')
 logical_and = HFunction(3, Associativity.RIGHT, Operator_Functions.AND, 2, '&&')
 concatenate = HFunction(5, Associativity.LEFT, Operator_Functions.concatenate, 2, '++')
-comprehension = HFunction(5, Associativity.LEFT, Operator_Functions.comprehension, 2, '..')
-notequal = HFunction(4, Associativity.NONE, Operator_Functions.notEqual, 2, '/=')
+iterator = HFunction(10, Associativity.LEFT, None, 2, 'in')
+notequal = HFunction(4, Associativity.NONE, Operator_Functions.notEqual, 2, '!=')
 logical_or = HFunction(3, Associativity.RIGHT, Operator_Functions.OR, 2, '||')
 left_parentheses = HFunction(8, Associativity.RIGHT, None, 1, '(')
 right_parentheses = HFunction(8, Associativity.LEFT, None, 1, ')')
@@ -41,14 +41,14 @@ right_bracket = HFunction(8, Associativity.LEFT, None, 1, ']')
 dollar = HFunction(0, Associativity.RIGHT, Operator_Functions.space, 2, '$')
 composition = HFunction(9, Associativity.RIGHT, Operator_Functions.compose, 2, '~')
 index = HFunction(9, Associativity.LEFT, Operator_Functions.index, 2, '!!')
-sequence = HFunction(2.5, Associativity.LEFT, Operator_Functions.sequence, 2, ';')
-newline = HFunction(-1, Associativity.LEFT, Operator_Functions.sequence, 2, '\n')
+sequence = HFunction(2.5, Associativity.RIGHT, Operator_Functions.sequence, 2, ';')
+newline = HFunction(-1, Associativity.RIGHT, Operator_Functions.sequence, 2, ';')
 chain = HFunction(2, Associativity.LEFT, Operator_Functions.chain, 2, '>>=')
 infix = HFunction(5, Associativity.LEFT, None, 1, '`')
 equals = HFunction(2.5, Associativity.RIGHT, Operator_Functions.assign, 2, '=')
-lambda_func = HFunction(8, Associativity.NONE, Operator_Functions.collect, -1, '\\')
 returns = HFunction(2, Associativity.RIGHT, Operator_Functions.createLambda, 2, '->')
-whereclause = HFunction(0, Associativity.LEFT, Operator_Functions.where, 2, 'where')
+whereclause = HFunction(2.6, Associativity.LEFT, Operator_Functions.where, 2, 'where')
+append_tail = HFunction(3, Associativity.LEFT, Prelude.append, 2, '<-')
 inheritance = HFunction(0, Associativity.LEFT, Operator_Functions.inherits, 2, 'extends')
 implements = HFunction(0, Associativity.LEFT, Operator_Functions.checkImplements, 2, 'implements')
 bitwise_or = HFunction(1, Associativity.LEFT, Operator_Functions.bitwise_or, 2, '¦')
@@ -61,6 +61,7 @@ left_curly = HFunction(8, Associativity.RIGHT, None, 1, '{')
 right_curly = HFunction(8, Associativity.LEFT, None, 1, '}')
 else_clause = HFunction(2.5, Associativity.RIGHT, None, 2, '|')
 access = HFunction(9.1, Associativity.LEFT, Operator_Functions.access, 2, '.')
+comprehension = HFunction(8, Associativity.LEFT, Operator_Functions.comprehension, 2, '..')
 
 class Operator(Enum):
     EQUAL = equals
@@ -83,11 +84,11 @@ class Operator(Enum):
     LEFT_BRACKET = left_bracket
     RIGHT_BRACKET = right_bracket
     DOUBLE_PLUS = concatenate
-    DOUBLE_PERIOD = comprehension
+    ITERATION = iterator
     COLON = colon
     NOT_EQUAL = notequal
     BACKTICK = infix
-    BACKSLASH = lambda_func
+    BACKSLASH = None
     ARROW = returns
     DOUBLE_EXCLAMATION = index
     DOLLAR = dollar
@@ -109,6 +110,8 @@ class Operator(Enum):
     NEWLINE = newline
     INHERITANCE = inheritance
     IMPLEMENTS = implements
+    BACK_ARROW = append_tail
+    DOUBLE_PERIOD = comprehension
     
 def initialiseFunctions(state):
     state['fst'] = HFunction(8, Associativity.LEFT, Prelude.fst, 1, 'fst')
@@ -183,13 +186,19 @@ def initialiseFunctions(state):
                              lambda exp: utils.getData(str(exp)[1:-1]), 1, 'read')
     state['for'] = HFunction(8, Associativity.LEFT, Operator_Functions.forLoop, 2, 'for')
     state['while'] = HFunction(8, Associativity.LEFT, Operator_Functions.whileLoop, 2, 'while')
+    state['if'] = HFunction(8, Associativity.LEFT, Operator_Functions.ifStatement, 2, 'if')
     state['struct'] = HFunction(8, Associativity.LEFT, Operator_Functions.createStruct, 2, 'struct')
     state['enum'] = HFunction(8, Associativity.LEFT, Operator_Functions.createEnum, 2, 'enum')
-    state['oper'] = HFunction(8, Associativity.LEFT, Operator_Functions.createOperator, 2, 'oper')
+    state['oper'] = HFunction(8, Associativity.LEFT, Operator_Functions.createOperator, 4, 'oper')
     state['class'] = HFunction(8, Associativity.LEFT, Operator_Functions.createClass, 3, 'class')
     state['interface'] = HFunction(8, Associativity.LEFT, Operator_Functions.createInterface, 2, 'interface')
     state['def'] = HFunction(8, Associativity.LEFT, Operator_Functions.definition, 1, 'def')
-    state['switch'] = HFunction(8, Associativity.LEFT, Operator_Functions.switch, 2, 'switch')
+    state['case'] = HFunction(8, Associativity.LEFT, Operator_Functions.switch, 2, 'case')
+    state['cascade'] = HFunction(8, Associativity.LEFT, Operator_Functions.cascade, 2, 'cascade')
+    state['continue'] = HFunction(8, Associativity.LEFT, Operator_Functions.continueCurrentLoop, 0, 'continue')
+    state['break'] = HFunction(8, Associativity.LEFT, Operator_Functions.breakCurrentLoop, 0, 'break')
+    state['let'] = HFunction(8, Associativity.LEFT, Operator_Functions.evaluate_in_scope, 2, 'let')
+    state['range'] = HFunction(8, Associativity.LEFT, Operator_Functions.range_specifier, 1, 'range')
 
 class Op:
     def __init__(self, hfunc):
@@ -222,8 +231,8 @@ operatorsDict = {'=' : Operator.EQUAL,
                  ']' : Operator.RIGHT_BRACKET,
                  ':' : Operator.COLON,
                  '++': Operator.DOUBLE_PLUS,
-                 '..': Operator.DOUBLE_PERIOD,
-                 '/=': Operator.NOT_EQUAL, 
+                 ' in ': Operator.ITERATION,
+                 '!=': Operator.NOT_EQUAL, 
                  '!!': Operator.DOUBLE_EXCLAMATION,
                  '`' : Operator.BACKTICK,
                  '$' : Operator.DOLLAR,
@@ -231,9 +240,8 @@ operatorsDict = {'=' : Operator.EQUAL,
                  '->': Operator.ARROW,
                  '¦' : Operator.BROKEN_BAR,
                  '>>=' : Operator.CHAIN,
-                 'where' : Operator.WHERE,
+                 ' where ' : Operator.WHERE,
                  '@' : Operator.AT,
-                 ';' : Operator.SEMI_COLON,
                  '<<' : Operator.SHIFT_LEFT,
                  '>>' : Operator.SHIFT_RIGHT,
                  '&' : Operator.AMPERSAND,
@@ -241,15 +249,17 @@ operatorsDict = {'=' : Operator.EQUAL,
                  '}' : Operator.RIGHT_CURLY,
                  '=>' : Operator.THEN,
                  '|' : Operator.BAR,
-                 'then' : Operator.RIGHT_CURLY,
-                 'else' : Operator.BROKEN_BAR,
+                 ' then ' : Operator.THEN,
+                 ' else ' : Operator.BAR,
                  '.' : Operator.PERIOD,
                  ',,' : Operator.DOUBLE_COMMA,
                  '\n' : Operator.NEWLINE,
                  '~' : Operator.TILDE,
-                 'extends' : Operator.INHERITANCE,
-                 ';;' : Operator.NEWLINE,
-                 'implements' : Operator.IMPLEMENTS}
+                 ' extends ' : Operator.INHERITANCE,
+                 ';' : Operator.NEWLINE,
+                 ' implements ' : Operator.IMPLEMENTS,
+                 '<-' : Operator.BACK_ARROW,
+                 '..' : Operator.DOUBLE_PERIOD}
     
 def operatorFromString(string):
     return operatorsDict[string].value   

@@ -5,7 +5,6 @@ Created on Tue Jun 23 08:58:06 2020
 @author: rohan
 """
 from functools import partial
-from Tuple import Tuple
 
 class HFunction:
     def __init__(self, precedence, associativity, func, noOfArgs,
@@ -17,15 +16,13 @@ class HFunction:
         self.noOfArgs = noOfArgs
         self.inputs =  inputs
         
-    def apply(self, arg1 = None, arg2 = None):        
-        if self.name == '..' and isinstance(arg2, Tuple):
-            (arg1, arg2) = (arg2, None)
+    def apply(self, arg1 = None, arg2 = None):
         if self.noOfArgs == 0:
             return self.func()
             
         func = self.func
-        noOfArgs = self.noOfArgs
-        name = self.name
+        noOfArgs = self.noOfArgs 
+        name = self.name 
         if arg1 != None:
             if self.noOfArgs == 1:
                 return func(arg1)
@@ -46,7 +43,7 @@ class HFunction:
                          name, self.inputs) 
     
     def simplify(self, simplifyVariables = True):
-        if (self.name[0] == '\\' or self.noOfArgs == 0):
+        if (self.noOfArgs == 0):
             return self.func()
         return self
     
@@ -56,15 +53,15 @@ class HFunction:
     
     def clone(self):
         return HFunction(self.precedence, self.associativity, self.func,
-                         self.noOfArgs, self.name) 
+                         self.noOfArgs, self.name)
     
 class Composition:
     def __init__(self, second, first):        
         self.first = first.simplify()
         self.second = second.simplify()
-        self.precedence = first.precedence
-        self.associativity = first.associativity
-        self.name = str(second) + '.' + str(first)
+        #self.precedence = first.precedence
+        #self.associativity = first.associativity
+        self.name = str(second) + '~' + str(first)
     
     def simplify(self, simplifyVariables = True):
         return self
@@ -76,7 +73,6 @@ class Composition:
         if arg1 != None or self.first.name == '..':
             return self.second.apply(self.first.apply(arg1))
         return self
-
 
 class Function:
     def __init__(self, name, noOfArgs, cases = [], inputs = []):
@@ -133,6 +129,8 @@ class Function:
                 if (case == None):
                     continue
                 return case
+            
+        raise Exception('Pattern match on arguments failed for all definitions of function', self.name)
         return None
 
     def checkCase(self, arguments, inputs):
@@ -145,13 +143,11 @@ class Function:
         return True
 
 class Lambda:
-    def __init__(self, name = None, arguments = [], expr = None, state = {},
-                 whereClause = None):
+    def __init__(self, name = None, arguments = [], expr = None, state = {}):
         self.name = name
         self.arguments = arguments
         self.expr = expr
         self.state = state
-        self.whereClause = whereClause
         self.noOfArgs = len(arguments)
         
     def apply(self, arg1 = None, arg2 = None):
@@ -172,27 +168,22 @@ class Lambda:
             assign(arguments[1], arg2, state)
             arguments = arguments[0] + arguments[2:]
 
-        return Lambda(arguments = arguments, expr = self.expr, state = state,
-                      whereClause = self.whereClause)
+        return Lambda(arguments = arguments, expr = self.expr, state = state)
 
     def __str__(self):
         string = '\\' + ' '.join(list(map(str, self.arguments)))
         if self.expr != None:
             string += ' -> ' + str(self.expr)
-        if self.whereClause != None: 
-            string += ' where ' + str(self.whereClause)
         return string
     
     def simplify(self, simplifyVariables = True):
         if self.arguments == []:
-            return self.expr.simplify(simplifyVariables)
+            return self.returnValue({})
         return self
 
     def returnValue(self, state):
         from utils import frameStack 
         frameStack.append(state)
-        if self.whereClause != None:
-            self.whereClause.simplify()
         if self.expr != None:
             value = self.expr.simplify()
         else:

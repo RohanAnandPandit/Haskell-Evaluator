@@ -22,10 +22,10 @@ def printHaskell(a):
     return Int(None)
 
 def show(a):
-    from Shunting_Yard_Algorithm import convertToList
+    from utils import convertToList
     return convertToList(list(map(Char, str(a.simplify())))).simplify()
 
 def inputHaskell(question):
-    from Shunting_Yard_Algorithm import convertToList
+    from utils import convertToList
     inp = input(str(question)[1:-1])
     return  convertToList(list(map(Char, str(inp)))).simplify()

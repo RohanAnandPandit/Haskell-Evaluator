@@ -13,7 +13,7 @@ functionNamesList = ['length', 'head', 'tail', 'last', 'concat', 'init', 'maximu
                  'words', 'unwords', 'takeWhile', 'dropWhile', 'zip', 'unzip',
                  'foldl', 'foldr', 'foldl1', 'foldr1', 'and', 'or', 'any', 'all', 'filter', 'sum',
                  'product', 'lookup', 'concatMap', 'splitAt', 'span', 'replicate',
-                 'iterate', 'repeat', 'zipWith', 'zip3', 'zipWith3', 'cycle']
+                 'iterate', 'repeat', 'zipWith', 'zip3', 'zipWith3', 'cycle', 'append']
 class List:
     pass
       
@@ -58,74 +58,66 @@ class Cons(List):
         return Cons(self.item.simplify(), self.tail.simplify())
 
 class Iterator(List):
-    def __init__(self, cycleList = None, func = None, item = None, iterations = None,
-                 iteratorType = None, step = None, end = None, mapFunc = None, current = None):
-        self.type = iteratorType
-        self.func = func
-        self.item = item
-        self.iterations = iterations
-        self.list = cycleList
-        self.current = current
-        if (current == None):
-            self.current = self.list
-        self.step = step
-        self.end = end
-        self.mapFunc = mapFunc
-        if (mapFunc == None):
-            from utils import builtInState
-            func_id = builtInState['id']
-            self.mapFunc = func_id
-    
-    def getHead(self):
-        if (self.type in ('comprehension', 'general')):
-            return self.mapFunc.apply(self.item)
+    def __init__(self, var, collection):
+        self.var = var
+        self.collection = collection.simplify()
+        if isinstance(self.collection, (Cons, Range)):
+            self.curr = self.collection
         else:
-            return self.mapFunc.apply(self.current.item)
-               
-    def getTail(self):
-        if (self.iterations == 0):
-            return Nil()
-        iterations = None
-        if (self.iterations != None):
-            iterations = self.iterations - 1
-        if (self.type == 'comprehension'):
-            return Iterator(item = self.func.apply(self.item), iteratorType = self.type, step = self.step,
-                            func = self.func, iterations = iterations, mapFunc = self.mapFunc)
-        elif (self.type == 'general'):
-            return Iterator(item = self.func.apply(self.item), iteratorType = self.type, 
-                            func = self.func, iterations = iterations, mapFunc = self.mapFunc)
-        elif (self.type == 'cycle'):
-            current = tail(self.current)
-            if isinstance(current, Nil):
-                current = self.list
-            return Iterator(mapFunc = self.mapFunc, cycleList = self.list,
-                            current = current, iteratorType = self.type, iterations = iterations)
-            
+            self.curr = 0
+    
+    def next(self):
+        from utils import patternMatch
+        from Operator_Functions import assign
+        if isinstance(self.collection, (Cons, Range)):
+            if isinstance(self.curr, Nil):
+                return None
+            item = head(self.curr)
+            self.curr = tail(self.curr)
+            if patternMatch(self.var, item):
+                assign(self.var, item)
+                return item
+            return self.next()
+        if isinstance(self.collection, Tuple):
+            if self.curr >= len(self.collection.tup):
+                return None
+            item = self.collection.tup[self.curr]
+            self.curr += 1
+            if patternMatch(self.var, item):
+                assign(self.var, item)
+                return item
+            return self.next()
+                           
     def simplify(self, simplifyVariables = True):
         return self
 
-    def apply(self, arg1 = None, arg2 = None):
-        if (arg1 != None):
-            self.start = arg1
-        if (arg2 != None):
-            self.end = arg2
-            self.iterations = int(abs((self.end - self.item) / self.step))
-        return self
+    def __str__(self):
+        return str(self.var) + ' in ' + str(self.collection)
 
-    def setRange(self, n):
-        self.iterations = n
+class Range:
+    def __init__(self, start, end, step):
+        self.curr = start
+        self.end = end
+        self.step = step
+        self.stop = False
+    
+    def next(self):
+        return self.curr
+    
+    def apply(self, end):
+        self.end = end
+        return self
+    
+    def simplify(self):
+        if self.stop:
+            return Nil()
+        return self
     
     def __str__(self):
-        if (self.iterations != None):
-            tail = str(self.getTail())[1 : -1]
-            sep = ', '
-            if (tail == ''):
-                sep = ''
-            return '[' + str(self.getHead()) + sep + tail + ']'
-        if (self.type in ('comprehension', 'general')):
-            return '[' + str(self.getHead()) + '..' + ']'   
-        if (self.type == 'cycle'):
-            return str(self.list)[ : -1] + '...]'
+        string = '[' + str(self.curr) + ', ' + str(self.curr.value + self.step.value)
+        string += '..'
+        string += str(self.end) + ']'
+        return string
         
 def length(a, l = 0):
     xs = tail(a)
@@ -137,73 +129,66 @@ def length(a, l = 0):
         return length(xs, l + 1)
 
 def head(a):    
-    if (isinstance(a, Nil)):
+    if isinstance(a, Nil):
         return None
-    if (isinstance(a, Cons)):
-        if (isinstance(a.item, Iterator)):
-            return a.item.getHead()
+    if isinstance(a, Cons):
         return a.item
+    elif isinstance(a, Range):
+        return a.next()
 
 def tail(a):
     if (isinstance(a, Nil)):
         return None
-    if (isinstance(a, Cons)):  
-        if (isinstance(a.item, Iterator)):
-            iterator = a.item.getTail()
-            if (isinstance(iterator, Nil)):
-                return a.tail
-            return Cons(iterator, a.tail)
+    if (isinstance(a, Cons)):
         return a.tail
+    elif isinstance(a, Range):
+        from Operator_Functions import add, greaterThan
+        start = add(a.curr, a.step)
+        if a.end != None and greaterThan(start, a.end).value:
+            return Nil()
+        return Range(start, a.end, a.step)
 
 def last(a):    
     (x, xs) = (head(a), tail(a)) 
-    if (isinstance(a, Nil)):
+    if isinstance(a, Nil):
         return None
-    if (isinstance(xs, Nil)):
+    if isinstance(xs, Nil):
         return x 
     return last(xs)
 
+def append(a, b):    
+    (x, xs) = (head(a), tail(a)) 
+    item = b
+    if isinstance(a, Nil):
+        return Cons(item, Nil())
+    return Cons(x, append(xs, item))
+
 def concat(a):
     from Operators import operatorFromString
-
     return foldl(operatorFromString('++'), Nil(), a)
 
 def init(a):
     (x, xs) = (head(a), tail(a)) 
-    if (isinstance(a, Nil)):
+    if isinstance(a, Nil):
         return None
-    elif (isinstance(a, Cons)):
-        if (isinstance(xs, Nil)):
+    elif isinstance(a, Cons):
+        if isinstance(xs, Nil):
             return Nil()
         return Cons(x, init(xs))  
 
 def maximum(a, m = None):
     from utils import isPrimitive
-    
     (x, xs) = (head(a), tail(a))
-
     if (isinstance(a, Nil)):
         return m
-    if (not isPrimitive(x)):
-        x = x.simplify()
     if (isinstance(a, Cons)):
         if (m == None):
             m = x
-        return maximum(xs, max(x, m))
-    elif (isinstance(a, Iterator)):
-        if (m == None):
-            m = x
-        if (a.iterations == None):
-            if (a.type == 'comprehension' and a.step <= 0):
-                return maximum(a.tail, max(x, m))
-            return None
         return maximum(xs, max(x, m))
 
 def minimum(a, m = None):
     from utils import isPrimitive
-    
     (x, xs) = (head(a), tail(a))
-
     if (isinstance(a, Nil)):
         return m
     if (not isPrimitive(x)):
@@ -212,14 +197,7 @@ def minimum(a, m = None):
         if (m == None):
             m = x
         return minimum(xs, min(x, m))
-    elif (isinstance(a, Iterator)):
-        if (m == None):
-            m = x
-        if (a.iterations == None):
-            if (a.type == 'comprehension' and a.step >= 0):
-                return minimum(a.tail, max(x, m))
-            return None
-        return minimum(xs, min(x, m))
+
 
 def elem(a, b):  
     from Operator_Functions import equals
@@ -228,12 +206,6 @@ def elem(a, b):
     if (isinstance(b, Nil)):
         return False
     elif (isinstance(b, Cons)):
-        if (isinstance(b.item, Iterator)):
-            if (b.item.iterations == None and b.item.type == 'general'):
-                return None
-            check = ((value - x) % b.item.step == 0 and x <= value 
-                     and (b.item.end == None or value <= b.item.end))
-            return check or elem(value, b.tail)
         return Bool(equals(x, value).value or elem(value, xs).value)
 
 
@@ -270,9 +242,6 @@ def mapHaskell(a, b):
     if (isinstance(b, Nil)):
         return b
     if (isinstance(b, Cons)):
-        if (isinstance(b.item, Iterator)):
-            b.item.mapFunc = compose(func, b.item.mapFunc)
-            return b
         return Cons(func.apply(x), mapHaskell(func, xs))
         
 
@@ -292,40 +261,34 @@ def unwords(a):
     if (isinstance(a, Nil)):
         return None
     x,xs = head(a), tail(a)
-    if (isinstance(xs, Nil)):
+    if isinstance(xs, Nil):
         return x
     return concatenate(x, Cons(' ', unwords(xs)))
 
 def takeWhile(a, b):
-    from utils import isPrimitive
-    
     func = a
     if (isinstance(b, Nil)):
         return Nil()
     (x, xs) = (head(b), tail(b))
-    if (not isPrimitive(x)):
-        x = x.simplify()
-    if (isinstance(b, Cons)):
-        if (func.apply(x).value):
-            return Cons(x, takeWhile(func, xs))
-        return Nil()
+    if func.apply(x).value:
+        return Cons(x, takeWhile(func, xs))
+    return Nil()
 
 def dropWhile(a, b):
     (func, xs) = (a, b)
-    if (isinstance(xs, Nil)):
+    if isinstance(xs, Nil):
         return Nil()
-    elif (isinstance(xs, Cons)):
-        if (func.apply(xs.item).value):
-            return dropWhile(func, tail(xs))
-        return xs 
+    if func.apply(head(xs)).value:
+        return dropWhile(func, tail(xs))
+    return xs 
 
 
 def zipHaskell(a, b):
     from Operators import operatorFromString
-    return zipWith(operatorFromString(','), a, b)
+    return zipWith(operatorFromString(',,'), a, b)
    
 def zip3(a, b, c):
-    if (isinstance(a, Nil) or isinstance(b, Nil) or isinstance(c, Nil)):
+    if isinstance(a, Nil) or isinstance(b, Nil) or isinstance(c, Nil):
         return Nil()
     x, xs = head(a), tail(a)
     y, ys = head(b), tail(b)
@@ -337,10 +300,10 @@ def unzip(a):
     pairs = a
     if (isinstance(pairs, Nil)):
         return Tuple((Nil(), Nil()))
-    elif (isinstance(pairs, Cons)):
-        tup = unzip(tail(pairs))
-        (left, right) = pairs.item.tup
-        return Tuple((Cons(left, fst(tup)), Cons(right, snd(tup)))) 
+    p, ps = head(pairs), tail(pairs)
+    tup = unzip(ps)
+    left, right = fst(p), snd(p)
+    return Tuple([Cons(left, fst(tup)), Cons(right, snd(tup))]) 
     
     
 def zipWith(a, b, c):
@@ -425,7 +388,7 @@ def sumHaskell(a):
 
 def product(a):
     from Operators import operatorFromString
-    return foldl(operatorFromString('*'), Int(0), a)
+    return foldl(operatorFromString('*'), Int(1), a)
 
 def lookup(a, b):
     from Prelude import fst, snd
@@ -433,7 +396,7 @@ def lookup(a, b):
     if isinstance(b, Nil):
         return Nothing()
     tup, pairs = head(b), tail(b)
-    if (equals(fst(tup), a).value):
+    if equals(fst(tup), a).value:
         return Just(snd(tup))
     return lookup(a, pairs)
 

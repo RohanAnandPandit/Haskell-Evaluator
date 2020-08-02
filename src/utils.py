@@ -9,27 +9,35 @@ import Prelude
 from Types import Variable, Int, Float, Bool, Alias, EnumValue, Object, Structure
 from List import Nil, Cons, head, tail
 from Tuple import functionNamesTuple, Tuple
+from Stack import Stack
 
-
-builtInState = {'otherwise' : Bool(True)}
-
+builtInState = {}
+static_mode = False
+functional_mode = False 
 frameStack = [builtInState]
 enumNames = []
 typeNames = []
 structNames = []
 operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
              '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
-             '$', ';', '>>', '>>=', '=', '->', '--', '\\',  'where', '|', '@',
-             '<-', '<<', '&', '}', '¦', 'then', 'else', '#', '{', '=>', '~',
-             ',,', '\n', '.', 'extends', ';;', 'implements']
+             '$', ';', '>>', '>>=', '=', '->', '--', '\\',  ' where ', '|', '@',
+             '<-', '<<', '&', '}', '¦', ' then ', ' else ', '#', '{', '=>', '~',
+             ',,', '\n', '.', ' extends ', ';;', ' implements ', '!=', ' in ']
 
+keywords = ('class', 'def', 'struct', 'interface', 'extends',
+            'where', 'implements', 'while', 'for', 'case', 'default',
+            'if', 'else', 'then', 'enum', 'oper', 'break', 'continue',
+            'cascade', 'in', 'True', 'False', 'let')
+
+continueLoop = False
+breakLoop = False
 functionNames = Prelude.functionNamesPrelude
 functionNames += List.functionNamesList 
 functionNames += Maybe.functionNamesMaybe 
 functionNames += Char.functionNamesChar
 functionNames += functionNamesTuple
 functionNames += IO.functionNamesIO
-functionNames += ['eval', 'read', 'for', 'while']
+functionNames += ['eval', 'read', 'range']
 
 closer = {'[' : ']', '(' : ')'}
 
@@ -39,7 +47,7 @@ def stringToList(string):
     from List import List, Nil
     from Operators import Operator
     from Expression import Data
-    from Shunting_Yard_Algorithm import addBinaryExpr
+    from Parser import addBinaryExpr
     from Stack import Stack
     chars = Stack()
     operators = Stack()
@@ -85,18 +93,21 @@ def isPrimitive(expr):
     return type(expr) in [Int, Float, Bool, Char, EnumValue]
 
 def haskellEval(exp):  
-    from Parser import Lexer
-    from Shunting_Yard_Algorithm import generateExpr  
+    from Lexer import Lexer
+    from Parser import parse  
     if isinstance(exp, Cons):
         exp = str(exp)[1:-1]
     lexer = Lexer(exp)
-    print("tokens : ", end = '')
+    #print("tokens : ", end = '')
     lexer.printTokens() 
-    binExp, returnType = generateExpr(lexer)
+    expr = parse(lexer)
     #binExp = optimise(binExp)
-    print("expression : ", str(binExp)) 
-    print("result : ", end = '')
-    return binExp.simplify() 
+    print("expression : ", str(expr)) 
+    #print("result : ", end = '')
+    #try:
+    return expr.simplify()
+    #except Exception as error:
+        #print(' '.join(error.args))
 
 def patternMatch(expr1, expr2):
     from Operator_Functions import equals
@@ -195,6 +206,17 @@ def optimise(expr):
             pass
     return expr
 
+def unassignVariables(struct):
+    if isinstance(struct, Variable):
+        frameStack[-1].pop(struct.name)
+    elif isinstance(struct, Cons):
+        unassignVariables(head(struct))
+        unassignVariables(tail(struct))
+    elif isinstance(struct, Tuple):
+        map(unassignVariables, struct.tup) 
+    elif type(struct) == str:
+        frameStack[-1].pop(struct)
+
 def replaceVariables(expr):
     from Expression import BinaryExpr
     if isinstance(expr, Variable):
@@ -203,6 +225,20 @@ def replaceVariables(expr):
         return BinaryExpr(expr.operator,
                           replaceVariables(expr.leftExpr),
                           replaceVariables(expr.rightExpr))
+    return expr
+
+def convertToList(expr):
+    # If None is returned means there was no operand or 
+    # operator which means it is an empty list
+    items = Stack()
+    ops = Stack()
+    for x in expr:
+        items.push(x)
+        ops.push(operatorFromString(':'))
+    items.push(Nil())
+    while ops.peek() != None:
+        createExpression(ops, items)
+    expr = items.pop()
     return expr
     
 def indexOfClosing(c, exp):
