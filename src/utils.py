@@ -229,6 +229,7 @@ def replaceVariables(expr):
 
 def convertToList(expr):
     from Operators import operatorFromString
+    from Parser import createExpression
     # If None is returned means there was no operand or 
     # operator which means it is an empty list
     items = Stack()
