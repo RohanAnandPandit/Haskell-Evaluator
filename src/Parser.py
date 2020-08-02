@@ -92,6 +92,7 @@ def pushOperand(operand, operands, operators):
         #print(operands.arr)
 
 def parse(lexer):
+    from utils import convertToList
     # Empty stacks will be created whenever the function is called again
     operands = Stack()
     operators = Stack()

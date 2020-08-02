@@ -177,7 +177,6 @@ def init(a):
         return Cons(x, init(xs))  
 
 def maximum(a, m = None):
-    from utils import isPrimitive
     (x, xs) = (head(a), tail(a))
     if (isinstance(a, Nil)):
         return m
@@ -221,11 +220,10 @@ def reverse(a, l = Nil()):
 
 def take(a, b):
     n = a
-    (x, xs) = (head(b), tail(b))
+    x, xs = head(b), tail(b)
     if (n.value <= 0 or isinstance(b, Nil)):
         return Nil()
-    if (isinstance(b, Cons)):
-        return Cons(x, take(Int(n.value - 1), xs))
+    return Cons(x, take(Int(n.value - 1), xs))
         
 
 def drop(a, b):    
@@ -234,9 +232,7 @@ def drop(a, b):
         return b
     return drop(Int(n.value - 1), tail(b))
 
-def mapHaskell(a, b):
-    from Operator_Functions import compose
-    
+def mapHaskell(a, b):    
     func = a
     (x, xs) = (head(b), tail(b))
     if (isinstance(b, Nil)):
