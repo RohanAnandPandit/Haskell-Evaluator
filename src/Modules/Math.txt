@@ -2,7 +2,19 @@ pi = 3.1415926535
 e = 2.718281828
 phi = 1.618
 
-struct Complex {real, imaginary}
-def add (Complex {a, b}) (Complex {c, d}) = Complex {a + c, b + d}
-def sub (Complex {a, b}) (Complex {c, d}) = Complex {a - c, b - d}
-def mul (Complex {a, b}) (Complex {c, d}) = Complex {a*c-b*d, a*d+b*c}
+class Complex (
+	def init {a, b} (
+		this.real = a; this.imag = b
+	)
+		
+	def toString = "(" ++ show real ++ "+" ++ show imag ++ "i)"
+
+	def add (Complex num) = Complex {real + num.real, imag + num.imag}
+	def add num = Complex {real + num, imag}
+
+	def mul (Complex num) = (
+		Complex {real * num.real - imag * num.imag, real * num.imag + imag * num.real}
+	)
+)
+
+i = Complex {0, 1}

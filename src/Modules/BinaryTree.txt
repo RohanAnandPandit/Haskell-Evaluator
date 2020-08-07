@@ -1,5 +1,5 @@
 class BinaryNode (
-	def BinaryNode {data, left, right} (
+	def init {data, left, right} (
 		this.data = data; this.left = left; this.right = right
 	)
 
@@ -27,7 +27,7 @@ class BinaryNode (
 )
 
 class BinaryTree (
-	def BinaryTree {} (
+	def init {} (
 		this.root = BinaryNode {?, ?, ?}
 	)
 	def insert item = (this.root.insert item)

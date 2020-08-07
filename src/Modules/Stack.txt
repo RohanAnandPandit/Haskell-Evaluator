@@ -1,5 +1,5 @@
-class Stack {} (
-	def init = (
+class Stack (
+	def init {} (
 		this.list = []
 	)
 
@@ -8,12 +8,14 @@ class Stack {} (
 	)
 
 	def pop = (
-		list == [] => ?
-		| item where (
-				item = head list
-				this.list = tail list
-		)
+		if (list == []) (return ?)
+
+		item = head list
+		this.list = tail list
+		return item
 	)
+
+	def toString = show this.list
 )
 
 

@@ -1,4 +1,3 @@
-struct Complex {real, imaginary}
-def add (Complex {a, b}) (Complex {c, d}) = Complex {a + c, b + d}
-def sub (Complex {a, b}) (Complex {c, d}) = Complex {a - c, b - d}
-def mul (Complex {a, b}) (Complex {c, d}) = Complex {a*c-b*d, a*d+b*c}
+import Math
+
+print (pi)

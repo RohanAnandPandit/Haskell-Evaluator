@@ -218,8 +218,8 @@ class Class:
                 obj.state[name] = Method(obj, self.state[name])
             else:
                 obj.state[name] = self.state[name]
-        if self.name in self.state.keys():
-            obj.state[self.name].apply(values)
+        if 'init' in self.state.keys():
+            obj.state['init'].apply(values)
         return obj
     
     def __str__(self):
