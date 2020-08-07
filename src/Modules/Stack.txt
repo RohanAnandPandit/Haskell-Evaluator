@@ -1,0 +1,20 @@
+class Stack {} (
+	def init = (
+		this.list = []
+	)
+
+	def push item = (
+		this.list = item : list
+	)
+
+	def pop = (
+		list == [] => ?
+		| item where (
+				item = head list
+				this.list = tail list
+		)
+	)
+)
+
+
+

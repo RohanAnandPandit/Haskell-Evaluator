@@ -14,7 +14,7 @@ class Associativity(Enum):
     LEFT = 0
     RIGHT = 1
     NONE = 2
-
+    
 apply = HFunction(9, Associativity.LEFT, Operator_Functions.space, 2, ' ')
 division = HFunction(7, Associativity.LEFT, Operator_Functions.divide, 2, '/')
 multiply = HFunction(7, Associativity.LEFT, Operator_Functions.multiply, 2, '*')
@@ -190,15 +190,17 @@ def initialiseFunctions(state):
     state['struct'] = HFunction(8, Associativity.LEFT, Operator_Functions.createStruct, 2, 'struct')
     state['enum'] = HFunction(8, Associativity.LEFT, Operator_Functions.createEnum, 2, 'enum')
     state['oper'] = HFunction(8, Associativity.LEFT, Operator_Functions.createOperator, 4, 'oper')
-    state['class'] = HFunction(8, Associativity.LEFT, Operator_Functions.createClass, 3, 'class')
+    state['class'] = HFunction(8, Associativity.LEFT, Operator_Functions.createClass, 2, 'class')
     state['interface'] = HFunction(8, Associativity.LEFT, Operator_Functions.createInterface, 2, 'interface')
-    state['def'] = HFunction(8, Associativity.LEFT, Operator_Functions.definition, 1, 'def')
+    state['def'] = HFunction(8, Associativity.LEFT, Operator_Functions.definition, 3, 'def')
     state['case'] = HFunction(8, Associativity.LEFT, Operator_Functions.switch, 2, 'case')
     state['cascade'] = HFunction(8, Associativity.LEFT, Operator_Functions.cascade, 2, 'cascade')
     state['continue'] = HFunction(8, Associativity.LEFT, Operator_Functions.continueCurrentLoop, 0, 'continue')
     state['break'] = HFunction(8, Associativity.LEFT, Operator_Functions.breakCurrentLoop, 0, 'break')
     state['let'] = HFunction(8, Associativity.LEFT, Operator_Functions.evaluate_in_scope, 2, 'let')
     state['range'] = HFunction(8, Associativity.LEFT, Operator_Functions.range_specifier, 1, 'range')
+    state['import'] = HFunction(8, Associativity.LEFT, Operator_Functions.import_module, 1, 'import')
+    state['return'] = HFunction(8, Associativity.LEFT, Operator_Functions.return_statement, 1, 'return')
 
 class Op:
     def __init__(self, hfunc):

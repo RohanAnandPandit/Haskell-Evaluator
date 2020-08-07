@@ -62,7 +62,7 @@ class BinaryExpr(Expression):
                     and isinstance(leftExpr, HFunction) 
                     and leftExpr.name in ('while', 'for', 'struct', 'enum', 
                                           'oper', 'class', 'interface', 'def',
-                                          'case', 'if', 'cascade', 'let'))
+                                          'case', 'if', 'cascade', 'let', 'import'))
 
     def simplify(self, simplifyVariables = True):
         simplifyRightVariables = simplifyLeftVariables = simplifyVariables

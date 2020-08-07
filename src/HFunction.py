@@ -81,7 +81,7 @@ class Function:
         self.cases = cases
         self.inputs = inputs
         from Operators import Associativity
-        self.associativity = Associativity.LEFT
+        self.associativity = Associativity.LEFT 
         self.precedence = 8
     
     def clone(self):
@@ -123,13 +123,13 @@ class Function:
     def checkCases(self, inputs):
         for case in self.cases:
             arguments = case.arguments
-            if (self.checkCase(arguments, inputs)):
+            if self.checkCase(arguments, inputs):
                 for i in range(len(arguments)):
                     case = case.apply(inputs[i])
-                if (case == None):
+                if case == None:
                     continue
                 return case
-            
+
         raise Exception('Pattern match on arguments failed for all definitions of function', self.name)
         return None
 

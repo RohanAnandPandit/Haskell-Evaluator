@@ -17,7 +17,7 @@ class Lexer:
         self.index = 0
         self.curr = 0
         self.acc = ''
-        self.parse()
+        self.scan()
         
     def nextToken(self):
         value = self.peek()
@@ -83,16 +83,30 @@ class Lexer:
 
         if op not in '[({':
             if (len(self.tokens) > 0 and isinstance(self.tokens[-1], (HFunction, Function)) 
-                and self.tokens[-1].name in ' ;'):
+                and self.tokens[-1].name in '; '):
                 del self.tokens[-1] 
+        
+        if op == '(':
+            if (len(self.tokens) > 0 
+                and (not isinstance(self.tokens[-1], HFunction) 
+                or  self.tokens[-1].name == ')')):
+                self.tokens.append(operatorFromString('*'))
         self.tokens.append(operatorFromString(op))
     
     def addData(self):
         if self.acc != '':
-            self.tokens.append(getData(self.acc)) 
+            i = 0
+            while i < len(self.acc) and ('0' <= self.acc[i] <= '9' or self.acc[i] in '._'):
+                i += 1
+            if i == 0 or i == len(self.acc):                
+                self.tokens.append(getData(self.acc)) 
+            else:
+                self.tokens.append(getData(self.acc[:i])) 
+                self.tokens.append(operatorFromString('*'))
+                self.tokens.append(getData(self.acc[i:])) 
             self.acc = ''
         
-    def parse(self):
+    def scan(self):
         while self.curr < len(self.string):
             if self.string[self.curr] == '\t':
                 self.curr += 1

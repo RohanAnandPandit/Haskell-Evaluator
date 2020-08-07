@@ -11,7 +11,7 @@ from List import Nil, Cons, head, tail
 from Tuple import functionNamesTuple, Tuple
 from Stack import Stack
 
-builtInState = {}
+builtInState = {'PI' : Float(3.1415926535)}
 static_mode = False
 functional_mode = False 
 frameStack = [builtInState]
@@ -27,10 +27,11 @@ operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&',
 keywords = ('class', 'def', 'struct', 'interface', 'extends',
             'where', 'implements', 'while', 'for', 'case', 'default',
             'if', 'else', 'then', 'enum', 'oper', 'break', 'continue',
-            'cascade', 'in', 'True', 'False', 'let')
+            'cascade', 'in', 'True', 'False', 'let', 'import', 'return')
 
 continueLoop = False
 breakLoop = False
+return_value = None
 functionNames = Prelude.functionNamesPrelude
 functionNames += List.functionNamesList 
 functionNames += Maybe.functionNamesMaybe 
@@ -84,8 +85,7 @@ def getData(exp):
         return builtInState[exp]
     if exp == '?':
         return Int(None)
-    elif exp == '_' : 
-        return Int(0)
+    
     from Types import Variable
     return Variable(exp)
 
@@ -98,12 +98,12 @@ def haskellEval(exp):
     if isinstance(exp, Cons):
         exp = str(exp)[1:-1]
     lexer = Lexer(exp)
-    #print("tokens : ", end = '')
+    print("tokens : ", end = '')
     lexer.printTokens() 
     expr = parse(lexer)
     #binExp = optimise(binExp)
     print("expression : ", str(expr)) 
-    #print("result : ", end = '')
+    print("result : ", end = '')
     #try:
     return expr.simplify()
     #except Exception as error:

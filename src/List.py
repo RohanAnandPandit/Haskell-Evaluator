@@ -79,7 +79,7 @@ class Range:
         return self.curr
     
     def apply(self, end):
-        self.end = end
+        self.end = end.simplify()
         return self
     
     def simplify(self):
@@ -118,9 +118,9 @@ def tail(a):
     elif isinstance(a, Range):
         from Operator_Functions import add, greaterThan
         start = add(a.curr, a.step)
-        if a.end != None and greaterThan(start, a.end).value:
+        if a.end.simplify() != None and greaterThan(start, a.end.simplify()).value:
             return Nil()
-        return Range(start, a.end, a.step)
+        return Range(start, a.end.simplify(), a.step)
 
 def last(a):    
     (x, xs) = (head(a), tail(a)) 

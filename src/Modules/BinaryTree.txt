@@ -1,0 +1,38 @@
+class BinaryNode (
+	def BinaryNode {data, left, right} (
+		this.data = data; this.left = left; this.right = right
+	)
+
+	def insert item = (
+		data == ? => (this.data = item)
+ 		| item < data => (
+			left == ? => (this.left = Node {item, ?, ?})
+			| left.insert item
+		)
+		| item > data => (
+			right == ? => (this.right = Node {item, ?, ?})
+			| right.insert item
+		)
+	)
+
+	def contains item = found where (
+		curr = this
+		found = False
+		while (curr != ?) (
+			curr.data == item => (found = True; break)
+			item < curr.data => (curr = curr.left)
+			| (curr = curr.right)
+		)
+	)
+)
+
+class BinaryTree (
+	def BinaryTree {} (
+		this.root = BinaryNode {?, ?, ?}
+	)
+	def insert item = (this.root.insert item)
+	def contains item = (this.root.contains item)
+)
+
+struct Node {data, left, right}
+struct Leaf {data}

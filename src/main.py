@@ -38,14 +38,18 @@ def execute(text):
     parts = code.split('#EVAL#\n')
     for part in parts:
         haskellEval(part)
-    
+
+lightmode = {'bg' : 'white', 'fg' : 'black', 'operators' : 'orange', 'insert' : 'black', 'keywords' : 'orange'}
+darkmode = {'bg' : 'black', 'fg' : 'white', 'operators' : 'yellow', 'insert' : 'white', 'keywords' : 'cyan'}
+mode = lightmode
+  
 def ide():
     root = tk.Tk()
-    root.title('Caskell')
+    root.title('Beaver')
     root.attributes('-topmost', True)
     root.geometry('2600x1000+0+0')
-    text = tk.Text(root, width = 75, height = 25, font = ('Consolas', 20, 'normal'), bg = 'black',
-                   fg = 'white', insertbackground = 'white', tabs = ('1c'))
+    text = tk.Text(root, width = 75, height = 20, font = ('Consolas', 20, 'normal'), bg = mode['bg'],
+                   fg = mode['fg'], insertbackground = mode['insert'], tabs = ('1c'))
     tk.Button(root, text = 'Run', command = lambda: execute(text)).grid(column = 2, row = 0)
     text.grid(column = 0, row = 0)
     
@@ -56,8 +60,14 @@ def ide():
     text.tag_config('bracket', foreground = 'red')
     root.bind('<KeyPress>', lambda event: analyse(event, text))
     root.bind('<KeyPress>', lambda event: analyse(event, text))
+    root.bind('<Control-s>', lambda event: save_code(text))
+    root.bind('<F5>', lambda event: execute(text))
     root.mainloop() 
 
+def save_code(text):
+    file = open('code.txt', 'w')
+    file.write(text.get(1.0, tk.END))
+    
 def analyse(event, text):
     if len(event.char) == 1 and event.keysym != 'BackSpace':
         if text.get('insert-1c') == '{':
@@ -98,7 +108,7 @@ def analyse(event, text):
             end = pos + '+' + str(len(operator)) + 'c'
             text.tag_add("operator", pos, end) 
             start = end 
-    text.tag_config("operator", foreground = 'yellow')
+    text.tag_config("operator", foreground = mode['operators'])
 
     text.tag_remove('keyword', '1.0', tk.END)    
     for keyword in keywords:
@@ -112,7 +122,7 @@ def analyse(event, text):
                 and (pos == '1.0' or text.get(pos + '-1c') in ' \n\t([{~$;')):
                 text.tag_add("keyword", pos, end) 
             start = end 
-    text.tag_config("keyword", foreground = 'cyan')
+    text.tag_config("keyword", foreground = mode['keywords'])
     
     text.tag_remove('comment', '1.0', tk.END)  
     start = 1.0
@@ -149,4 +159,4 @@ def analyse(event, text):
 #if way == 'ide':
 ide()
 #else:
-    #commandLine()
+#commandLine()

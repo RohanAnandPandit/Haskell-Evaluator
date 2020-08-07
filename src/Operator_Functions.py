@@ -38,13 +38,13 @@ def assign(a, b, state = None):
         assign(var.expr, value, state)
     elif isinstance(var, Tuple):
         varTup = var.tup
-        valTup =  value.tup
+        valTup =  value.simplify().tup
         for i in range(len(varTup)): 
             assign(varTup[i], valTup[i], state)
         return value
     elif isinstance(var, Cons) and isinstance(value, Cons):
         assign(head(var), head(value), state)
-        assign(tail(var), tail(value))
+        assign(tail(var), tail(value), state)
         return value
     elif isinstance(var, BinaryExpr):
         if var.operator.name == ' ':
@@ -52,6 +52,8 @@ def assign(a, b, state = None):
             args = var 
             while True:
                 arg = args.rightExpr
+                if not isinstance(arg, BinaryExpr) or arg.operator.name != ' ':
+                    arg = arg.simplify()
                 arguments.insert(0, arg)
                 args = args.leftExpr
                 if isinstance(args, Variable):
@@ -227,8 +229,15 @@ def sequence(a, b):
     a.simplify()
     import utils
     if not (utils.breakLoop or utils.continueLoop):
-        b.simplify()
-    return Int(0)
+        if utils.return_value != None:
+            value = utils.return_value
+            utils.return_value = None
+            return value
+        value = b.simplify()
+        if utils.return_value != None:
+            utils.return_value = None
+        return value
+    return Int(None)
     
 def chain(a, b):
     return b.apply(a.simplify())
@@ -286,12 +295,11 @@ def createOperator(symbol, precedence, associativity, func):
     operatorsDict[symbol] = Op(func)
     return func
 
-def createClass(name, fields, methodsExpr):
+def createClass(name, methodsExpr):
     state = frameStack[-1]
     name = name.name
     typeNames.append(name)
-    fields = list(map(str, fields.tup))
-    cls = Class(name, fields, methodsExpr)
+    cls = Class(name, methodsExpr)
     state[name] = cls
     functionNames.append(name)
     return cls
@@ -328,22 +336,11 @@ def bitwise_and(x, y):
     return Int(x.value & y.value)
 
 def access(obj, field):       
-    return obj.state[field.name]
+    return obj.state[field.name].simplify()
 
 def forLoop(n, expr):
     import utils
-    if isinstance(n, Int) or isinstance(n, BinaryExpr) and n.operator.name != ';':
-        n = n.simplify()
-        for i in range(n.value):
-            expr.simplify()
-            if utils.continueLoop:
-                utils.continueLoop = False
-                break
-            if utils.breakLoop:
-                utils.breakLoop = False
-                return Int(0)
-            
-    elif isinstance(n, Iterator):
+    if isinstance(n, Iterator):
         frameStack.append({})
         var, collection = n.var, n.collection
         while not isinstance(collection, Nil):
@@ -357,36 +354,55 @@ def forLoop(n, expr):
         unassignVariables(n.var)
         frameStack[-2].update(frameStack[-1])
         frameStack.pop(-1)
-        
-    elif isinstance(n, BinaryExpr):
-        init, n = n.leftExpr, n.rightExpr
-        cond, after = n.leftExpr, n.rightExpr
-        state = {}
-        frameStack.append(state)
-        init.simplify()
-        variables = list(state.keys())
-        while cond.simplify().value:
-            expr.simplify()
-            import utils
-            if utils.continueLoop:
-                utils.continueLoop = False
-                break
-            if utils.breakLoop:
-                utils.breakLoop = False
-                return Int(0)
-            after.simplify()
-        from utils import unassignVariables
-        for var in variables:
-            frameStack[-1].pop(var)
-        frameStack[-2].update(frameStack[-1])
-        frameStack.pop(-1)
-        
+        return Int(0)
+    if isinstance(n, BinaryExpr):
+        if n.operator.name != ';':
+            n = n.simplify()
+            for i in range(n.value):
+                expr.simplify()
+                if utils.continueLoop:
+                    utils.continueLoop = False
+                    break
+                if utils.breakLoop:
+                    utils.breakLoop = False
+                    return Int(0)
+        else:
+            init, n = n.leftExpr, n.rightExpr
+            cond, after = n.leftExpr, n.rightExpr
+            state = {}
+            frameStack.append(state)
+            init.simplify()
+            variables = list(state.keys())
+            while cond.simplify().value:
+                expr.simplify()
+                import utils
+                if utils.continueLoop:
+                    utils.continueLoop = False
+                if utils.breakLoop:
+                    utils.breakLoop = False
+                    break
+                after.simplify()
+            from utils import unassignVariables
+            for var in variables:
+                frameStack[-1].pop(var)
+            frameStack[-2].update(frameStack[-1])
+            frameStack.pop(-1)
+    n = n.simplify()
+    for i in range(n.value):
+        expr.simplify()
+        if utils.continueLoop:
+            utils.continueLoop = False
+        if utils.breakLoop:
+            utils.breakLoop = False
+            ret 
     return Int(0)
 
 def whileLoop(cond, expr):
     while cond.simplify().value:
         expr.simplify()
         import utils
+        if utils.continueLoop:
+            utils.continueLoop = False
         if utils.breakLoop:
             utils.breakLoop = False
             break
@@ -420,15 +436,17 @@ def checkImplements(subclass, interface):
             print("Missing definition for " + methodName)
     return subclass
 
-def definition(name):
-    name = name.name
+def definition(name_var, args_tup, expr):
+    name = name_var.name
     state = frameStack[-1]
-    state[name] = None
+    state[name] = func = Lambda(name, arguments = [args_tup], expr = expr)
+    return func
+
 
 def switch(value, expr):
     cases = []
     while True:
-        if not (isinstance(expr, BinaryExpr) and expr.operator.name == '\n'):
+        if not ((isinstance(expr, BinaryExpr) and expr.operator.name == ';')):
             cases.append(expr)
             break
         cases.insert(0, expr.leftExpr)
@@ -436,14 +454,13 @@ def switch(value, expr):
     for case in cases:
         if (isinstance(case.cond, Variable) and case.cond.name == 'default' 
             or equals(value.simplify(), case.cond.simplify()).value):
-            case.ret.simplify()
-            break
-    return Int(0)
+            return case.ret.simplify()
+    return Int(None)
         
 def cascade(value, expr):
     cases = []
     while True:
-        if not (isinstance(expr, BinaryExpr) and expr.operator.name == '\n'):
+        if not (isinstance(expr, BinaryExpr) and expr.operator.name == ';'):
             cases.append(expr)
             break
         cases.append(expr.leftExpr)
@@ -471,5 +488,16 @@ def evaluate_in_scope(assign, expr):
         state.pop(var)
     frameStack[-2].update(state)
     frameStack.pop(-1)
-            
-        
+
+def import_module(name):
+    name = name.name
+    file = open('Modules/' + name + '.txt', 'r')
+    code = file.read()
+    from utils import haskellEval
+    haskellEval(code)
+    return Int(0)
+    
+def return_statement(value):
+    import utils
+    utils.return_value = value
+    return value
