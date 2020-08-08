@@ -60,7 +60,7 @@ class Cons(List):
         if simplifyVariables:
             hd = hd.simplify()
         if isinstance(hd, BinaryExpr) and hd.operator.name == ' ':
-            hd = BinaryExpr(self.item.operator, hd.leftExpr,
+            hd = BinaryExpr(hd.operator, hd.leftExpr,
                             hd.rightExpr.simplify(False))
         return Cons(hd, self.tail.simplify(simplifyVariables))
 

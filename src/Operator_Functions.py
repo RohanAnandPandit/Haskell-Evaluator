@@ -354,18 +354,16 @@ def forLoop(n, expr):
         unassignVariables(n.var)
         frameStack[-2].update(frameStack[-1])
         frameStack.pop(-1)
-        return Int(0)
-    if isinstance(n, BinaryExpr):
+    elif isinstance(n, BinaryExpr):
         if n.operator.name != ';':
             n = n.simplify()
             for i in range(n.value):
                 expr.simplify()
                 if utils.continueLoop:
                     utils.continueLoop = False
-                    break
                 if utils.breakLoop:
                     utils.breakLoop = False
-                    return Int(0)
+                    break
         else:
             init, n = n.leftExpr, n.rightExpr
             cond, after = n.leftExpr, n.rightExpr
@@ -387,13 +385,14 @@ def forLoop(n, expr):
                 frameStack[-1].pop(var)
             frameStack[-2].update(frameStack[-1])
             frameStack.pop(-1)
-    n = n.simplify()
-    for i in range(n.value):
-        expr.simplify()
-        if utils.continueLoop:
-            utils.continueLoop = False
-        if utils.breakLoop:
-            utils.breakLoop = False
+    else:
+        n = n.simplify()
+        for i in range(n.value):
+            expr.simplify()
+            if utils.continueLoop:
+                utils.continueLoop = False
+            if utils.breakLoop:
+                utils.breakLoop = False
     return Int(0)
 
 def whileLoop(cond, expr):
