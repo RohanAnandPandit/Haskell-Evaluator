@@ -5,17 +5,25 @@ Created on Mon Jun 29 10:19:03 2020
 @author: rohan
 """
 functionNamesTuple = ['fst', 'snd', 'swap']
-
 class Tuple:
     def __init__(self, tup):
         self.tup = tup
        
     def simplify(self, simplifyVariables = True):
-        if simplifyVariables:
-            tup = []
-            for i in range(len(self.tup)):
-                tup.append(self.tup[i].simplify())
-            return Tuple(tup)
+        from Expression import BinaryExpr
+
+        tup = []
+        for i in range(len(self.tup)):
+            value = self.tup[i]
+            if (simplifyVariables):
+                value = self.tup[i].simplify()
+            if (isinstance(self.tup[i], BinaryExpr) 
+                and self.tup[i].operator.name == ' '):
+                value = BinaryExpr(self.tup[i].operator, self.tup[i].leftExpr,
+                                   self.tup[i].rightExpr.simplify(False))
+            tup.append(value)
+                
+        return Tuple(tup)
         return self
     
     def __str__(self):

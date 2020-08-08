@@ -1,35 +1,35 @@
+class Pair (
+	def init {first, second} (this.first = first; this.second = second)
+	def toString = "{" ++ show first ++ ", " ++ show second ++ "}"
+)
+
 class Map (
 	def init {} (this.pairs = [])
 	
-	def get k = (
-		for {key, value} in pairs (
-			if (key == k) (return value)
+	def get key = (
+		for p in pairs (
+			if (p.first == key) (return p.second)
 		)
 		return ?
 	)
 
-	def put {k, v} = (
-		list = []
-		not_found = True
-		prev_value = ?
-		for {key, value} in pairs (
-			if (key == k) (
-				list = {k, v} : list
-				not_found = False
-				prev_value = value
-				continue
+	def put {key, value} = (
+		for p in pairs (
+			if (p.first == key) (
+				prev = p.second
+				p.second = value
+				return prev
 			)
-			list = {key, value} : list
 		)
-		if (not_found) (list = {k, v} : list)
-		this.pairs = list
-		return prev_value
+		this.pairs = Pair {key, value} : pairs
+		return ?
 	)
 
-	def keys = map fst pairs
+	def keys = map (.first) pairs
 	
-	def values = map snd pairs
+	def values = map (.second) pairs
 )
+
 
 
 

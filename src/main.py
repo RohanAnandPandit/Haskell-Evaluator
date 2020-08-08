@@ -4,8 +4,8 @@ Created on Mon Jun 22 10:24:50 2020
 
 @author: rohan
 """
+
 import utils
-from utils import builtInState, frameStack, haskellEval, functionNames, operators, keywords
 from Operators import initialiseFunctions
 import tkinter as tk
 import ctypes
@@ -13,7 +13,7 @@ import os
 ctypes.windll.shcore.SetProcessDpiAwareness(1)
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (50, 50) 
 
-initialiseFunctions(builtInState)
+initialiseFunctions(utils.builtInState)
 
 def commandLine():
     while (True):
@@ -23,13 +23,16 @@ def commandLine():
         elif (string == '$quit'):
             break
         elif (string == '$stack'):
-            print(frameStack)
+            print(utils.frameStack)
             continue
-        value = haskellEval(string)
+        value = utils.evaluate(string)
         if (value != None):
             print(value)
-
+    
 def execute(text):
+    import utils
+    #utils.reset_state()
+    #initialiseFunctions(utils.builtInState)
     code = text.get(1.0, tk.END)
     if "#STATIC-MODE#\n" in code:
         utils.static_mode = True
@@ -37,9 +40,10 @@ def execute(text):
         utils.functional_mode = True
     parts = code.split('#EVAL#\n')
     for part in parts:
-        haskellEval(part)
+        utils.evaluate(part)
 
-lightmode = {'bg' : 'white', 'fg' : 'black', 'operators' : 'orange', 'insert' : 'black', 'keywords' : 'orange'}
+lightmode = {'bg' : 'white', 'fg' : 'black', 'operators' : 'orange',
+             'insert' : 'black', 'keywords' : 'orange'}
 darkmode = {'bg' : 'black', 'fg' : 'white', 'operators' : 'yellow', 
             'insert' : 'white', 'keywords' : 'cyan', 'string' : 'lime green'}
 mode = darkmode
@@ -85,7 +89,7 @@ def analyse(event, text):
             text.mark_set("insert", "insert-1c")
 
     text.tag_remove('function', '1.0', tk.END)    
-    for name in functionNames:
+    for name in utils.functionNames:
         start = 1.0
         while 1:
             pos = text.search(name, start, stopindex = tk.END)
@@ -100,7 +104,7 @@ def analyse(event, text):
             
     
     text.tag_remove('operator', '1.0', tk.END)    
-    for operator in operators:
+    for operator in utils.operators:
         start = 1.0
         while 1:
             pos = text.search(operator, start, stopindex = tk.END)
@@ -112,7 +116,7 @@ def analyse(event, text):
     text.tag_config("operator", foreground = mode['operators'])
 
     text.tag_remove('keyword', '1.0', tk.END)    
-    for keyword in keywords:
+    for keyword in utils.keywords:
         start = 1.0
         while 1:
             pos = text.search(keyword, start, stopindex = tk.END)

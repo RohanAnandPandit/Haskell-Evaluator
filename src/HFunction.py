@@ -182,12 +182,14 @@ class Lambda:
         return self
 
     def returnValue(self, state):
-        from utils import frameStack 
-        frameStack.append(state)
+        import utils 
+        utils.frameStack.append(state)
         if self.expr != None:
             value = self.expr.simplify()
         else:
             value = None
-        frameStack.pop(-1)
+        utils.frameStack.pop(-1)
+        if (utils.return_value != None):
+            utils.return_value = None
         return value
     

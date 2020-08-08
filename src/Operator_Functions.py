@@ -53,7 +53,7 @@ def assign(a, b, state = None):
             while True:
                 arg = args.rightExpr
                 if not isinstance(arg, BinaryExpr) or arg.operator.name != ' ':
-                    arg = arg.simplify()
+                    arg = arg.simplify(False)
                 arguments.insert(0, arg)
                 args = args.leftExpr
                 if isinstance(args, Variable):
@@ -231,16 +231,9 @@ def sequence(a, b):
     a.simplify()
     import utils
     if utils.return_value != None:
-        value = utils.return_value
-        utils.return_value = None
-        utils.breakLoop = False 
-        return value
+        return utils.return_value
     if not (utils.breakLoop or utils.continueLoop):
-        value = b.simplify()
-        if utils.return_value != None:
-            utils.return_value = None
-            utils.breakLoop = False 
-        return value
+        return b.simplify()
     return Int(None)
     
 def chain(a, b):
@@ -339,7 +332,8 @@ def bitwise_or(x, y):
 def bitwise_and(x, y):
     return Int(x.value & y.value)
 
-def access(obj, field):       
+def access(a, b):
+    obj, field = a, b       
     return obj.state[field.name].simplify()
 
 def forLoop(n, expr):
@@ -350,7 +344,7 @@ def forLoop(n, expr):
         while not isinstance(collection, Nil):
             assign(var, head(collection))
             expr.simplify()
-            if utils.breakLoop:
+            if utils.breakLoop or utils.return_value != None:
                 utils.breakLoop = False
                 break
             if utils.continueLoop:
@@ -384,7 +378,7 @@ def forLoop(n, expr):
                 import utils
                 if utils.continueLoop:
                     utils.continueLoop = False
-                if utils.breakLoop:
+                if utils.breakLoop or utils.return_value != None:
                     utils.breakLoop = False
                     break
                 after.simplify()
@@ -408,7 +402,7 @@ def whileLoop(cond, expr):
         import utils
         if utils.continueLoop:
             utils.continueLoop = False
-        if utils.breakLoop:
+        if utils.breakLoop or utils.return_value != None:
             utils.breakLoop = False
             break
     return Int(0)
@@ -498,12 +492,11 @@ def import_module(name):
     name = name.name
     file = open('Modules/' + name + '.txt', 'r')
     code = file.read()
-    from utils import haskellEval
-    haskellEval(code)
+    from utils import evaluate
+    evaluate(code)
     return Int(0)
     
 def return_statement(value):
     import utils
     utils.return_value = value
-    utils.breakLoop = True
     return value

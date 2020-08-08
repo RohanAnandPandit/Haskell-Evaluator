@@ -11,6 +11,11 @@ from List import Nil, Cons, head, tail
 from Tuple import functionNamesTuple, Tuple
 from Stack import Stack
 
+'''
+global builtInState, static_mode, functional_mode, frameStack, enumNames
+global typeNames, structNames, operators, keywords, continueLoop, breakLoop 
+global return_value, functionNames
+'''
 builtInState = {}
 static_mode = False
 functional_mode = False 
@@ -40,6 +45,38 @@ functionNames += functionNamesTuple
 functionNames += IO.functionNamesIO
 functionNames += ['eval', 'read', 'range']
 
+def reset_state():
+    import utils
+    utils.builtInState = {}
+    utils.static_mode = False
+    utils.functional_mode = False 
+    utils.frameStack = [builtInState]
+    utils.enumNames = []
+    utils.typeNames = ['Int', 'Float', 'Char', 'Bool']
+    utils.structNames = []
+    utils.operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
+                 '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
+                 '$', ';', '>>', '>>=', '=', '->', '--', '\\',  ' where ', '|', '@',
+                 '<-', '<<', '&', '}', '¦', ' then ', ' else ', '#', '{', '=>', '~',
+                 ',,', '\n', '.', ' extends ', ';;', ' implements ', '!=', ' in ']
+    
+    utils.keywords = ('class', 'def', 'struct', 'interface', 'extends',
+                'where', 'implements', 'while', 'for', 'case', 'default',
+                'if', 'else', 'then', 'enum', 'oper', 'break', 'continue',
+                'cascade', 'in', 'True', 'False', 'let', 'import', 'return')
+    
+    utils.continueLoop = False
+    utils.breakLoop = False
+    utils.return_value = None
+    utils.functionNames = Prelude.functionNamesPrelude
+    utils.functionNames += List.functionNamesList 
+    utils.functionNames += Maybe.functionNamesMaybe 
+    utils.functionNames += Char.functionNamesChar
+    utils.functionNames += functionNamesTuple
+    utils.functionNames += IO.functionNamesIO
+    utils.functionNames += ['eval', 'read', 'range']
+
+
 closer = {'[' : ']', '(' : ')'}
 
 brackets = ['[', ']','(', ')']
@@ -62,28 +99,23 @@ def stringToList(string):
         
 
 def getData(exp):
-    if exp == '':
-        return None
     if isPrimitive(exp):
         return exp
+
+    if '.' in str(exp):
+        return Float(float(exp))
     try: 
-        x = int(exp) 
-        if x == float(exp):
-            return Int(x)
+        return Int(int(exp))
     except:
         pass
-    try:
-        x = float(exp)
-        return Float(x)
-    except:
-        pass
+
     if exp == 'True':
         return Bool(True)
     elif exp == 'False':
         return Bool(False)
     if exp in enumNames:
         return builtInState[exp]
-    if exp == '?':
+    if exp in '?':
         return Int(None)
     
     from Types import Variable
@@ -92,7 +124,7 @@ def getData(exp):
 def isPrimitive(expr):
     return type(expr) in [Int, Float, Bool, Char, EnumValue]
 
-def haskellEval(exp):  
+def evaluate(exp):  
     from Lexer import Lexer
     from Parser import parse  
     if isinstance(exp, Cons):
@@ -213,7 +245,10 @@ def optimise(expr):
 
 def unassignVariables(struct):
     if isinstance(struct, Variable):
-        frameStack[-1].pop(struct.name)
+        try:
+            frameStack[-1].pop(struct.name)
+        except:
+            pass
     elif isinstance(struct, Cons):
         unassignVariables(head(struct))
         unassignVariables(tail(struct))
