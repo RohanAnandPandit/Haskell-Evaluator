@@ -17,10 +17,12 @@ class Tuple:
             value = self.tup[i]
             if (simplifyVariables):
                 value = self.tup[i].simplify()
-            if (isinstance(self.tup[i], BinaryExpr) 
-                and self.tup[i].operator.name == ' '):
-                value = BinaryExpr(self.tup[i].operator, self.tup[i].leftExpr,
-                                   self.tup[i].rightExpr.simplify(False))
+            if isinstance(self.tup[i], BinaryExpr):
+                if self.tup[i].operator.name == ' ':
+                    value = BinaryExpr(self.tup[i].operator, self.tup[i].leftExpr,
+                                       self.tup[i].rightExpr.simplify(False))
+                else:
+                    value = value.simplify()
             tup.append(value)
                 
         return Tuple(tup)

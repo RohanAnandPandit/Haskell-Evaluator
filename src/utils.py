@@ -178,7 +178,7 @@ def patternMatch(expr1, expr2):
         elif isPrimitive(expr2):
             return expr1.leftExpr.name == expr2.type
     return False
-   
+
 def optimise(expr):
     from Expression import BinaryExpr
     from Operator_Functions import equals

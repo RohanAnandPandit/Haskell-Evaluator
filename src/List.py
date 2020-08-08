@@ -59,9 +59,11 @@ class Cons(List):
         hd = self.item
         if simplifyVariables:
             hd = hd.simplify()
-        if isinstance(hd, BinaryExpr) and hd.operator.name == ' ':
-            hd = BinaryExpr(hd.operator, hd.leftExpr,
-                            hd.rightExpr.simplify(False))
+        if isinstance(hd, BinaryExpr):
+            if (hd.operator.name == ' '):
+                hd = BinaryExpr(hd.operator, hd.leftExpr, hd.rightExpr.simplify(False))
+            else:
+                hd = hd.simplify()
         return Cons(hd, self.tail.simplify(simplifyVariables))
 
 class Iterator(List):
