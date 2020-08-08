@@ -7,7 +7,7 @@ Created on Mon Jun 22 11:24:28 2020
 import List, Maybe, Char, IO
 import Prelude
 from Types import Variable, Int, Float, Bool, Alias, EnumValue, Object, Structure
-from List import Nil, Cons, head, tail
+from List import Nil, Cons, head, tail, Range
 from Tuple import functionNamesTuple, Tuple
 from Stack import Stack
 
@@ -154,11 +154,13 @@ def patternMatch(expr1, expr2):
         return equals(expr1, expr2).value
     if isinstance(expr1, Nil) and isinstance(expr2, Nil):
         return True
-    if isinstance(expr1, Cons) and isinstance(expr2, Cons):
-        return patternMatch(head(expr1), head(expr2)) and patternMatch(tail(expr1), tail(expr2))
+    if isinstance(expr1, (Cons, Range)) and isinstance(expr2, (Cons, Range)):
+        return (patternMatch(head(expr1), head(expr2)) 
+                and patternMatch(tail(expr1), tail(expr2)))
     if (isinstance(expr1, BinaryExpr) and isinstance(expr2, BinaryExpr)
         and expr1.operator.name == ':'):
-        return patternMatch(expr1.leftEpxr, expr2.leftExpr) and patternMatch(expr1.rightExpr, expr2.rightExpr)
+        return (patternMatch(expr1.leftEpxr, expr2.leftExpr) 
+                and patternMatch(expr1.rightExpr, expr2.rightExpr))
     if isinstance(expr1, Tuple) and isinstance(expr2, Tuple):
         if len(expr1.tup) != len(expr2.tup):
             return False

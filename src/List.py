@@ -55,7 +55,14 @@ class Cons(List):
         return self
     
     def simplify(self, simplifyVariables = True):
-        return Cons(self.item.simplify(), self.tail.simplify())
+        from Expression import BinaryExpr
+        hd = self.item
+        if simplifyVariables:
+            hd = hd.simplify()
+        if isinstance(hd, BinaryExpr) and hd.operator.name == ' ':
+            hd = BinaryExpr(self.item.operator, hd.leftExpr,
+                            hd.rightExpr.simplify(False))
+        return Cons(hd, self.tail.simplify(simplifyVariables))
 
 class Iterator(List):
     def __init__(self, var, collection):
