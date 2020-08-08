@@ -40,15 +40,16 @@ def execute(text):
         haskellEval(part)
 
 lightmode = {'bg' : 'white', 'fg' : 'black', 'operators' : 'orange', 'insert' : 'black', 'keywords' : 'orange'}
-darkmode = {'bg' : 'black', 'fg' : 'white', 'operators' : 'yellow', 'insert' : 'white', 'keywords' : 'cyan'}
-mode = lightmode
+darkmode = {'bg' : 'black', 'fg' : 'white', 'operators' : 'yellow', 
+            'insert' : 'white', 'keywords' : 'cyan', 'string' : 'lime green'}
+mode = darkmode
   
 def ide():
     root = tk.Tk()
     root.title('Beaver')
     root.attributes('-topmost', True)
-    root.geometry('2600x1000+0+0')
-    text = tk.Text(root, width = 75, height = 20, font = ('Consolas', 20, 'normal'), bg = mode['bg'],
+    root.geometry('1700x1600+0+0')
+    text = tk.Text(root, width = 80, height = 40, font = ('Consolas', 14, 'normal'), bg = mode['bg'],
                    fg = mode['fg'], insertbackground = mode['insert'], tabs = ('1c'))
     tk.Button(root, text = 'Run', command = lambda: execute(text)).grid(column = 2, row = 0)
     text.grid(column = 0, row = 0)
@@ -153,7 +154,7 @@ def analyse(event, text):
         pos2 += '+1c'
         text.tag_add("string", pos1, pos2)
         start = pos2
-    text.tag_config("string", foreground = 'green') 
+    text.tag_config("string", foreground = mode['string']) 
                 
 #way = input('Do you want to write on command-line or IDE?: ')
 #if way == 'ide':

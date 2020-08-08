@@ -118,9 +118,12 @@ def tail(a):
     elif isinstance(a, Range):
         from Operator_Functions import add, greaterThan
         start = add(a.curr, a.step)
-        if a.end.simplify() != None and greaterThan(start, a.end.simplify()).value:
+        if a.end != None and greaterThan(start, a.end.simplify()).value:
             return Nil()
-        return Range(start, a.end.simplify(), a.step)
+        end = a.end
+        if end != None:
+            end = end.simplify()
+        return Range(start, end, a.step)
 
 def last(a):    
     (x, xs) = (head(a), tail(a)) 
@@ -208,11 +211,10 @@ def drop(a, b):
 
 def mapHaskell(a, b):    
     func = a
-    (x, xs) = (head(b), tail(b))
+    x, xs = head(b), tail(b)
     if (isinstance(b, Nil)):
         return b
-    if (isinstance(b, Cons)):
-        return Cons(func.apply(x), mapHaskell(func, xs))
+    return Cons(func.apply(x), mapHaskell(func, xs))
         
 
 def words(a):

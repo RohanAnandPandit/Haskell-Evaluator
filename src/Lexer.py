@@ -17,7 +17,7 @@ class Lexer:
         self.index = 0
         self.curr = 0
         self.acc = ''
-        self.scan()
+        self.tokenize()
         
     def nextToken(self):
         value = self.peek()
@@ -39,7 +39,8 @@ class Lexer:
     def addSpace(self, op):
         if len(self.tokens) > 0:
             lastToken = self.tokens[-1]
-            if op == '\n' and isinstance(lastToken, HFunction) and lastToken.name == ' ':
+            if (op == '\n' and isinstance(lastToken, HFunction) 
+                and lastToken.name == ' '):
                 del self.tokens[-1]
             if (not isinstance(lastToken, (HFunction, Function, Lambda)) 
                 or not lastToken.name in operators
@@ -82,7 +83,8 @@ class Lexer:
             return
 
         if op not in '[({':
-            if (len(self.tokens) > 0 and isinstance(self.tokens[-1], (HFunction, Function)) 
+            if (len(self.tokens) > 0 
+                and isinstance(self.tokens[-1], (HFunction, Function)) 
                 and self.tokens[-1].name in '; '):
                 del self.tokens[-1] 
         
@@ -96,7 +98,8 @@ class Lexer:
     def addData(self):
         if self.acc != '':
             i = 0
-            while i < len(self.acc) and ('0' <= self.acc[i] <= '9' or self.acc[i] in '._'):
+            while (i < len(self.acc) 
+                    and ('0' <= self.acc[i] <= '9' or self.acc[i] in '._')):
                 i += 1
             if i == 0 or i == len(self.acc):                
                 self.tokens.append(getData(self.acc)) 
@@ -106,7 +109,7 @@ class Lexer:
                 self.tokens.append(getData(self.acc[i:])) 
             self.acc = ''
         
-    def scan(self):
+    def tokenize(self):
         while self.curr < len(self.string):
             if self.string[self.curr] == '\t':
                 self.curr += 1
@@ -120,7 +123,9 @@ class Lexer:
                 self.curr += 1
                 continue
             op = self.searchOperator(utils.operators)
-            if (op != None and not (op == '.' and '0' <= self.string[self.curr + 1] <= '9')):
+            if (op != None 
+                and not (op == '.' 
+                         and '0' <= self.string[self.curr + 1] <= '9')):
                 self.addData()
                 self.addOperator(op)
                 continue
@@ -145,7 +150,8 @@ class Lexer:
         del self.tokens[-1]
             
     def searchOperator(self, operators):
-        for length in range(11, 0, -1):
+        max_length = max(map(len, operators))
+        for length in range(max_length, 0, -1):
             if self.curr + length - 1 < len(self.string):
                 substring = self.string[self.curr : self.curr + length]
                 if substring in operators: 

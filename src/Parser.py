@@ -7,7 +7,7 @@ Created on Tue Jun 23 09:35:26 2020
 from Stack import Stack
 from HFunction import HFunction, Lambda, Function
 from Operators import Associativity, operatorFromString
-from Expression import UnaryExpr, BinaryExpr
+from Expression import BinaryExpr
 from List import Nil, Cons, Iterator
 from Tuple import Tuple
 from Types import Int, Collection, Conditional, Else, Alias
@@ -33,8 +33,7 @@ def printState(operands, operators):
 
 def createExpression(operators, operands):
     operator = operators.pop()
-    if (operator.noOfArgs == 1):
-         UnaryExpr(operator, operands.pop())
+
     (right, left) = (operands.pop(), operands.pop())
     if operator.name == '=>':
         expr = Conditional(left, right)
@@ -47,20 +46,20 @@ def createExpression(operators, operands):
     elif operator.name == 'in':
         expr = Iterator(left, right)
     else:
-        if operator.name == '-' and left == None:
-            left = Int(0)
+        if operator.name == '-':
+            if left == None or isinstance(left, Collection):
+                if isinstance(left, Collection):
+                    operands.push(left)
+                left = Int(0)
         expr = BinaryExpr(operator, left, right)
     operands.push(expr)
 
 def createCollection(operators, operands):
     operator = operators.pop()    
     right, left = operands.pop(), operands.pop()
-    if isinstance(left, Collection):
-        if (left.operator.name == operator.name):
-            left.items.append(right)
-            expr = left
-        else:
-            expr = Collection([left, right], operator)
+    if isinstance(left, Collection) and left.operator.name == operator.name:
+        left.items.append(right)
+        expr = left
     else:
         expr = Collection([left, right], operator)
     operands.push(expr)
@@ -113,7 +112,8 @@ def parse(lexer):
                 else:
                     if operands.peek() == None:
                         operands.pop()
-                    lexer.tokens.insert(lexer.index, Collection([], operatorFromString(':')))
+                    lexer.tokens.insert(lexer.index,
+                                        Collection([], operatorFromString(':')))
                     collection = parse(lexer)
                     pushOperand(convertToList(collection.items), operands, operators)
             elif token.name == '{':
@@ -123,7 +123,8 @@ def parse(lexer):
                 else:
                     if operands.peek() == None:
                         operands.pop() 
-                    lexer.tokens.insert(lexer.index, Collection([], operatorFromString(',')))
+                    lexer.tokens.insert(lexer.index,
+                                        Collection([], operatorFromString(',')))
                     collection = parse(lexer)
                     pushOperand(Tuple(collection.items), operands, operators)
             elif token.name in  ('}', ']', ','):
@@ -141,13 +142,13 @@ def parse(lexer):
                 right, left = operands.pop(), operands.pop() 
                 left.items.append(right)
                 operands.push(left)
-                if token.name in ('}', ']'):
-                    return operands.pop()
-                else:
-                    lexer.tokens.insert(lexer.index, Collection([], left.operator))
+                if token.name == ',':
+                    lexer.tokens.insert(lexer.index,
+                                        Collection([], left.operator))
                     expr = parse(lexer) 
-                    operands.push(Collection(operands.pop().items + expr.items, left.operator))
-                    return operands.pop()
+                    operands.push(Collection(operands.pop().items + expr.items,
+                                             left.operator))
+                return operands.pop()
             else:
                 if token.name == '`':
                     token = lexer.nextToken().simplify()

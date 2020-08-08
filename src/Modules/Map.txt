@@ -1,4 +1,4 @@
-class Dictionary (
+class Map (
 	def init {} (this.pairs = [])
 	
 	def get k = (
@@ -11,16 +11,19 @@ class Dictionary (
 	def put {k, v} = (
 		list = []
 		not_found = True
+		prev_value = ?
 		for {key, value} in pairs (
 			if (key == k) (
 				list = {k, v} : list
 				not_found = False
+				prev_value = value
 				continue
 			)
 			list = {key, value} : list
 		)
 		if (not_found) (list = {k, v} : list)
 		this.pairs = list
+		return prev_value
 	)
 
 	def keys = map fst pairs

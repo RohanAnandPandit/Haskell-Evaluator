@@ -42,6 +42,7 @@ class Constant:
     
 class Int:
     def __init__(self, value):
+        self.type = 'Int'
         self.value = value
     
     def simplify(self, simplifyVariable = True):
@@ -54,6 +55,7 @@ class Int:
 
 class Float:
     def __init__(self, value):
+        self.type = 'Float'
         self.value = value
     
     def simplify(self, simplifyVariable = True):
@@ -65,6 +67,7 @@ class Float:
 
 class Bool:
     def __init__(self, value):
+        self.type = 'Bool'
         self.value = value
     
     def simplify(self, simplifyVariable = True):
@@ -77,6 +80,7 @@ class Bool:
 
 class Char:
     def __init__(self, value):
+        self.type = 'Char'
         self.value = value
     
     def simplify(self, simplifyVariable = True):

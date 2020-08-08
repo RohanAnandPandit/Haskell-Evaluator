@@ -11,12 +11,12 @@ from List import Nil, Cons, head, tail
 from Tuple import functionNamesTuple, Tuple
 from Stack import Stack
 
-builtInState = {'PI' : Float(3.1415926535)}
+builtInState = {}
 static_mode = False
 functional_mode = False 
 frameStack = [builtInState]
 enumNames = []
-typeNames = []
+typeNames = ['Int', 'Float', 'Char', 'Bool']
 structNames = []
 operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
              '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
@@ -101,7 +101,7 @@ def haskellEval(exp):
     print("tokens : ", end = '')
     lexer.printTokens() 
     expr = parse(lexer)
-    #binExp = optimise(binExp)
+    #expr = optimise(expr)
     print("expression : ", str(expr)) 
     print("result : ", end = '')
     #try:
@@ -134,11 +134,14 @@ def patternMatch(expr1, expr2):
             if not patternMatch(expr1.tup[i], expr2.tup[i]):
                 return False
         return True
-    if isinstance(expr1, BinaryExpr) and isinstance(expr2, Structure):
-        if expr1.leftExpr.name == expr2.type.name:
-            return patternMatch(expr1.rightExpr, Tuple(expr2.values))
-    if isinstance(expr1, BinaryExpr) and isinstance(expr2, Object):
-        return expr1.leftExpr.name == expr2.classType.name
+    if isinstance(expr1, BinaryExpr): 
+        if isinstance(expr2, Structure):
+            if expr1.leftExpr.name == expr2.type.name:
+                return patternMatch(expr1.rightExpr, Tuple(expr2.values))
+        elif isinstance(expr2, Object):
+            return expr1.leftExpr.name == expr2.classType.name
+        elif isPrimitive(expr2):
+            return expr1.leftExpr.name == expr2.type
     return False
    
 def optimise(expr):
@@ -195,6 +198,9 @@ def optimise(expr):
             elif equals(expr.rightExpr, Int(1)).value:
                 if expr.leftExpr != None:
                     return expr.leftExpr
+            elif equals(expr.rightExpr, Int(0)).value:
+                if expr.leftExpr != None:
+                    return Int(1)
         elif expr.operator.name == '++':
             if isinstance(expr.leftExpr, Nil):
                 if expr.rightExpr != None:
@@ -202,8 +208,7 @@ def optimise(expr):
             elif isinstance(expr.rightExpr, Nil):
                 if expr.leftExpr != None:
                     return expr.leftExpr
-        elif expr.operator.name == ' ':
-            pass
+
     return expr
 
 def unassignVariables(struct):

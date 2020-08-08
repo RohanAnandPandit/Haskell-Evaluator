@@ -10,17 +10,6 @@ from HFunction import HFunction
 class Expression:
     pass
 
-class UnaryExpr(Expression):
-    def __init__(self, operator, value):
-        self.operator = operator
-        self.value = value
-    
-    def simplify(self, simplifyVariables = True):
-        return self.operator.apply(self.value)
-    
-    def __str__(self):
-        return str(self.operator) + str(self.value)
-        
 class BinaryExpr(Expression):
     def __init__(self, operator, left, right): 
         self.operator = operator

@@ -76,7 +76,10 @@ def assign(a, b, state = None):
                 assign(arguments[1], value, state)
                 return value 
             elif arguments[0].name in structNames:
-                assign(arguments[1], Tuple(value.values), state)
+                if isinstance(arguments[1], Tuple):
+                    assign(arguments[1], Tuple(value.values), state)
+                else:
+                    assign(arguments[1], value, state)
                 return value
         elif var.operator.name == '.':
             obj = var.leftExpr.simplify()
@@ -145,7 +148,6 @@ def greaterThanOrEqual(a, b):
     return Bool(a >= b)
 
 def equals(a, b):
-    a,b = a.simplify(), b.simplify()
     if a == None or b == None:
         return Bool(False)
     if isinstance(a, (Variable, BinaryExpr)) or isinstance(b, (Variable, BinaryExpr)):
@@ -228,14 +230,16 @@ def comprehension(a, b):
 def sequence(a, b):
     a.simplify()
     import utils
+    if utils.return_value != None:
+        value = utils.return_value
+        utils.return_value = None
+        utils.breakLoop = False 
+        return value
     if not (utils.breakLoop or utils.continueLoop):
-        if utils.return_value != None:
-            value = utils.return_value
-            utils.return_value = None
-            return value
         value = b.simplify()
         if utils.return_value != None:
             utils.return_value = None
+            utils.breakLoop = False 
         return value
     return Int(None)
     
@@ -342,13 +346,15 @@ def forLoop(n, expr):
     import utils
     if isinstance(n, Iterator):
         frameStack.append({})
-        var, collection = n.var, n.collection
+        var, collection = n.var, n.collection.simplify()
         while not isinstance(collection, Nil):
             assign(var, head(collection))
             expr.simplify()
             if utils.breakLoop:
                 utils.breakLoop = False
                 break
+            if utils.continueLoop:
+                utils.continueLoop = False
             collection = tail(collection)
         from utils import unassignVariables
         unassignVariables(n.var)
@@ -394,7 +400,6 @@ def forLoop(n, expr):
             utils.continueLoop = False
         if utils.breakLoop:
             utils.breakLoop = False
-            ret 
     return Int(0)
 
 def whileLoop(cond, expr):
@@ -420,8 +425,8 @@ def continueCurrentLoop():
     
 def ifStatement(cond, expr):
     if cond.simplify().value:
-        expr.simplify()
-    return Int(0)
+        return expr.simplify()
+    return Int(None)
 
 def inherits(subclass, superclass):
      subclass.state['super'] = superclass
@@ -500,4 +505,5 @@ def import_module(name):
 def return_statement(value):
     import utils
     utils.return_value = value
+    utils.breakLoop = True
     return value

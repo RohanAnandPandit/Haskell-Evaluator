@@ -1,11 +1,7 @@
 class Stack (
-	def init {} (
-		this.list = []
-	)
+	def init {} (this.list = [])
 
-	def push item = (
-		this.list = item : list
-	)
+	def push item = (this.list = item : list)
 
 	def pop = (
 		if (list == []) (return ?)
@@ -15,7 +11,7 @@ class Stack (
 		return item
 	)
 
-	def toString = show this.list
+	def toString = "top" ++ show this.list
 )
 
 
