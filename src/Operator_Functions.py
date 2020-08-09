@@ -268,6 +268,7 @@ def createStruct(name, fields):
     state = frameStack[-1]
     fields = list(map(lambda var: var.name, fields.tup))
     name = name.name
+    typeNames.append(name)
     structNames.append(name)
     struct = Struct(name, fields)
     state[name] = struct

@@ -11,22 +11,22 @@ class Tuple:
        
     def simplify(self, simplifyVariables = True):
         from Expression import BinaryExpr
-
+        from utils import typeNames
         tup = []
         for i in range(len(self.tup)):
             value = self.tup[i]
             if (simplifyVariables):
                 value = self.tup[i].simplify()
             if isinstance(self.tup[i], BinaryExpr):
-                if self.tup[i].operator.name == ' ':
-                    value = BinaryExpr(self.tup[i].operator, self.tup[i].leftExpr,
-                                       self.tup[i].rightExpr.simplify(False))
+                if (self.tup[i].operator.name == ' ' 
+                    and self.tup[i].leftExpr.name in typeNames):
+                    value = BinaryExpr(value.operator, value.leftExpr,
+                                       value.rightExpr.simplify(False))
                 else:
                     value = value.simplify()
             tup.append(value)
                 
         return Tuple(tup)
-        return self
     
     def __str__(self):
         return '{' + ', '.join(list(map(str, self.tup))) + '}'

@@ -56,11 +56,12 @@ class Cons(List):
     
     def simplify(self, simplifyVariables = True):
         from Expression import BinaryExpr
+        from utils import typeNames
         hd = self.item
         if simplifyVariables:
             hd = hd.simplify()
         if isinstance(hd, BinaryExpr):
-            if (hd.operator.name == ' '):
+            if (hd.operator.name == ' ' and hd.leftExpr.name in typeNames):
                 hd = BinaryExpr(hd.operator, hd.leftExpr, hd.rightExpr.simplify(False))
             else:
                 hd = hd.simplify()
