@@ -8,13 +8,12 @@ import utils
 from utils import frameStack, builtInState, functionNames, getData, enumNames, isPrimitive, typeNames, structNames
 from HFunction import HFunction, Composition, Function, Lambda
 from List import List, Nil, Cons, Iterator, head, tail
-from Tuple import Tuple, fst, snd
-from Types import Int, Float, Bool, Variable, Alias, Enum, EnumValue, Struct, Class, Interface
+from Tuple import Tuple
+from Types import Int, Float, Bool, Variable, Alias, Enum, EnumValue, Struct, Class, Interface, Char
 from Expression import BinaryExpr
 
+
 def assign(a, b, state = None):
-    if (state == None):
-        state = frameStack[-1]
     var, value = a, b
     if isPrimitive(var) or isinstance(var, Nil):
         return 
@@ -31,14 +30,21 @@ def assign(a, b, state = None):
                     raise Exception('Cannot assign variable', var.name, 'of type',
                                     str(varType), 'with value of type',  str(valType),
                                     'in STATIC-MODE.')
+        if state == None:
+            for i in range(len(frameStack) - 1, -1, -1):
+                curr = frameStack[i]
+                if var.name in curr.keys():
+                    curr[var.name] = value
+                    return value
+        frameStack[-1][var.name] = value
+        return value
 
-        state[var.name] = value
-    elif isinstance(var, Alias):
+    if isinstance(var, Alias):
         assign(var.var, value, state)
         assign(var.expr, value, state)
     elif isinstance(var, Tuple):
         varTup = var.tup
-        valTup =  value.simplify().tup
+        valTup =  value.tup
         for i in range(len(varTup)): 
             assign(varTup[i], valTup[i], state)
         return value
@@ -72,14 +78,14 @@ def assign(a, b, state = None):
                         state[name] = func
                         functionNames.append(name) 
                 return case
-            elif arguments[0].name in typeNames:
-                assign(arguments[1], value, state)
-                return value 
             elif arguments[0].name in structNames:
                 if isinstance(arguments[1], Tuple):
-                    assign(arguments[1], Tuple(value.values), state)
+                    assign(arguments[1], Tuple(value.values), frameStack[-1]) 
                 else:
                     assign(arguments[1], value, state)
+                return value
+            elif arguments[0].name in typeNames:
+                assign(arguments[1], value, frameStack[-1])
                 return value
         elif var.operator.name == '.':
             obj = var.leftExpr.simplify()
@@ -351,9 +357,6 @@ def forLoop(n, expr):
             if utils.continueLoop:
                 utils.continueLoop = False
             collection = tail(collection)
-        from utils import unassignVariables
-        unassignVariables(n.var)
-        frameStack[-2].update(frameStack[-1])
         frameStack.pop(-1)
     elif isinstance(n, BinaryExpr):
         if n.operator.name != ';':
@@ -371,7 +374,6 @@ def forLoop(n, expr):
             state = {}
             frameStack.append(state)
             init.simplify()
-            variables = list(state.keys())
             while cond.simplify().value:
                 expr.simplify()
                 import utils
@@ -381,10 +383,6 @@ def forLoop(n, expr):
                     utils.breakLoop = False
                     break
                 after.simplify()
-            from utils import unassignVariables
-            for var in variables:
-                frameStack[-1].pop(var)
-            frameStack[-2].update(frameStack[-1])
             frameStack.pop(-1)
     else:
         n = n.simplify()
@@ -438,8 +436,16 @@ def checkImplements(subclass, interface):
 def definition(name_var, args_tup, expr):
     name = name_var.name
     state = frameStack[-1]
-    state[name] = func = Lambda(name, arguments = [args_tup], expr = expr)
-    return func
+    case = Lambda(name, arguments = [args_tup], expr = expr)
+    if name != None:
+        if name in state.keys():
+            func = state[name]
+            func.cases.append(case)
+        else:
+            func = Function(name, 1, [case])
+            state[name] = func
+            functionNames.append(name) 
+    return case
 
 
 def switch(value, expr):
@@ -500,3 +506,43 @@ def return_statement(value):
     import utils
     utils.return_value = value
     return value
+
+def toInt(expr):
+    if isinstance(expr, (Int, Float)):
+        return Int(int(expr.value))
+    if isinstance(expr, Cons):
+        return toInt(getData(str(expr)[1:-1]))
+    if isinstance(expr, Bool):
+        if expr.value:
+            return Int(1)
+        return Int(0)
+    if isinstance(expr, Char):
+        return Int(ord(expr.value))
+    return Int(0)
+
+def toFloat(expr):
+    if isinstance(expr, (Int, Float)):
+        return Float(float(expr.value))
+    if isinstance(expr, Cons):
+        return toFloat(getData(str(expr)[1:-1]))
+    if isinstance(expr, Bool):
+        if expr.value:
+            return Float(1.0)
+        return Float(0.0)
+    return Float(0)
+
+def toBool(expr):
+    if isinstance(expr, (Int, Float)):
+        if expr.value > 0:
+            return Bool(True)
+        return Bool(False)
+    if isinstance(expr, Nil):
+        return Bool(False)
+    if isinstance(expr, Cons):
+        return Bool(True)
+    return Bool(False)
+
+def toChar(expr):
+    if isinstance(expr, Int):
+        return Char(chr(expr.value))
+    return Char(chr(0))

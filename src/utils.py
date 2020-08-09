@@ -27,13 +27,14 @@ operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&',
              '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
              '$', ';', '>>', '>>=', '=', '->', '--', '\\',  ' where ', '|', '@',
              '<-', '<<', '&', '}', '¦', ' then ', ' else ', '#', '{', '=>', '~',
-             ',,', '\n', '.', ' extends ', ';;', ' implements ', '!=', ' in ']
+             ',,', '\n', '.', ' extends ', ';;', ' implements ', '!=', ' in ',
+             '+=', '-=', '*=', '/=', '^=']
 
 keywords = ('class', 'def', 'struct', 'interface', 'extends',
             'where', 'implements', 'while', 'for', 'case', 'default',
             'if', 'else', 'then', 'enum', 'oper', 'break', 'continue',
             'cascade', 'in', 'True', 'False', 'let', 'import', 'return',
-            'Int', 'Float', 'Bool', 'Char')
+            'Int', 'Float', 'Bool', 'Char') 
 
 continueLoop = False
 breakLoop = False

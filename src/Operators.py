@@ -181,7 +181,7 @@ def initialiseFunctions(state):
     state['zipWith3'] = HFunction(8, Associativity.LEFT, Prelude.zipWith3, 4, 'zipWith3')
     state['cycle'] = HFunction(8, Associativity.LEFT, Prelude.cycle, 1, 'cycle')
     state['eval'] = HFunction(8, Associativity.LEFT, 
-                             lambda exp: utils.haskellEval(str(exp)[1:-1]), 1, 'eval')
+                             lambda exp: utils.evaluate(str(exp)[1:-1]), 1, 'eval')
     state['read'] = HFunction(8, Associativity.LEFT,
                              lambda exp: utils.getData(str(exp)[1:-1]), 1, 'read')
     state['for'] = HFunction(8, Associativity.LEFT, Operator_Functions.forLoop, 2, 'for')
@@ -201,6 +201,10 @@ def initialiseFunctions(state):
     state['range'] = HFunction(8, Associativity.LEFT, Operator_Functions.range_specifier, 1, 'range')
     state['import'] = HFunction(8, Associativity.LEFT, Operator_Functions.import_module, 1, 'import')
     state['return'] = HFunction(8, Associativity.LEFT, Operator_Functions.return_statement, 1, 'return')
+    state['Int'] = HFunction(8, Associativity.LEFT, Operator_Functions.toInt, 1, 'Int')
+    state['Float'] = HFunction(8, Associativity.LEFT, Operator_Functions.toFloat, 1, 'Float')
+    state['Bool'] = HFunction(8, Associativity.LEFT, Operator_Functions.toBool, 1, 'Bool')
+    state['Char'] = HFunction(8, Associativity.LEFT, Operator_Functions.toChar, 1, 'Char')
 
 class Op:
     def __init__(self, hfunc):

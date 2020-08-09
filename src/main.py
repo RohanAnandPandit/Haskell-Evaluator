@@ -96,8 +96,8 @@ def analyse(event, text):
             if not pos:
                 break
             end = pos + '+' + str(len(name)) + 'c'
-            if (text.get(end) in ' \n)]}~$;' 
-                and (pos == '1.0' or text.get(pos + '-1c') in ' \n\t([{~$;')):
+            if (text.get(end) in ' \n)]}~$;,' 
+                and (pos == '1.0' or text.get(pos + '-1c') in ' \n\t([{~$;,')):
                 text.tag_add("function", pos, end) 
             start = end 
     text.tag_config("function", foreground = 'magenta')
@@ -123,8 +123,8 @@ def analyse(event, text):
             if not pos:
                 break
             end = pos + '+' + str(len(keyword)) + 'c'
-            if (text.get(end) in ' \n)]}~$;'
-                and (pos == '1.0' or text.get(pos + '-1c') in ' \n\t([{~$;')):
+            if (text.get(end) in ' \n)]}~$;,'
+                and (pos == '1.0' or text.get(pos + '-1c') in ' \n\t([{~$;,')):
                 text.tag_add("keyword", pos, end) 
             start = end 
     text.tag_config("keyword", foreground = mode['keywords'])
@@ -158,7 +158,20 @@ def analyse(event, text):
         pos2 += '+1c'
         text.tag_add("string", pos1, pos2)
         start = pos2
-    text.tag_config("string", foreground = mode['string']) 
+    #text.tag_remove('string', '1.0', tk.END)    
+    start = 1.0
+    while 1:
+        pos1 = text.search("'", start, stopindex = tk.END)
+        if not pos1:
+            break 
+        start = pos1 + '+1c'
+        pos2 = text.search("'", start, stopindex = tk.END)
+        if not pos2:
+            break 
+        pos2 += '+1c'
+        text.tag_add("string", pos1, pos2)
+        start = pos2
+    text.tag_config("string", foreground = mode['string'])
                 
 #way = input('Do you want to write on command-line or IDE?: ')
 #if way == 'ide':

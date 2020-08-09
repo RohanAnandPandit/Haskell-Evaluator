@@ -2,7 +2,7 @@
 """
 Created on Mon Jun 29 10:19:03 2020
 
-@author: rohan
+@author: rohan\
 """
 functionNamesTuple = ['fst', 'snd', 'swap']
 class Tuple:
@@ -17,9 +17,9 @@ class Tuple:
             value = self.tup[i]
             if (simplifyVariables):
                 value = self.tup[i].simplify()
-            if isinstance(self.tup[i], BinaryExpr):
-                if (self.tup[i].operator.name == ' ' 
-                    and self.tup[i].leftExpr.name in typeNames):
+            if isinstance(value, BinaryExpr):
+                if (value.operator.name == ' '
+                    and value.leftExpr.name in typeNames):
                     value = BinaryExpr(value.operator, value.leftExpr,
                                        value.rightExpr.simplify(False))
                 else:
