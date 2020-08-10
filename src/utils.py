@@ -21,7 +21,7 @@ static_mode = False
 functional_mode = False 
 frameStack = [builtInState]
 enumNames = []
-typeNames = ['int', 'float', 'char', 'bool', 'var']
+typeNames = ['int', 'float', 'char', 'bool', 'var', 'list', 'tuple']
 structNames = []
 operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
              '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
@@ -34,7 +34,7 @@ keywords = ('class', 'def', 'struct', 'interface', 'extends',
             'where', 'implements', 'while', 'for', 'case', 'default',
             'if', 'else', 'then', 'enum', 'oper', 'break', 'continue',
             'cascade', 'in', 'True', 'False', 'let', 'import', 'return',
-            'int', 'float', 'bool', 'char', 'var', 'do', '?') 
+            'int', 'float', 'bool', 'char', 'var', 'do', '?', 'list', 'tuple') 
 
 continueLoop = False
 breakLoop = False
@@ -178,6 +178,11 @@ def patternMatch(expr1, expr2):
             return expr1.leftExpr.name == expr2.classType.name
         elif isPrimitive(expr2):
             return expr1.leftExpr.name == expr2.type
+        elif expr1.leftExpr.name == 'list' and isinstance(expr2, (Nil, Cons)):
+            return True
+        elif expr1.leftExpr.name == 'tuple' and isinstance(expr2, Tuple):
+            return True
+
     return False
 
 def optimise(expr):
