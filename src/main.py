@@ -53,7 +53,7 @@ def ide():
     root.title('Beaver')
     root.attributes('-topmost', True)
     root.geometry('1700x1600+0+0')
-    text = tk.Text(root, width = 80, height = 40, font = ('Consolas', 14, 'normal'), bg = mode['bg'],
+    text = tk.Text(root, width = 80, height = 35, font = ('Consolas', 14, 'normal'), bg = mode['bg'],
                    fg = mode['fg'], insertbackground = mode['insert'], tabs = ('1c'))
     tk.Button(root, text = 'Run', command = lambda: execute(text)).grid(column = 2, row = 0)
     text.grid(column = 0, row = 0)

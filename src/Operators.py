@@ -218,7 +218,7 @@ def initialiseFunctions(state):
     state['toBool'] = HFunction(8, Associativity.LEFT, Operator_Functions.toBool, 1, 'toBool')
     state['toChar'] = HFunction(8, Associativity.LEFT, Operator_Functions.toChar, 1, 'toChar')
     state['do'] = HFunction(8, Associativity.LEFT, Operator_Functions.doLoop, 3, 'do')
-    state['int'] = HFunction(8, Associativity.LEFT, Operator_Functions.defaultInt, 1, 'int')
+    state['int'] = HFunction(8, Associativity.LEFT, Operator_Functions.defaultInt, 1, 'int') 
     state['float'] = HFunction(8, Associativity.LEFT, Operator_Functions.defaultFloat, 1, 'float')
     state['bool'] = HFunction(8, Associativity.LEFT, Operator_Functions.defaultBool, 1, 'bool')
     state['char'] = HFunction(8, Associativity.LEFT, Operator_Functions.defaultChar, 1, 'char')

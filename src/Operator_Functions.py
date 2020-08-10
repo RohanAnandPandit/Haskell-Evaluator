@@ -59,9 +59,9 @@ def assign(a, b, state = None):
             args = var 
             while True:
                 arg = args.rightExpr
-                if not (isinstance(arg, BinaryExpr) or arg.operator.name != ' ' 
-                        and arg.leftExpr.name in typeNames):
-                    arg = arg.simplify(False)
+                if (not isinstance(arg, BinaryExpr) 
+                    or not (arg.operator.name == ' ' and arg.leftExpr.name in typeNames)):
+                    arg = arg.simplify(False)   
                 arguments.insert(0, arg)
                 args = args.leftExpr
                 if isinstance(args, Variable):

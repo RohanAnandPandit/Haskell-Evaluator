@@ -22,7 +22,7 @@ def printHaskell(a):
     return Int(None)
 
 def show(a):
-    from utils import convertToList
+    from utils import convertToList 
     return convertToList(list(map(Char, str(a.simplify())))).simplify()
 
 def inputHaskell(question):

@@ -34,9 +34,11 @@ class Cons(List):
         self.type = listType
         
     def __str__(self):
-        if (type(self.item) == Char):
+        if isinstance(self.item, Char):
             tail = str(self.tail)
-            return '\"' + str(self.item)[1:-1] + tail[1:-1] + '\"'
+            if tail == '[]':
+                tail = ''
+            return str(self.item)[1:-1] + tail
     
         tail = str(self.tail)
         sep = ', '
