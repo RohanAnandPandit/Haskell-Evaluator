@@ -155,6 +155,7 @@ class Else:
 
 class EnumValue:
     def __init__(self, enum, name, value):
+        self.type = enum.name
         self.enum = enum
         self.name = name
         self.value = value

@@ -266,6 +266,7 @@ def createEnum(name, values):
     values = values.tup
     names = list(map(str, values))
     name = name.name
+    typeNames.append(name)
     enum = Enum(name, names)
     state[name] = enum
     i = 0
@@ -573,6 +574,27 @@ def divideBy(var, val):
 
 def raiseTo(var, val):
     return assign(var, power(var.simplify(), val.simplify()))
+
+def defaultInt(var):
+    frameStack[-1][var.name] = Int(0)
+    return Int(0)
+
+def defaultFloat(var):
+    frameStack[-1][var.name] = Float(0)
+    return Float(0)
+
+def defaultBool(var):
+    frameStack[-1][var.name] = Bool(False)
+    return Bool(False)
+
+def defaultChar(var):
+    frameStack[-1][var.name] = toChar(Int(97))
+    return toChar(Int(97))
+    
+def defaultList(var):
+    frameStack[-1][var.name] = Nil()
+    return Nil()
+
 
 
 

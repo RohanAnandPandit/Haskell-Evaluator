@@ -4,9 +4,9 @@ Created on Mon Jun 22 11:24:28 2020
 
 @author: rohan
 """
-import List, Maybe, Char, IO
+import List, Maybe, IO
 import Prelude
-from Types import Variable, Int, Float, Bool, Alias, EnumValue, Object, Structure
+from Types import Variable, Int, Float, Bool, Alias, EnumValue, Object, Structure, Char
 from List import Nil, Cons, head, tail, Range
 from Tuple import functionNamesTuple, Tuple
 from Stack import Stack
@@ -21,7 +21,7 @@ static_mode = False
 functional_mode = False 
 frameStack = [builtInState]
 enumNames = []
-typeNames = ['int', 'float', 'char', 'bool', 'var', 'list', 'tuple']
+typeNames = ['int', 'float', 'char', 'bool', 'var', 'list', 'tuple', 'string']
 structNames = []
 operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
              '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
@@ -34,7 +34,8 @@ keywords = ('class', 'def', 'struct', 'interface', 'extends',
             'where', 'implements', 'while', 'for', 'case', 'default',
             'if', 'else', 'then', 'enum', 'oper', 'break', 'continue',
             'cascade', 'in', 'True', 'False', 'let', 'import', 'return',
-            'int', 'float', 'bool', 'char', 'var', 'do', '?', 'list', 'tuple') 
+            'int', 'float', 'bool', 'char', 'var', 'do', '?', 'list', 'tuple',
+            'string') 
 
 continueLoop = False
 breakLoop = False
@@ -42,7 +43,7 @@ return_value = None
 functionNames = Prelude.functionNamesPrelude
 functionNames += List.functionNamesList 
 functionNames += Maybe.functionNamesMaybe 
-functionNames += Char.functionNamesChar
+#functionNames += Char.functionNamesChar
 functionNames += functionNamesTuple
 functionNames += IO.functionNamesIO
 functionNames += ['eval', 'read', 'range', 'toInt', 'toBool', 'toChar', 'toFloat']
@@ -115,8 +116,6 @@ def getData(exp):
         return Bool(True)
     elif exp == 'False':
         return Bool(False)
-    if exp in enumNames:
-        return builtInState[exp]
     if exp in '?':
         return Int(None)
     
@@ -181,6 +180,10 @@ def patternMatch(expr1, expr2):
         elif expr1.leftExpr.name == 'list' and isinstance(expr2, (Nil, Cons)):
             return True
         elif expr1.leftExpr.name == 'tuple' and isinstance(expr2, Tuple):
+            return True
+        elif (expr1.leftExpr.name == 'string' 
+              and (isinstance(expr2, Nil) or isinstance(expr2, Cons) 
+              and isinstance(head(expr2), Char))):
             return True
 
     return False
