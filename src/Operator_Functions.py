@@ -59,7 +59,8 @@ def assign(a, b, state = None):
             args = var 
             while True:
                 arg = args.rightExpr
-                if not isinstance(arg, BinaryExpr) or arg.operator.name != ' ':
+                if not (isinstance(arg, BinaryExpr) or arg.operator.name != ' ' 
+                        and arg.leftExpr.name in typeNames):
                     arg = arg.simplify(False)
                 arguments.insert(0, arg)
                 args = args.leftExpr
@@ -364,6 +365,24 @@ def forLoop(n, expr):
                 utils.continueLoop = False
             collection = tail(collection)
         frameStack.pop(-1)
+    elif (n, Tuple):
+        generators = n.tup       
+        frameStack.append({})
+        curr = generators[0]
+        var, collection = curr.var, curr.collection.simplify()
+        while not isinstance(collection, Nil):
+            assign(var, head(collection))
+            if len(generators) == 1:
+                expr.simplify()
+            else:
+                forLoop(Tuple(generators[1:]), expr)
+            if utils.breakLoop or utils.return_value != None:
+                utils.breakLoop = False
+                break
+            if utils.continueLoop:
+                utils.continueLoop = False
+            collection = tail(collection)
+        frameStack.pop(-1)
     elif isinstance(n, BinaryExpr):
         if n.operator.name != ';':
             n = n.simplify()
@@ -594,8 +613,3 @@ def defaultChar(var):
 def defaultList(var):
     frameStack[-1][var.name] = Nil()
     return Nil()
-
-
-
-
-

@@ -27,18 +27,6 @@ class Variable:
     def __str__(self):
         return self.name
 
-class Constant:
-    def __init__(self, name):
-        self.name = name
-        self.value = None
-    
-    def simplify(self, a = True):
-        return self.value
-    
-    def __str__(self):
-        if self.value != None:
-            return str(self.value)
-        return self.name
     
 class Int:
     def __init__(self, value):
