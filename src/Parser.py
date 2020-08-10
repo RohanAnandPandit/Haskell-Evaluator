@@ -151,10 +151,15 @@ def parse(lexer):
                 return operands.pop()
             else:
                 if token.name == '`':
-                    token = lexer.nextToken().simplify()
-                    lexer.nextToken()
-                # Compares the current operator with the operators on the stack
-                addOperator(token, operands, operators)
+                    func = lexer.nextToken()
+                    lexer.nextToken() == '`'
+                    operands.pop() == None
+                    expr = BinaryExpr(operatorFromString(' '), func, operands.pop())
+                    operands.push(expr)
+                    operators.push(operatorFromString(' '))
+                else:
+                    # Compares the current operator with the operators on the stack
+                    addOperator(token, operands, operators)
         else:
             pushOperand(token, operands, operators)
         #printState(operands, operators)

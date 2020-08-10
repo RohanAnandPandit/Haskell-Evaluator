@@ -124,8 +124,7 @@ class Lexer:
                 continue
             op = self.searchOperator(utils.operators)
             if (op != None 
-                and not (op == '.' 
-                         and '0' <= self.string[self.curr + 1] <= '9')):
+                and not (op == '.' and '0' <= self.string[self.curr + 1] <= '9')):
                 self.addData()
                 self.addOperator(op)
                 continue
