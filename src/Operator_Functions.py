@@ -9,7 +9,7 @@ from utils import frameStack, builtInState, functionNames, getData, enumNames, i
 from HFunction import HFunction, Composition, Function, Lambda
 from List import List, Nil, Cons, Iterator, head, tail
 from Tuple import Tuple
-from Types import Int, Float, Bool, Variable, Alias, Enum, EnumValue, Struct, Class, Interface, Char, Module
+from Types import Int, Float, Bool, Variable, Alias, Enum, EnumValue, Struct, Class, Interface, Char, Module, Object
 from Expression import BinaryExpr
 
 def assign(a, b, state = None):
@@ -142,20 +142,21 @@ def subtract(a, b):
     return getData(a - b)
    
 def lessThan(a, b):
-    (a, b) = (a.value, b.value)
-    return Bool(a < b)
+    if isinstance(a, Object) and isinstance(b, Object):
+        if 'lessThan' in a.state.keys():
+            return a.state['lessThan'].apply(b)
+        return Bool(False)
+    
+    return Bool(a.value < b.value)
 
 def lessThanOrEqual(a, b):
-    (a, b) = (a.value, b.value)
-    return Bool(a <= b)
+    return Bool(lessThan(a, b).value or equals(a, b).value)
 
 def greaterThan(a, b):
-    (a, b) = (a.value, b.value)
-    return Bool(a > b)
+    return Bool(not lessThanOrEqual(a, b).value)
 
 def greaterThanOrEqual(a, b):
-    a, b = a.value, b.value
-    return Bool(a >= b)
+    return Bool(greaterThan(a, b).value or equals(a, b).value)
 
 def equals(a, b):
     if a == None or b == None:
@@ -179,6 +180,12 @@ def equals(a, b):
         return Bool(True)
     if isPrimitive(a) and isPrimitive(b):
         return Bool(a.value == b.value)
+    
+    if isinstance(a, Object) and isinstance(b, Object):
+        if 'equals' in a.state.keys():
+            return a.state['equals'].apply(b)
+        return Bool(a == b)
+    
     return Bool(False)
 
 def notEqual(a, b):
@@ -365,7 +372,7 @@ def forLoop(n, expr, reset_break = True):
                 utils.continueLoop = False
             collection = tail(collection)
         frameStack.pop(-1)
-    elif (n, Tuple):
+    elif isinstance(n, Tuple):
         generators = n.tup       
         frameStack.append({})
         curr = generators[0]

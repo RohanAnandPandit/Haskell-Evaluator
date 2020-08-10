@@ -1,32 +1,16 @@
-pi = 3.1415926535
-e = 2.718281828
-phi = 1.618
+def fact1 = product~(1..)
 
-class Complex (
-	def init {a, b} (this.real = a; this.imag = b)
+def fact2 n = product (1..n)
 
-	def i = Complex {0, 1}
-		
-	def toString = str where (
-		str = "(" ++ show real
-		if (imag >= 0) (str = str ++ "+")
-		str = str ++ show imag ++ "i)"
+def fact3 n (
+	prod = 1
+	i = 1
+	for n (
+		prod *= i
+		i += 1
 	)
-
-	def add (Complex num) = Complex {real + num.real, imag + num.imag}
-	def add num = Complex {real + num, imag}
-
-	def sub (Complex num) = Complex {real - num.real, imag - num.imag}
-	def sub num = Complex {real - num, imag}
-
-	def mul (Complex num) = (
-		Complex {real * num.real - imag * num.imag, real * num.imag + imag * num.real}
-	)
-	def mul n = Complex {real * n, imag * n}
-
-	def conjugate = Complex {real, -imag}
+	prod
 )
 
-
-
+print (fact3 5)
 
