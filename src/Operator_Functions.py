@@ -12,7 +12,6 @@ from Tuple import Tuple
 from Types import Int, Float, Bool, Variable, Alias, Enum, EnumValue, Struct, Class, Interface, Char
 from Expression import BinaryExpr
 
-
 def assign(a, b, state = None):
     var, value = a, b
     if isPrimitive(var) or isinstance(var, Nil):
@@ -36,7 +35,8 @@ def assign(a, b, state = None):
                 if var.name in curr.keys():
                     curr[var.name] = value
                     return value
-        frameStack[-1][var.name] = value
+            state = frameStack[-1]
+        state[var.name] = value
         return value
 
     if isinstance(var, Alias):
@@ -53,6 +53,7 @@ def assign(a, b, state = None):
         assign(tail(var), tail(value), state)
         return value
     elif isinstance(var, BinaryExpr):
+        state = frameStack[-1]
         if var.operator.name == ' ':
             arguments = []
             args = var 
@@ -90,6 +91,8 @@ def assign(a, b, state = None):
         elif var.operator.name == '.':
             obj = var.leftExpr.simplify()
             obj.state[var.rightExpr.name] = value.simplify()
+        elif var.operator.name == ',,':
+            assign(var.simplify(), value.simplify(), state)
     return value
     
 def space(a, b):
@@ -188,7 +191,9 @@ def OR(a, b):
     a, b = a.value, b.value
     return Bool(a or b)
 
-def comma(a, b): 
+def comma(a, b):
+    if isinstance(a, Tuple):
+        return Tuple(a.tup + [b])
     return Tuple([a, b])
     
 def cons(a, b):
@@ -546,3 +551,29 @@ def toChar(expr):
     if isinstance(expr, Int):
         return Char(chr(expr.value))
     return Char(chr(0))
+
+def doLoop(expr, loop, cond):
+    expr.simplify()
+    if loop.name == 'while':
+        return whileLoop(cond, expr)
+    if loop.name == 'for':
+        return forLoop(cond, expr)
+        
+def incrementBy(var, val):
+    return assign(var, add(var.simplify(), val.simplify()))
+
+def decrementBy(var, val):
+    return assign(var, subtract(var.simplify(), val.simplify()))
+
+def multiplyBy(var, val):
+    return assign(var, multiply(var.simplify(), val.simplify()))
+
+def divideBy(var, val):
+    return assign(var, divide(var.simplify(), val.simplify()))
+
+def raiseTo(var, val):
+    return assign(var, power(var.simplify(), val.simplify()))
+
+
+
+

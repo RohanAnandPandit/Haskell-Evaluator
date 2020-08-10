@@ -35,7 +35,7 @@ logical_or = HFunction(3, Associativity.RIGHT, Operator_Functions.OR, 2, '||')
 left_parentheses = HFunction(8, Associativity.RIGHT, None, 1, '(')
 right_parentheses = HFunction(8, Associativity.LEFT, None, 1, ')')
 comma = HFunction(2, Associativity.NONE, None, 2, ',')
-tuple_cons = HFunction(2, Associativity.LEFT, Operator_Functions.comma, 2, ',,')
+tuple_cons = HFunction(2.6, Associativity.LEFT, Operator_Functions.comma, 2, ',,')
 left_bracket = HFunction(8, Associativity.RIGHT, None, 1, '[')
 right_bracket = HFunction(8, Associativity.LEFT, None, 1, ']')
 dollar = HFunction(0, Associativity.RIGHT, Operator_Functions.space, 2, '$')
@@ -62,6 +62,13 @@ right_curly = HFunction(8, Associativity.LEFT, None, 1, '}')
 else_clause = HFunction(2.5, Associativity.RIGHT, None, 2, '|')
 access = HFunction(9.1, Associativity.LEFT, Operator_Functions.access, 2, '.')
 comprehension = HFunction(8, Associativity.LEFT, Operator_Functions.comprehension, 2, '..')
+increment_by = HFunction(2.5, Associativity.RIGHT, Operator_Functions.incrementBy, 2, '+=')
+decrement_by = HFunction(2.5, Associativity.RIGHT, Operator_Functions.decrementBy, 2, '-=')
+multiply_by = HFunction(2.5, Associativity.RIGHT, Operator_Functions.multiplyBy, 2, '*=')
+divide_by = HFunction(2.5, Associativity.RIGHT, Operator_Functions.divideBy, 2, '/=')
+raise_to = HFunction(2.5, Associativity.RIGHT, Operator_Functions.raiseTo, 2, '^=')
+
+
 
 class Operator(Enum):
     EQUAL = equals
@@ -112,6 +119,11 @@ class Operator(Enum):
     IMPLEMENTS = implements
     BACK_ARROW = append_tail
     DOUBLE_PERIOD = comprehension
+    INCREMENT_BY = increment_by
+    DECREMENT_BY = decrement_by
+    MULTIPLY_BY = multiply_by
+    DIVIDE_BY = divide_by
+    RAISE_TO = raise_to
     
 def initialiseFunctions(state):
     state['fst'] = HFunction(8, Associativity.LEFT, Prelude.fst, 1, 'fst')
@@ -201,10 +213,11 @@ def initialiseFunctions(state):
     state['range'] = HFunction(8, Associativity.LEFT, Operator_Functions.range_specifier, 1, 'range')
     state['import'] = HFunction(8, Associativity.LEFT, Operator_Functions.import_module, 1, 'import')
     state['return'] = HFunction(8, Associativity.LEFT, Operator_Functions.return_statement, 1, 'return')
-    state['Int'] = HFunction(8, Associativity.LEFT, Operator_Functions.toInt, 1, 'Int')
-    state['Float'] = HFunction(8, Associativity.LEFT, Operator_Functions.toFloat, 1, 'Float')
-    state['Bool'] = HFunction(8, Associativity.LEFT, Operator_Functions.toBool, 1, 'Bool')
-    state['Char'] = HFunction(8, Associativity.LEFT, Operator_Functions.toChar, 1, 'Char')
+    state['toInt'] = HFunction(8, Associativity.LEFT, Operator_Functions.toInt, 1, 'roInt')
+    state['toFloat'] = HFunction(8, Associativity.LEFT, Operator_Functions.toFloat, 1, 'toFloat')
+    state['toBool'] = HFunction(8, Associativity.LEFT, Operator_Functions.toBool, 1, 'toBool')
+    state['toChar'] = HFunction(8, Associativity.LEFT, Operator_Functions.toChar, 1, 'toChar')
+    state['do'] = HFunction(8, Associativity.LEFT, Operator_Functions.doLoop, 3, 'do')
 
 class Op:
     def __init__(self, hfunc):
@@ -265,7 +278,12 @@ operatorsDict = {'=' : Operator.EQUAL,
                  ';' : Operator.NEWLINE,
                  ' implements ' : Operator.IMPLEMENTS,
                  '<-' : Operator.BACK_ARROW,
-                 '..' : Operator.DOUBLE_PERIOD}
+                 '..' : Operator.DOUBLE_PERIOD,
+                 '+=' : Operator.INCREMENT_BY,
+                 '-=' : Operator.DECREMENT_BY,
+                 '*=' : Operator.MULTIPLY_BY,
+                 '/=' : Operator.DIVIDE_BY,
+                 '^=' : Operator.RAISE_TO}
     
 def operatorFromString(string):
     return operatorsDict[string].value   

@@ -46,13 +46,13 @@ class BinaryExpr(Expression):
         return buf
 
     def simplifyRightExpr(self, leftExpr):
-        return not (self.operator.name in ('=', '->', 'where', '|', '.', '\n', ';', ':=') 
+        return not (self.operator.name in ('=', '->', 'where', '|', '.', '\n', ';', '+=', '-=', '*=', '/=', '^=') 
                     or self.operator.name == ' ' 
                     and isinstance(leftExpr, HFunction) 
                     and leftExpr.name in ('while', 'for', 'struct', 'enum', 
                                           'oper', 'class', 'interface', 'def',
                                           'case', 'if', 'cascade', 'let',
-                                          'import'))
+                                          'import', 'do'))
 
     def simplify(self, simplifyVariables = True):
         simplifyRightVariables = simplifyLeftVariables = simplifyVariables
@@ -64,7 +64,8 @@ class BinaryExpr(Expression):
             operator.apply()
         if self.leftExpr != None:
             leftExpr = self.leftExpr
-            if self.operator.name not in (':', '->', '=', '\n', ';', 'in', 'where', ':='):
+            if (self.operator.name not in (':', '->', '=', '\n', ';', 'in', 
+                                           'where', '+=', '-=', '*=', '/=', '^=')):
                 leftExpr = leftExpr.simplify(simplifyLeftVariables)
             operator = operator.apply(leftExpr)
             if (self.rightExpr != None):

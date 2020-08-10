@@ -21,20 +21,20 @@ static_mode = False
 functional_mode = False 
 frameStack = [builtInState]
 enumNames = []
-typeNames = ['Int', 'Float', 'Char', 'Bool']
+typeNames = ['int', 'float', 'char', 'bool', 'var']
 structNames = []
 operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
              '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
              '$', ';', '>>', '>>=', '=', '->', '--', '\\',  ' where ', '|', '@',
              '<-', '<<', '&', '}', '¦', ' then ', ' else ', '#', '{', '=>', '~',
-             ',,', '\n', '.', ' extends ', ';;', ' implements ', '!=', ' in ',
+             ',,', '\n', '.', ' extends ', ' implements ', '!=', ' in ',
              '+=', '-=', '*=', '/=', '^=']
 
 keywords = ('class', 'def', 'struct', 'interface', 'extends',
             'where', 'implements', 'while', 'for', 'case', 'default',
             'if', 'else', 'then', 'enum', 'oper', 'break', 'continue',
             'cascade', 'in', 'True', 'False', 'let', 'import', 'return',
-            'Int', 'Float', 'Bool', 'Char') 
+            'int', 'float', 'bool', 'char', 'var', 'do', '?') 
 
 continueLoop = False
 breakLoop = False
@@ -45,7 +45,7 @@ functionNames += Maybe.functionNamesMaybe
 functionNames += Char.functionNamesChar
 functionNames += functionNamesTuple
 functionNames += IO.functionNamesIO
-functionNames += ['eval', 'read', 'range']
+functionNames += ['eval', 'read', 'range', 'toInt', 'toBool', 'toChar', 'toFloat']
 
 def reset_state():
     import utils
@@ -65,7 +65,7 @@ def reset_state():
     utils.keywords = ('class', 'def', 'struct', 'interface', 'extends',
                 'where', 'implements', 'while', 'for', 'case', 'default',
                 'if', 'else', 'then', 'enum', 'oper', 'break', 'continue',
-                'cascade', 'in', 'True', 'False', 'let', 'import', 'return')
+                'cascade', 'in', 'True', 'False', 'let', 'import', 'return', 'do')
     
     utils.continueLoop = False
     utils.breakLoop = False
@@ -76,7 +76,7 @@ def reset_state():
     utils.functionNames += Char.functionNamesChar
     utils.functionNames += functionNamesTuple
     utils.functionNames += IO.functionNamesIO
-    utils.functionNames += ['eval', 'read', 'range']
+    utils.functionNames += ['eval', 'read', 'range', 'toInt', 'toBool', 'toChar', 'toFloat']
 
 
 closer = {'[' : ']', '(' : ')'}
