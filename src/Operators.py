@@ -212,6 +212,7 @@ def initialiseFunctions(state):
     state['let'] = HFunction(8, Associativity.LEFT, Operator_Functions.evaluate_in_scope, 2, 'let')
     state['range'] = HFunction(8, Associativity.LEFT, Operator_Functions.range_specifier, 1, 'range')
     state['import'] = HFunction(8, Associativity.LEFT, Operator_Functions.import_module, 1, 'import')
+    state['from'] = HFunction(8, Associativity.LEFT, Operator_Functions.from_import, 3, 'from')
     state['return'] = HFunction(8, Associativity.LEFT, Operator_Functions.return_statement, 1, 'return')
     state['toInt'] = HFunction(8, Associativity.LEFT, Operator_Functions.toInt, 1, 'roInt')
     state['toFloat'] = HFunction(8, Associativity.LEFT, Operator_Functions.toFloat, 1, 'toFloat')

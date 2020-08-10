@@ -20,12 +20,13 @@ class Complex (
 	def sub num = Complex {real - num, imag}
 
 	def mul (Complex num) = (
-		Complex {real * num.real - imag * num.imag,
-			 real * num.imag + imag * num.real}
+		Complex {real * num.real - imag * num.imag, real * num.imag + imag * num.real}
 	)
 	def mul n = Complex {real * n, imag * n}
 
 	def conjugate = Complex {real, -imag}
 )
+
+
 
 

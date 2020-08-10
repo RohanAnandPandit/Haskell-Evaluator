@@ -9,7 +9,7 @@ from utils import frameStack, builtInState, functionNames, getData, enumNames, i
 from HFunction import HFunction, Composition, Function, Lambda
 from List import List, Nil, Cons, Iterator, head, tail
 from Tuple import Tuple
-from Types import Int, Float, Bool, Variable, Alias, Enum, EnumValue, Struct, Class, Interface, Char
+from Types import Int, Float, Bool, Variable, Alias, Enum, EnumValue, Struct, Class, Interface, Char, Module
 from Expression import BinaryExpr
 
 def assign(a, b, state = None):
@@ -350,7 +350,7 @@ def access(a, b):
     obj, field = a, b       
     return obj.state[field.name].simplify()
 
-def forLoop(n, expr):
+def forLoop(n, expr, reset_break = True):
     import utils
     if isinstance(n, Iterator):
         frameStack.append({})
@@ -375,9 +375,10 @@ def forLoop(n, expr):
             if len(generators) == 1:
                 expr.simplify()
             else:
-                forLoop(Tuple(generators[1:]), expr)
+                forLoop(Tuple(generators[1:]), expr, False)
             if utils.breakLoop or utils.return_value != None:
-                utils.breakLoop = False
+                if reset_break:
+                    utils.breakLoop = False
                 break
             if utils.continueLoop:
                 utils.continueLoop = False
@@ -417,6 +418,7 @@ def forLoop(n, expr):
                 utils.continueLoop = False
             if utils.breakLoop:
                 utils.breakLoop = False
+
     return Int(0)
 
 def whileLoop(cond, expr):
@@ -519,12 +521,29 @@ def evaluate_in_scope(assign, expr):
     frameStack[-2].update(state)
     frameStack.pop(-1)
 
-def import_module(name):
-    name = name.name
+def import_module(nameVar):
+    name = nameVar.name
     file = open('Modules/' + name + '.txt', 'r')
     code = file.read()
-    from utils import evaluate
-    evaluate(code)
+    assign(nameVar, Module(name, code))
+    return Int(0)
+
+def from_import(moduleVar, stat, names):
+    if isinstance(names, Tuple):
+        names = list(map(str, names.tup))
+    elif isinstance(names, Variable):
+        names = [names.name]
+    moduleName = moduleVar.name
+    file = open('Modules/' + moduleName + '.txt', 'r')
+    code = file.read()
+    module = Module(moduleName, code)
+    state = module.state
+    module.state = module.state.copy()
+    keys = list(state.keys())
+    for name in keys:
+        if name not in names:
+            state.pop(name)
+    assign(moduleVar, module)
     return Int(0)
     
 def return_statement(value):

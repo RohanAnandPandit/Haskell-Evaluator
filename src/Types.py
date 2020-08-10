@@ -216,7 +216,7 @@ class Class:
         return obj
     
     def __str__(self):
-        return self.name + ' {' + ' '.join(self.fields) + '} ' + ' '.join(self.state.keys())
+        return self.name
     
     def simplify(self):
         return self
@@ -278,4 +278,19 @@ class Interface:
         return self
 
     def __str__(self):
-        return self.name + ' ' + ' '.join(self.methods)        
+        return self.name + ' ' + ' '.join(self.methods)
+
+class Module:
+    def __init__(self, name, code):
+        self.name = name
+        self.state = {}
+        import utils
+        utils.frameStack.append(self.state)
+        utils.evaluate(code)
+        #utils.frameStack.pop(-1)
+    
+    def simplify(self, a = True):
+        return self
+    
+    def __str__(self):
+        self.name

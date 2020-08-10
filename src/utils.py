@@ -36,7 +36,7 @@ keywords = ('class', 'def', 'struct', 'interface', 'extends',
             'if', 'else', 'then', 'enum', 'oper', 'break', 'continue',
             'cascade', 'in', 'True', 'False', 'let', 'import', 'return',
             'int', 'float', 'bool', 'char', 'var', 'do', '?', 'list', 'tuple',
-            'string', 'Num') 
+            'string', 'Num', 'from') 
 
 continueLoop = False
 breakLoop = False
@@ -179,7 +179,7 @@ def patternMatch(expr1, expr2):
         elif isPrimitive(expr2):
             if expr1.leftExpr.name == 'Num' and isinstance(expr2, (Int, Float)):
                 return True
-            return expr1.leftExpr.name == expr2.type 
+            return expr1.leftExpr.name == expr2.type
         elif expr1.leftExpr.name == 'list' and isinstance(expr2, (Nil, Cons)):
             return True
         elif expr1.leftExpr.name == 'tuple' and isinstance(expr2, Tuple):

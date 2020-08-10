@@ -5,6 +5,7 @@ Created on Mon Jun 29 10:19:03 2020
 @author: rohan\
 """
 functionNamesTuple = ['fst', 'snd', 'swap']
+
 class Tuple:
     def __init__(self, tup):
         self.tup = tup

@@ -1,35 +1,32 @@
-class LinkedListNode (
-	def init {data, next} (
-		this.data = data
-		this.next = next
+pi = 3.1415926535
+e = 2.718281828
+phi = 1.618
+
+class Complex (
+	def init {a, b} (this.real = a; this.imag = b)
+
+	def i = Complex {0, 1}
+		
+	def toString = str where (
+		str = "(" ++ show real
+		if (imag >= 0) (str = str ++ "+")
+		str = str ++ show imag ++ "i)"
 	)
 
-	def toString = show data ++ " -> (" ++ show next ++ ")"
+	def add (Complex num) = Complex {real + num.real, imag + num.imag}
+	def add num = Complex {real + num, imag}
+
+	def sub (Complex num) = Complex {real - num.real, imag - num.imag}
+	def sub num = Complex {real - num, imag}
+
+	def mul (Complex num) = (
+		Complex {real * num.real - imag * num.imag, real * num.imag + imag * num.real}
+	)
+	def mul n = Complex {real * n, imag * n}
+
+	def conjugate = Complex {real, -imag}
 )
 
-class LinkedList (
-	def init {} (
-		this.front = ?
-		this.back = ?
-	)
-
-	def add data (
-		node = LinkedListNode {data, ?}
-		if (front == ?) (
-			this.front = node
-			return ?
-		)
-		if (back == ?) (
-			this.back = node
-			this.front.next = node
-			return ?
-		)
-		this.back.next = node
-		this.back = node
-	)
-
-	def toString = show front
-)
 
 
 
