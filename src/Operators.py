@@ -224,7 +224,7 @@ def initialiseFunctions(state):
     state['bool'] = HFunction(8, Associativity.LEFT, Operator_Functions.defaultBool, 1, 'bool')
     state['char'] = HFunction(8, Associativity.LEFT, Operator_Functions.defaultChar, 1, 'char')
     state['list'] = HFunction(8, Associativity.LEFT, Operator_Functions.defaultList, 1, 'list')
-    state['string'] = HFunction(8, Associativity.LEFT, Operator_Functions.defaultList, 1, 'string')
+    state['string'] = HFunction(8, Associativity.LEFT, Operator_Functions.defaultList, 1, 'string') 
 
 class Op:
     def __init__(self, hfunc):

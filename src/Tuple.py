@@ -10,24 +10,8 @@ class Tuple:
     def __init__(self, tup):
         self.tup = tup
        
-    def simplify(self, simplifyVariables = True):
-        from Expression import BinaryExpr
-        from utils import typeNames
-        tup = []
-        for i in range(len(self.tup)):
-            value = self.tup[i]
-            if (simplifyVariables):
-                value = self.tup[i].simplify()
-            if isinstance(value, BinaryExpr):
-                if (value.operator.name == ' '
-                    and value.leftExpr.name in typeNames):
-                    value = BinaryExpr(value.operator, value.leftExpr,
-                                       value.rightExpr.simplify(False))
-                else:
-                    value = value.simplify()
-            tup.append(value)
-                
-        return Tuple(tup)
+    def simplify(self, simplifyVariables = True):                
+        return self
     
     def __str__(self):
         return '{' + ', '.join(list(map(str, self.tup))) + '}'

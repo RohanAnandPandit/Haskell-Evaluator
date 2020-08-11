@@ -10,7 +10,10 @@ from Operators import initialiseFunctions
 import tkinter as tk
 import ctypes
 import os
-ctypes.windll.shcore.SetProcessDpiAwareness(1)
+try:
+    ctypes.windll.shcore.SetProcessDpiAwareness(1)
+except:
+    pass
 os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (50, 50) 
 
 initialiseFunctions(utils.builtInState)
@@ -175,6 +178,7 @@ def analyse(event, text):
                 
 #way = input('Do you want to write on command-line or IDE?: ')
 #if way == 'ide':
-ide()
-#else:
-#commandLine()
+try:
+    ide()
+except:
+    commandLine()

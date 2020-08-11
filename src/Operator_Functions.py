@@ -115,7 +115,7 @@ def index(a, b):
         x, xs = head(a), tail(a) 
         if n == 0:
             return x
-        return getData(index(xs, Int(n - 1)))
+        return index(xs, Int(n - 1))
     elif isinstance(a, Enum):
         return builtInState[a.values[n]].simplify()
     elif isinstance(a, Tuple):

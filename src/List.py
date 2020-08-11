@@ -57,17 +57,7 @@ class Cons(List):
         return self
     
     def simplify(self, simplifyVariables = True):
-        from Expression import BinaryExpr
-        from utils import typeNames
-        hd = self.item
-        if simplifyVariables:
-            hd = hd.simplify()
-        if isinstance(hd, BinaryExpr):
-            if (hd.operator.name == ' ' and hd.leftExpr.name in typeNames):
-                hd = BinaryExpr(hd.operator, hd.leftExpr, hd.rightExpr.simplify(False))
-            else:
-                hd = hd.simplify()
-        return Cons(hd, self.tail.simplify(simplifyVariables))
+        return self
 
 class Iterator(List):
     def __init__(self, var, collection):
@@ -226,7 +216,10 @@ def mapHaskell(a, b):
     x, xs = head(b), tail(b)
     if (isinstance(b, Nil)):
         return b
-    return Cons(func.apply(x), mapHaskell(func, xs))
+    from Expression import BinaryExpr
+    from Operators import operatorFromString
+    expr = BinaryExpr(operatorFromString(' '), func, x)
+    return Cons(expr, mapHaskell(func, xs))
         
 
 def words(a):
