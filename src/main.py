@@ -20,7 +20,7 @@ initialiseFunctions(utils.builtInState)
 
 def commandLine():
     while (True):
-        string = input('Prelude> ')
+        string = input('Start> ')
         if (string == ''):
             continue
         elif (string == '$quit'):

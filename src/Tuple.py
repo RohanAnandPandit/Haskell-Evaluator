@@ -14,7 +14,8 @@ class Tuple:
         return self
     
     def __str__(self):
-        return '{' + ', '.join(list(map(str, self.tup))) + '}'
+        return '{' + ', '.join(list(map(str, map(lambda expr: expr.simplify(), 
+                                                 self.tup)))) + '}'
 
 def fst(tup):
     return tup.tup[0]

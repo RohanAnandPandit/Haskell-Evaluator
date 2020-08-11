@@ -44,7 +44,7 @@ class Cons(List):
         sep = ', '
         if (tail == '[]'):
             sep = ''
-        value = str(self.item)
+        value = str(self.item.simplify())
         if (isinstance(self.item, Iterator)):
             value = value[1 : -1]
             if (tail != '[]'):
