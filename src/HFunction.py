@@ -178,18 +178,17 @@ class Lambda:
     
     def simplify(self, simplifyVariables = True):
         if self.arguments == []:
-            return self.returnValue({})
+            return self.returnValue({}).simplify()
         return self
 
     def returnValue(self, state):
         import utils 
         utils.frameStack.append(state)
         if self.expr != None:
-            value = self.expr.simplify()
+            value = utils.replaceVariables(self.expr)
         else:
             value = None
         utils.frameStack.pop(-1)
         if (utils.return_value != None):
             utils.return_value = None
-        return value
-    
+        return value.simplify()

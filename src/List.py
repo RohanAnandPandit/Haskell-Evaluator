@@ -6,7 +6,7 @@ Created on Tue Jun 23 20:381 2020
 """
 from Maybe import Just, Nothing
 from Tuple import Tuple
-from Types import Int, Char, Bool
+from Types import Int, Char, Bool, Variable
 
 functionNamesList = ['length', 'head', 'tail', 'last', 'concat', 'init', 'maximum',
                  'minimum', 'elem', 'notElem', 'reverse', 'take', 'drop', 'map',

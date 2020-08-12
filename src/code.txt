@@ -1,10 +1,7 @@
-class Point (
-	def init {x, y} = (this.x = x; this.y = y)
-
-	def equals p = (x == p.x) && (y == p.y)
+def rev [] = []
+def rev xs = rev2 xs [] where (
+	def rev2 [] ys = ys
+	def rev2 (x:xs) ys = rev2 xs (x:ys)
 )
 
-p1 = Point {3,4}
-p2 = Point {3,4}
-p3 = Point {0,0}
-printLn (p1 == p3)
+print (rev [1,2,3])

@@ -15,7 +15,7 @@ def printLn(a):
     return Int(None)
 
 def printHaskell(a):
-    a = str(a)
+    a = str(a.simplify())
     if (len(a) > 0 and a[0] == '"'):
         a = a[1:-1]
     print(a, end = '')

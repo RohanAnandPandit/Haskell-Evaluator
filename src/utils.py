@@ -285,28 +285,21 @@ def optimise(expr):
 
     return expr
 
-def unassignVariables(struct):
-    if isinstance(struct, Variable):
-        try:
-            frameStack[-1].pop(struct.name)
-        except:
-            pass
-    elif isinstance(struct, Cons):
-        unassignVariables(head(struct))
-        unassignVariables(tail(struct))
-    elif isinstance(struct, Tuple):
-        map(unassignVariables, struct.tup) 
-    elif type(struct) == str:
-        frameStack[-1].pop(struct)
-
 def replaceVariables(expr):
     from Expression import BinaryExpr
     if isinstance(expr, Variable):
-        return expr.simplify()
+        if expr.name in frameStack[-1].keys():
+            return expr.simplify()
     if isinstance(expr, BinaryExpr):
-        return BinaryExpr(expr.operator,
-                          replaceVariables(expr.leftExpr),
-                          replaceVariables(expr.rightExpr))
+        left = expr.leftExpr
+        if expr.operator.name != '=':
+            left = replaceVariables(expr.leftExpr)
+        right = replaceVariables(expr.rightExpr)
+        return BinaryExpr(expr.operator, left, right)
+    if isinstance(expr, Cons):
+        return Cons(replaceVariables(expr.item), replaceVariables(expr.tail))
+    if isinstance(expr, Tuple):
+        return Tuple(list(map(lambda exp: replaceVariables(exp), expr.tup)))
     return expr
 
 def convertToList(expr):
