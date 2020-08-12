@@ -294,3 +294,18 @@ class Module:
     
     def __str__(self):
         self.name
+        
+
+class Type:
+    def __init__(self, expr):
+        self.expr = expr
+    
+    def simplify(self):
+        return self
+    
+class Union:
+    def __init__(self, types):
+        self.types = types.tup
+    
+    def simplify(self):
+        return self

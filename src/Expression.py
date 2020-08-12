@@ -53,7 +53,8 @@ class BinaryExpr(Expression):
                                           'oper', 'class', 'interface', 'def',
                                           'case', 'if', 'cascade', 'let',
                                           'import', 'do', 'int', 'float', 'char',
-                                          'bool', 'string', 'list', 'from'))
+                                          'bool', 'string', 'list', 'from',
+                                          'type', 'union'))
 
     def simplify(self, simplifyVariables = True):
         simplifyRightVariables = simplifyLeftVariables = simplifyVariables

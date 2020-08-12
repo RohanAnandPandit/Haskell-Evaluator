@@ -59,15 +59,31 @@ def assign(a, b, state = None):
             args = var 
             while True:
                 arg = args.rightExpr
-                if (not isinstance(arg, BinaryExpr) 
-                    or not (arg.operator.name == ' ' and arg.leftExpr.name in typeNames)):
-                    arg = arg.simplify(False)   
+                if isinstance(arg, BinaryExpr):
+                    if arg.operator.name == ' ':
+                        if isinstance(arg.leftExpr, (Nil, Cons, Tuple)):
+                            pass
+                        elif (isinstance(arg.leftExpr, Variable) 
+                                and arg.leftExpr.name not in typeNames):
+                            arg = arg.simplify()
+                    else: 
+                        arg = arg.simplify()
+ 
                 arguments.insert(0, arg)
                 args = args.leftExpr
-                if isinstance(args, Variable):
+                if isinstance(args, (Variable, Nil, Cons, Tuple)):
                     arguments.insert(0, args)
                     break
-            if arguments[0].name == 'def':
+            if isinstance(arguments[0], Variable) and arguments[0].name in structNames:
+                if isinstance(arguments[1], Tuple):
+                    assign(arguments[1], Tuple(value.values), state) 
+                else:
+                    assign(arguments[1], value, state)
+                return value
+            if isinstance(arguments[0], (Nil, Cons, Tuple)) or arguments[0].name in typeNames:
+                assign(arguments[1], value, frameStack[-1])
+                return value
+            elif arguments[0].name == 'def':
                 name = arguments[1].name
                 arguments = arguments[2:]
                 case = Lambda(name, arguments = arguments, expr = value)
@@ -80,15 +96,8 @@ def assign(a, b, state = None):
                         state[name] = func
                         functionNames.append(name) 
                 return case
-            elif arguments[0].name in structNames:
-                if isinstance(arguments[1], Tuple):
-                    assign(arguments[1], Tuple(value.values), frameStack[-1]) 
-                else:
-                    assign(arguments[1], value, state)
-                return value
-            elif arguments[0].name in typeNames:
-                assign(arguments[1], value, frameStack[-1])
-                return value
+
+
         elif var.operator.name == '.':
             obj = var.leftExpr.simplify()
             obj.state[var.rightExpr.name] = value.simplify()
@@ -639,3 +648,17 @@ def defaultChar(var):
 def defaultList(var):
     frameStack[-1][var.name] = Nil()
     return Nil()
+
+def type_synonym(typeVar, typeExpr):
+    from Types import Type
+    type_ = Type(typeExpr)
+    assign(typeVar, type_)
+    typeNames.append(typeVar.name)
+    return type_
+
+def types_union(typeVar, types):
+    from Types import Union
+    union = Union(types)
+    assign(typeVar, union)
+    typeNames.append(typeVar.name)
+    return union

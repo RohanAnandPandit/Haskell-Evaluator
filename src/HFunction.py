@@ -123,7 +123,7 @@ class Function:
     def checkCases(self, inputs):
         for case in self.cases:
             arguments = case.arguments
-            if self.checkCase(arguments, inputs):
+            if self.matchCase(arguments, inputs):
                 for i in range(len(arguments)):
                     case = case.apply(inputs[i])
                 if case == None:
@@ -133,7 +133,7 @@ class Function:
         raise Exception('Pattern match on arguments failed for all definitions of function', self.name)
         return None
 
-    def checkCase(self, arguments, inputs):
+    def matchCase(self, arguments, inputs):
         from utils import patternMatch
         if len(inputs) != len(arguments):
             return False

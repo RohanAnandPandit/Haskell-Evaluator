@@ -225,6 +225,8 @@ def initialiseFunctions(state):
     state['char'] = HFunction(8, Associativity.LEFT, Operator_Functions.defaultChar, 1, 'char')
     state['list'] = HFunction(8, Associativity.LEFT, Operator_Functions.defaultList, 1, 'list')
     state['string'] = HFunction(8, Associativity.LEFT, Operator_Functions.defaultList, 1, 'string') 
+    state['type'] = HFunction(8, Associativity.LEFT, Operator_Functions.type_synonym, 2, 'type') 
+    state['union'] = HFunction(8, Associativity.LEFT, Operator_Functions.types_union, 2, 'union') 
 
 class Op:
     def __init__(self, hfunc):

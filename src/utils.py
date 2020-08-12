@@ -36,7 +36,7 @@ keywords = ('class', 'def', 'struct', 'interface', 'extends',
             'if', 'else', 'then', 'enum', 'oper', 'break', 'continue',
             'cascade', 'in', 'True', 'False', 'let', 'import', 'return',
             'int', 'float', 'bool', 'char', 'var', 'do', '?', 'list', 'tuple',
-            'string', 'Num', 'from') 
+            'string', 'Num', 'from', 'type', 'union') 
 
 continueLoop = False
 breakLoop = False
@@ -171,25 +171,53 @@ def patternMatch(expr1, expr2):
                 return False
         return True
     if isinstance(expr1, BinaryExpr): 
-        if isinstance(expr2, Structure):
-            if expr1.leftExpr.name == expr2.type.name:
+        if typeMatch(expr1.leftExpr, expr2):
+            if isinstance(expr2, Structure):
                 return patternMatch(expr1.rightExpr, Tuple(expr2.values))
-        elif isinstance(expr2, Object):
-            return expr1.leftExpr.name == expr2.classType.name
-        elif isPrimitive(expr2):
-            if expr1.leftExpr.name == 'Num' and isinstance(expr2, (Int, Float)):
-                return True
-            return expr1.leftExpr.name == expr2.type
-        elif expr1.leftExpr.name == 'list' and isinstance(expr2, (Nil, Cons)):
-            return True
-        elif expr1.leftExpr.name == 'tuple' and isinstance(expr2, Tuple):
-            return True
-        elif (expr1.leftExpr.name == 'string' 
-              and (isinstance(expr2, Nil) or isinstance(expr2, Cons) 
-              and isinstance(head(expr2), Char))):
-            return True
+            else:
+                return patternMatch(expr1.rightExpr, expr2)
     return False
 
+
+def typeMatch(type_, expr):
+    from Types import Type, Union
+    if isinstance(type_,  Variable):
+        if isinstance(type_.simplify(), Type):
+            return typeMatch(type_.simplify().expr, expr)
+        elif isinstance(type_.simplify(), Union):
+            type_ = type_.simplify()
+            for t in type_.types:
+                if typeMatch(t, expr):
+                    return True
+        elif isinstance(expr, Structure):
+            return type_.name == expr.type.name
+        elif isinstance(expr, Object):
+            return type_.name == expr.classType.name
+        elif isPrimitive(expr):
+            if type_.name == 'Num' and isinstance(expr, (Int, Float)):
+                return True
+            return type_.name == expr.type
+        elif type_.name == 'list' and isinstance(expr, (Nil, Cons)):
+            return True
+        elif type_.name == 'tuple' and isinstance(expr, Tuple):
+            return True
+        elif (type_.name == 'string' 
+              and (isinstance(expr, Nil) or isinstance(expr, Cons) 
+              and isinstance(head(expr), Char))):
+            return True
+    elif isinstance(type_, Nil) and isinstance(expr, (Nil, Cons)):
+        return True
+    elif isinstance(type_, Cons) and isinstance(expr, Cons):
+        return typeMatch(head(type_), head(expr)) and typeMatch(tail(type_), tail(expr))
+    elif isinstance(type_, Tuple) and isinstance(expr, Tuple):
+        if len(type_.tup) != len(expr.tup):
+            return False
+        for i in range(len(type_.tup)):
+            if not typeMatch(type_.tup[i], expr.tup[i]):
+                return False
+        return True
+    return False
+    
 def optimise(expr):
     from Expression import BinaryExpr
     from Operator_Functions import equals
