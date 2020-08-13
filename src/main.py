@@ -28,6 +28,8 @@ def commandLine():
         elif (string == '$stack'):
             print(utils.frameStack)
             continue
+        elif (string == '$ide'):
+            ide()
         value = utils.evaluate(string)
         if (value != None):
             print(value)
@@ -178,7 +180,7 @@ def analyse(event, text):
                 
 #way = input('Do you want to write on command-line or IDE?: ')
 #if way == 'ide':
-try:
-    ide()
-except:
-    commandLine()
+#try:
+    #ide()
+#except:
+commandLine()

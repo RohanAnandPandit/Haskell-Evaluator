@@ -112,34 +112,6 @@ class Collection:
             string += ' : []'
         return '(' + string + ')'
 
-class Conditional:
-    def __init__(self, cond, ret):
-        self.cond = cond
-        self.ret = ret 
-    
-    def simplify(self, simplifyVariables = True):
-        if self.cond.simplify().value:
-            return self.ret.simplify()
-        return Int(None)
-
-    def __str__(self):
-        return '(' + str(self.cond) + ' => ' + str(self.ret) + ')'
-    
-class Else:
-    def __init__(self, conditional, right):
-        self.conditional = conditional
-        self.right = right
-    
-    def simplify(self, simplifyVariables = True):
-        value = self.conditional.simplify()
-        from Operator_Functions import equals
-        if equals(value, Int(None)):
-            return self.right.simplify()
-        return value
-    
-    def __str__(self):
-        return '(' + str(self.conditional) + ' | ' + str(self.right) + ')'
-
 
 class EnumValue:
     def __init__(self, enum, name, value):
@@ -303,9 +275,15 @@ class Type:
     def simplify(self):
         return self
     
+    def __str__(self):
+        return str(self.expr)
+    
 class Union:
     def __init__(self, types):
         self.types = types.tup
+        
+    def __str__(self):
+        return str(Tuple(self.types))
     
     def simplify(self):
         return self

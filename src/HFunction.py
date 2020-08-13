@@ -185,10 +185,10 @@ class Lambda:
         import utils 
         utils.frameStack.append(state)
         if self.expr != None:
-            value = utils.replaceVariables(self.expr)
+            value = self.expr.simplify()
         else:
             value = None
         utils.frameStack.pop(-1)
         if (utils.return_value != None):
             utils.return_value = None
-        return value.simplify()
+        return value

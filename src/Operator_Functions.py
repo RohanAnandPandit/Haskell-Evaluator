@@ -16,6 +16,7 @@ def assign(a, b, state = None):
     var, value = a, b
     if isPrimitive(var) or isinstance(var, Nil):
         return 
+    
     elif isinstance(var, Variable):
         value = b.simplify()
         if utils.functional_mode:
@@ -38,23 +39,39 @@ def assign(a, b, state = None):
             state = frameStack[-1]
         state[var.name] = value
         return value
-
-    if isinstance(var, Alias):
-        assign(var.var, value, state)
-        assign(var.expr, value, state)
+    
     elif isinstance(var, Tuple):
         varTup = var.tup
         valTup =  value.tup
         for i in range(len(varTup)): 
             assign(varTup[i], valTup[i], state)
         return value
-    elif isinstance(var, Cons) and isinstance(value, Cons):
+
+    if isinstance(var, Cons):
         assign(head(var), head(value), state)
         assign(tail(var), tail(value), state)
         return value
+        
     elif isinstance(var, BinaryExpr):
-        state = frameStack[-1]
-        if var.operator.name == ' ':
+        if state == None:
+            state = frameStack[-1]
+        if var.operator.name == '@':
+            assign(var.leftExpr, value, state)
+            assign(var.rightExpr, value, state)
+
+        if var.operator.name == ':':
+            assign(var.leftExpr, head(value), state)
+            assign(var.rightExpr, tail(value), state)
+            return value
+        
+        elif var.operator.name == '.':
+            obj = var.leftExpr.simplify()
+            obj.state[var.rightExpr.name] = value.simplify()
+            
+        elif var.operator.name == ',,':
+            assign(var.simplify(), value.simplify(), state) 
+            
+        elif var.operator.name == ' ':
             arguments = []
             args = var 
             while True:
@@ -63,8 +80,7 @@ def assign(a, b, state = None):
                     if arg.operator.name == ' ':
                         if isinstance(arg.leftExpr, (Nil, Cons, Tuple)):
                             pass
-                        elif (isinstance(arg.leftExpr, Variable) 
-                                and arg.leftExpr.name not in typeNames):
+                        if isinstance(arg.leftExpr, Variable) and arg.leftExpr.name not in typeNames:
                             arg = arg.simplify()
                     else: 
                         arg = arg.simplify()
@@ -80,8 +96,9 @@ def assign(a, b, state = None):
                 else:
                     assign(arguments[1], value, state)
                 return value
-            if isinstance(arguments[0], (Nil, Cons, Tuple)) or arguments[0].name in typeNames:
-                assign(arguments[1], value, frameStack[-1])
+            if (isinstance(arguments[0], (Nil, Cons, Tuple)) 
+                or arguments[0].name in typeNames):
+                assign(arguments[1], value, state)
                 return value
             elif arguments[0].name == 'def':
                 name = arguments[1].name
@@ -97,12 +114,6 @@ def assign(a, b, state = None):
                         functionNames.append(name) 
                 return case
 
-
-        elif var.operator.name == '.':
-            obj = var.leftExpr.simplify()
-            obj.state[var.rightExpr.name] = value.simplify()
-        elif var.operator.name == ',,':
-            assign(var.simplify(), value.simplify(), state)
     return value
     
 def space(a, b):
@@ -662,3 +673,21 @@ def types_union(typeVar, types):
     assign(typeVar, union)
     typeNames.append(typeVar.name)
     return union
+
+def then_clause(cond, expr):
+    if cond.simplify().value:
+        return expr.simplify()
+    return Int(None)
+
+def else_clause(cond, expr):
+    value = cond.simplify()
+    from Operator_Functions import equals
+    if equals(value, Int(None)):
+        return expr.simplify()
+    return value
+
+def read_as(var, struct):
+    return Alias(var, struct)
+
+def create_iterator(var, xs):
+    return Iterator(var, xs)

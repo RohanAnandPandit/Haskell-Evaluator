@@ -1,7 +1,9 @@
 def rev [] = []
+
 def rev xs = rev2 xs [] where (
 	def rev2 [] ys = ys
-	def rev2 (x:xs) ys = rev2 xs (x:ys)
+	def rev2 (x:xs) ys = rev2 xs (x:ys) 
 )
 
-print (rev [1,2,3])
+printLn (rev [1,2,3])
+

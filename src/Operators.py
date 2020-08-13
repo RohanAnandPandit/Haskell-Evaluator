@@ -29,7 +29,7 @@ greater_than_or_equal = HFunction(4, Associativity.NONE, Operator_Functions.grea
 colon = HFunction(5, Associativity.RIGHT, Operator_Functions.cons, 2, ':')
 logical_and = HFunction(3, Associativity.RIGHT, Operator_Functions.AND, 2, '&&')
 concatenate = HFunction(5, Associativity.LEFT, Operator_Functions.concatenate, 2, '++')
-iterator = HFunction(10, Associativity.LEFT, None, 2, 'in')
+iterator = HFunction(10, Associativity.LEFT, Operator_Functions.create_iterator, 2, 'in')
 notequal = HFunction(4, Associativity.NONE, Operator_Functions.notEqual, 2, '!=')
 logical_or = HFunction(3, Associativity.RIGHT, Operator_Functions.OR, 2, '||')
 left_parentheses = HFunction(8, Associativity.RIGHT, None, 1, '(')
@@ -41,7 +41,6 @@ right_bracket = HFunction(8, Associativity.LEFT, None, 1, ']')
 dollar = HFunction(0, Associativity.RIGHT, Operator_Functions.space, 2, '$')
 composition = HFunction(9, Associativity.RIGHT, Operator_Functions.compose, 2, '~')
 index = HFunction(9, Associativity.LEFT, Operator_Functions.index, 2, '!!')
-sequence = HFunction(2.5, Associativity.RIGHT, Operator_Functions.sequence, 2, ';')
 newline = HFunction(-1, Associativity.RIGHT, Operator_Functions.sequence, 2, ';')
 chain = HFunction(2, Associativity.LEFT, Operator_Functions.chain, 2, '>>=')
 infix = HFunction(5, Associativity.LEFT, None, 1, '`')
@@ -56,10 +55,10 @@ bitwise_and = HFunction(1, Associativity.LEFT, Operator_Functions.bitwise_and, 2
 alias = HFunction(9.1, Associativity.LEFT, Operator_Functions.alias, 2, '@')
 shiftleft = HFunction(5, Associativity.LEFT, Operator_Functions.shiftLeft, 2, '<<')
 shiftright = HFunction(5, Associativity.LEFT, Operator_Functions.shiftRight, 2, '>>')
-then = HFunction(2.6, Associativity.RIGHT, None, 2, '=>')
+then = HFunction(2.6, Associativity.RIGHT, Operator_Functions.then_clause, 2, '=>')
 left_curly = HFunction(8, Associativity.RIGHT, None, 1, '{')
 right_curly = HFunction(8, Associativity.LEFT, None, 1, '}')
-else_clause = HFunction(2.5, Associativity.RIGHT, None, 2, '|')
+else_clause = HFunction(2.5, Associativity.RIGHT, Operator_Functions.else_clause, 2, '|')
 access = HFunction(9.1, Associativity.LEFT, Operator_Functions.access, 2, '.')
 comprehension = HFunction(8, Associativity.LEFT, Operator_Functions.comprehension, 2, '..')
 increment_by = HFunction(2.5, Associativity.RIGHT, Operator_Functions.incrementBy, 2, '+=')
@@ -67,8 +66,6 @@ decrement_by = HFunction(2.5, Associativity.RIGHT, Operator_Functions.decrementB
 multiply_by = HFunction(2.5, Associativity.RIGHT, Operator_Functions.multiplyBy, 2, '*=')
 divide_by = HFunction(2.5, Associativity.RIGHT, Operator_Functions.divideBy, 2, '/=')
 raise_to = HFunction(2.5, Associativity.RIGHT, Operator_Functions.raiseTo, 2, '^=')
-
-
 
 class Operator(Enum):
     EQUAL = equals
@@ -100,7 +97,6 @@ class Operator(Enum):
     DOUBLE_EXCLAMATION = index
     DOLLAR = dollar
     WHERE = whereclause
-    SEMI_COLON = sequence
     BAR = else_clause
     CHAIN = chain 
     TILDE = composition
@@ -138,8 +134,8 @@ def initialiseFunctions(state):
     state['drop'] = HFunction(8, Associativity.LEFT, Prelude.drop, 2, 'drop')
     state['even'] = HFunction(8, Associativity.LEFT, Prelude.even, 1, 'even')
     state['odd'] = HFunction(8, Associativity.LEFT, Prelude.odd, 1, 'odd')
-    state['max'] = HFunction(8, Associativity.LEFT, Prelude.maximum, 1, 'maximum')
-    state['min'] = HFunction(8, Associativity.LEFT, Prelude.minimum, 1, 'minimum')
+    state['maximum'] = HFunction(8, Associativity.LEFT, Prelude.maximum, 1, 'maximum')
+    state['minimum'] = HFunction(8, Associativity.LEFT, Prelude.minimum, 1, 'minimum')
     state['elem'] = HFunction(8, Associativity.LEFT, Prelude.elem, 2, 'elem')
     state['notElem'] = HFunction(8, Associativity.LEFT, Prelude.empty, 1, 'notElem')
     state['empty'] = HFunction(8, Associativity.LEFT, Prelude.empty, 1, 'notElem')

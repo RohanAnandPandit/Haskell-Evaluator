@@ -10,7 +10,7 @@ from Operators import Associativity, operatorFromString
 from Expression import BinaryExpr
 from List import Nil, Cons, Iterator
 from Tuple import Tuple
-from Types import Int, Collection, Conditional, Else, Alias
+from Types import Int, Collection, Alias
 
 
 def printState(operands, operators):
@@ -33,25 +33,13 @@ def printState(operands, operators):
 
 def createExpression(operators, operands):
     operator = operators.pop()
-
     (right, left) = (operands.pop(), operands.pop())
-    if operator.name == '=>':
-        expr = Conditional(left, right)
-    elif operator.name == '|':
-        expr = Else(left, right)
-    elif operator.name == '@':
-        expr = Alias(left, right)    
-    elif operator.name == ':':
-        expr = Cons(left, right)
-    elif operator.name == 'in':
-        expr = Iterator(left, right)
-    else:
-        if operator.name == '-':
-            if left == None or isinstance(left, Collection):
-                if isinstance(left, Collection):
-                    operands.push(left)
-                left = Int(0)
-        expr = BinaryExpr(operator, left, right)
+    if operator.name == '-':
+        if left == None or isinstance(left, Collection):
+            if isinstance(left, Collection):
+                operands.push(left)
+            left = Int(0)
+    expr = BinaryExpr(operator, left, right)
     operands.push(expr)
 
 def createCollection(operators, operands):

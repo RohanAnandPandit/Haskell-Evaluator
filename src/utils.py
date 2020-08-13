@@ -10,7 +10,6 @@ from Types import Variable, Int, Float, Bool, Alias, EnumValue, Object, Structur
 from List import Nil, Cons, head, tail, Range
 from Tuple import functionNamesTuple, Tuple
 from Stack import Stack
-
 '''
 global builtInState, static_mode, functional_mode, frameStack, enumNames
 global typeNames, structNames, operators, keywords, continueLoop, breakLoop 
@@ -145,24 +144,23 @@ def evaluate(exp):
 
 def patternMatch(expr1, expr2):
     from Operator_Functions import equals
-    from Expression import BinaryExpr
+    from Expression import BinaryExpr #hello bye hi shy
     if expr1 == expr2 == None:
         return True
     if isinstance(expr1, Variable):
         return True
-    if isinstance(expr1, Alias):
+    if isinstance(expr1, BinaryExpr) and expr1.operator.name == '@':
         return patternMatch(expr1.expr, expr2)
     if isPrimitive(expr1) and isPrimitive(expr2):
         return equals(expr1, expr2).value
     if isinstance(expr1, Nil) and isinstance(expr2, Nil):
         return True
-    if isinstance(expr1, (Cons, Range)) and isinstance(expr2, (Cons, Range)):
+    if isinstance(expr1, Range) and isinstance(expr2, Range):
         return (patternMatch(head(expr1), head(expr2)) 
                 and patternMatch(tail(expr1), tail(expr2)))
-    if (isinstance(expr1, BinaryExpr) and isinstance(expr2, BinaryExpr)
-        and expr1.operator.name == ':'):
-        return (patternMatch(expr1.leftEpxr, expr2.leftExpr) 
-                and patternMatch(expr1.rightExpr, expr2.rightExpr))
+    if isinstance(expr1, Cons):
+            return (patternMatch(head(expr1), head(expr2)) 
+                    and patternMatch(tail(expr1), tail(expr2)))
     if isinstance(expr1, Tuple) and isinstance(expr2, Tuple):
         if len(expr1.tup) != len(expr2.tup):
             return False
@@ -181,6 +179,7 @@ def patternMatch(expr1, expr2):
 
 def typeMatch(type_, expr):
     from Types import Type, Union
+    from Expression import BinaryExpr
     if isinstance(type_,  Variable):
         if isinstance(type_.simplify(), Type):
             return typeMatch(type_.simplify().expr, expr)
@@ -202,10 +201,11 @@ def typeMatch(type_, expr):
         elif type_.name == 'tuple' and isinstance(expr, Tuple):
             return True
         elif (type_.name == 'string' 
-              and (isinstance(expr, Nil) or isinstance(expr, Cons) 
-              and isinstance(head(expr), Char))):
+              and (isinstance(expr, Nil) or isinstance(expr, BinaryExpr) 
+              and expr.operator.name == ':' 
+              and isinstance(expr.leftExpr, Char))):
             return True
-    elif isinstance(type_, Nil) and isinstance(expr, (Nil, Cons)):
+    elif isinstance(type_, Nil) and (isinstance(expr, (Nil, Cons))):
         return True
     elif isinstance(type_, Cons) and isinstance(expr, Cons):
         return typeMatch(head(type_), head(expr)) and typeMatch(tail(type_), tail(expr))
@@ -303,20 +303,12 @@ def replaceVariables(expr):
     return expr
 
 def convertToList(expr):
-    from Operators import operatorFromString
-    from Parser import createExpression
     # If None is returned means there was no operand or 
     # operator which means it is an empty list
-    items = Stack()
-    ops = Stack()
-    for x in expr:
-        items.push(x)
-        ops.push(operatorFromString(':'))
-    items.push(Nil())
-    while ops.peek() != None:
-        createExpression(ops, items)
-    expr = items.pop()
-    return expr
+    xs = Nil()
+    for i in range(len(expr) - 1, -1, -1):
+        xs = Cons(expr[i], xs)
+    return xs
     
 def indexOfClosing(c, exp):
     closer = {'[' : ']', '(' : ')'}

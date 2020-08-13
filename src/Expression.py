@@ -46,7 +46,9 @@ class BinaryExpr(Expression):
         return buf
 
     def simplifyRightExpr(self, leftExpr):
-        return not (self.operator.name in ('=', '->', 'where', '|', '.', '\n', ';', '+=', '-=', '*=', '/=', '^=') 
+        return not (self.operator.name in ('=', '->', 'where', '|', '.', '\n',
+                                           ';', '+=', '-=', '*=', '/=', '^=',
+                                           '=>', ':') 
                     or self.operator.name == ' ' 
                     and isinstance(leftExpr, HFunction) 
                     and leftExpr.name in ('while', 'for', 'struct', 'enum', 
@@ -57,7 +59,7 @@ class BinaryExpr(Expression):
                                           'type', 'union'))
 
     def simplify(self, simplifyVariables = True):
-        simplifyRightVariables = simplifyLeftVariables = simplifyVariables
+        simplifyRightVariables = simplifyLeftVariables = simplifyVariables 
         if (self.operator.name in ('=', 'where', '|')):
             simplifyRightVariables = simplifyLeftVariables = False
 
@@ -67,7 +69,8 @@ class BinaryExpr(Expression):
         if self.leftExpr != None:
             leftExpr = self.leftExpr
             if (self.operator.name not in (':', '->', '=', '\n', ';', 'in', 
-                                           'where', '+=', '-=', '*=', '/=', '^=')):
+                                           'where', '+=', '-=', '*=', '/=', 
+                                           '^=', '=>', '|')):
                 leftExpr = leftExpr.simplify(simplifyLeftVariables)
             operator = operator.apply(leftExpr)
             if (self.rightExpr != None):

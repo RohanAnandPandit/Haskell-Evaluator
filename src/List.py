@@ -57,7 +57,8 @@ class Cons(List):
         return self
     
     def simplify(self, simplifyVariables = True):
-        return self
+        from utils import replaceVariables
+        return replaceVariables(self)
 
 class Iterator(List):
     def __init__(self, var, collection):
