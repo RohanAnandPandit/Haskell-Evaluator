@@ -135,7 +135,7 @@ def parse(lexer):
                                         Collection([], left.operator))
                     expr = parse(lexer) 
                     operands.push(Collection(operands.pop().items + expr.items,
-                                             left.operator))
+                                             left.operator)) 
                 return operands.pop()
             else:
                 if token.name == '`':
@@ -143,7 +143,7 @@ def parse(lexer):
                     lexer.nextToken() == '`'
                     operands.pop() == None
                     expr = BinaryExpr(operatorFromString(' '), func, operands.pop())
-                    operands.push(expr)
+                    pushOperand(expr, operands, operators)
                     operators.push(operatorFromString(' '))
                 else:
                     # Compares the current operator with the operators on the stack

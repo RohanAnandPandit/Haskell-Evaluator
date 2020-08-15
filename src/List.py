@@ -28,10 +28,9 @@ class Nil(List):
         return self
         
 class Cons(List):
-    def __init__(self, itemExpr, listExpr, listType = None):
+    def __init__(self, itemExpr, listExpr):
         self.item = itemExpr
         self.tail = listExpr 
-        self.type = listType
         
     def __str__(self):
         if isinstance(self.item, Char):
@@ -59,6 +58,7 @@ class Cons(List):
     def simplify(self, simplifyVariables = True):
         from utils import replaceVariables
         return replaceVariables(self)
+        #return self
 
 class Iterator(List):
     def __init__(self, var, collection):
@@ -96,14 +96,11 @@ class Range:
         string += str(self.end) + ']'
         return string
         
-def length(a, l = 0):
+def length(a):
     xs = tail(a)
-    if (isinstance(a, Nil)):
-        return l
-    elif (isinstance(a, Cons)):
-        if (isinstance(a.item, Iterator)):
-            return length(xs, l + a.item.iterations)
-        return length(xs, l + 1)
+    if isinstance(a, Nil):
+        return Int(0)
+    return Int(length(xs).value + 1)
 
 def head(a):    
     if isinstance(a, Nil):
@@ -181,12 +178,11 @@ def minimum(a, m = None):
 def elem(a, b):  
     from Operator_Functions import equals
     value = a
-    (x, xs) = (head(b), tail(b))
-    if (isinstance(b, Nil)):
-        return False
-    elif (isinstance(b, Cons)):
+    x, xs = head(b), tail(b)
+    if isinstance(b, Nil):
+        return Bool(False)
+    elif isinstance(b, Cons):
         return Bool(equals(x, value).value or elem(value, xs).value)
-
 
 def notElem(a, b): 
     return Bool(not elem(a, b).value)
@@ -356,7 +352,7 @@ def filterHaskell(a, b):
     if isinstance(b, Nil):
         return b
     x, xs = head(b), tail(b)
-    if (func.apply(x).value):
+    if func.apply(x).value:
         return Cons(x, filterHaskell(func, xs))
     return filterHaskell(func, xs)
 

@@ -10,12 +10,12 @@ class Tuple:
     def __init__(self, tup):
         self.tup = tup
        
-    def simplify(self, simplifyVariables = True):                
-        return self
+    def simplify(self, simplifyVariables = True): 
+        from utils import replaceVariables
+        return Tuple(list(map(lambda expr: replaceVariables(expr), self.tup)))
     
     def __str__(self):
-        return '{' + ', '.join(list(map(str, map(lambda expr: expr.simplify(), 
-                                                 self.tup)))) + '}'
+        return '{' + ', '.join(list(map(str, self.tup))) + '}'
 
 def fst(tup):
     return tup.tup[0]

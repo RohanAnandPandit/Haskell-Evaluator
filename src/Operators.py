@@ -60,7 +60,7 @@ left_curly = HFunction(8, Associativity.RIGHT, None, 1, '{')
 right_curly = HFunction(8, Associativity.LEFT, None, 1, '}')
 else_clause = HFunction(2.5, Associativity.RIGHT, Operator_Functions.else_clause, 2, '|')
 access = HFunction(9.1, Associativity.LEFT, Operator_Functions.access, 2, '.')
-comprehension = HFunction(8, Associativity.LEFT, Operator_Functions.comprehension, 2, '..')
+comprehension = HFunction(11, Associativity.LEFT, Operator_Functions.comprehension, 2, '..')
 increment_by = HFunction(2.5, Associativity.RIGHT, Operator_Functions.incrementBy, 2, '+=')
 decrement_by = HFunction(2.5, Associativity.RIGHT, Operator_Functions.decrementBy, 2, '-=')
 multiply_by = HFunction(2.5, Associativity.RIGHT, Operator_Functions.multiplyBy, 2, '*=')
@@ -223,6 +223,8 @@ def initialiseFunctions(state):
     state['string'] = HFunction(8, Associativity.LEFT, Operator_Functions.defaultList, 1, 'string') 
     state['type'] = HFunction(8, Associativity.LEFT, Operator_Functions.type_synonym, 2, 'type') 
     state['union'] = HFunction(8, Associativity.LEFT, Operator_Functions.types_union, 2, 'union') 
+    state['breakout'] = HFunction(8, Associativity.LEFT, Operator_Functions.breakout, 1, 'breakout') 
+    state['skipout'] = HFunction(8, Associativity.LEFT, Operator_Functions.skipout, 1, 'skipout') 
 
 class Op:
     def __init__(self, hfunc):

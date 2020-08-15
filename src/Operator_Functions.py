@@ -5,7 +5,7 @@ Created on Sat Jun 27 16:19:04 2020
 @author: rohan
 """
 import utils
-from utils import frameStack, builtInState, functionNames, getData, enumNames, isPrimitive, typeNames, structNames
+from utils import frameStack, builtInState, functionNames, getData, enumNames, isPrimitive, typeNames, structNames, replaceVariables
 from HFunction import HFunction, Composition, Function, Lambda
 from List import List, Nil, Cons, Iterator, head, tail
 from Tuple import Tuple
@@ -16,45 +16,43 @@ def assign(a, b, state = None):
     var, value = a, b
     if isPrimitive(var) or isinstance(var, Nil):
         return 
-    
-    elif isinstance(var, Variable):
+    if state == None:
+        state = frameStack[-1] 
+
+    if isinstance(var, Variable):
         value = b.simplify()
         if utils.functional_mode:
             if var.name in state.keys():
-                raise Exception('Cannot assign variable', var.name, 'in FUNCTIONAL-MODE.')
+                raise Exception('Cannot assign variable',
+                                var.name, 'in FUNCTIONAL-MODE.')
         if utils.static_mode:
             if var.name in state.keys():
                 varType = type(state[var.name])
                 valType = type(value)
                 if varType != valType:
-                    raise Exception('Cannot assign variable', var.name, 'of type',
-                                    str(varType), 'with value of type',  str(valType),
+                    raise Exception('Cannot assign variable', var.name,
+                                    'of type',
+                                    str(varType), 'with value of type',
+                                    str(valType),
                                     'in STATIC-MODE.')
-        if state == None:
-            for i in range(len(frameStack) - 1, -1, -1):
-                curr = frameStack[i]
-                if var.name in curr.keys():
-                    curr[var.name] = value
-                    return value
-            state = frameStack[-1]
+
         state[var.name] = value
         return value
     
     elif isinstance(var, Tuple):
+        value = value.simplify()
         varTup = var.tup
         valTup =  value.tup
         for i in range(len(varTup)): 
             assign(varTup[i], valTup[i], state)
         return value
 
-    if isinstance(var, Cons):
+    elif isinstance(var, Cons):
         assign(head(var), head(value), state)
         assign(tail(var), tail(value), state)
         return value
         
     elif isinstance(var, BinaryExpr):
-        if state == None:
-            state = frameStack[-1]
         if var.operator.name == '@':
             assign(var.leftExpr, value, state)
             assign(var.rightExpr, value, state)
@@ -80,7 +78,8 @@ def assign(a, b, state = None):
                     if arg.operator.name == ' ':
                         if isinstance(arg.leftExpr, (Nil, Cons, Tuple)):
                             pass
-                        if isinstance(arg.leftExpr, Variable) and arg.leftExpr.name not in typeNames:
+                        if (isinstance(arg.leftExpr, Variable) 
+                            and arg.leftExpr.name not in typeNames):
                             arg = arg.simplify()
                     else: 
                         arg = arg.simplify()
@@ -226,12 +225,11 @@ def comma(a, b):
     
 def cons(a, b):
     x, xs = a, b
-    x = x.simplify()
-    return Cons(x, xs, type(a))    
+    return Cons(x, xs)    
 
 def concatenate(a, b): 
     from List import head, tail
-    (left, right) = (a, b)
+    left, right = a, b
     if isinstance(left, Nil):
         return right
     elif isinstance(right, Nil):
@@ -267,12 +265,13 @@ def comprehension(a, b):
     return Range(start, end, Int(1))
 
 def sequence(a, b):
-    a.simplify()
     import utils
-    if utils.return_value != None:
-        return utils.return_value
-    if not (utils.breakLoop or utils.continueLoop):
-        return b.simplify()
+    if not (utils.breakLoop > 0 or utils.continueLoop > 0):
+        a.simplify()
+        if utils.return_value != None:
+            return utils.return_value
+        if not (utils.breakLoop > 0 or utils.continueLoop > 0):
+            return b.simplify()
     return Int(None)
     
 def chain(a, b):
@@ -379,23 +378,10 @@ def access(a, b):
 
 def forLoop(n, expr, reset_break = True):
     import utils
-    if isinstance(n, Iterator):
-        frameStack.append({})
-        var, collection = n.var, n.collection.simplify()
-        while not isinstance(collection, Nil):
-            assign(var, head(collection))
-            expr.simplify()
-            if utils.breakLoop or utils.return_value != None:
-                utils.breakLoop = False
-                break
-            if utils.continueLoop:
-                utils.continueLoop = False
-            collection = tail(collection)
-        frameStack.pop(-1)
-    elif isinstance(n, Tuple):
+    if isinstance(n, Tuple):
         generators = n.tup       
         frameStack.append({})
-        curr = generators[0]
+        curr = generators[0].simplify() 
         var, collection = curr.var, curr.collection.simplify()
         while not isinstance(collection, Nil):
             assign(var, head(collection))
@@ -403,25 +389,16 @@ def forLoop(n, expr, reset_break = True):
                 expr.simplify()
             else:
                 forLoop(Tuple(generators[1:]), expr, False)
-            if utils.breakLoop or utils.return_value != None:
+            if utils.breakLoop > 0 or utils.return_value != None:
                 if reset_break:
-                    utils.breakLoop = False
+                    utils.breakLoop -= 1
                 break
-            if utils.continueLoop:
-                utils.continueLoop = False
+            if utils.continueLoop > 0:
+                utils.continueLoop -= 1
             collection = tail(collection)
         frameStack.pop(-1)
     elif isinstance(n, BinaryExpr):
-        if n.operator.name != ';':
-            n = n.simplify()
-            for i in range(n.value):
-                expr.simplify()
-                if utils.continueLoop:
-                    utils.continueLoop = False
-                if utils.breakLoop:
-                    utils.breakLoop = False
-                    break
-        else:
+        if n.operator.name == ';':
             init, n = n.leftExpr, n.rightExpr
             cond, after = n.leftExpr, n.rightExpr
             state = {}
@@ -430,21 +407,44 @@ def forLoop(n, expr, reset_break = True):
             while cond.simplify().value:
                 expr.simplify()
                 import utils
-                if utils.continueLoop:
-                    utils.continueLoop = False
-                if utils.breakLoop or utils.return_value != None:
-                    utils.breakLoop = False
+                if utils.continueLoop > 0:
+                    utils.continueLoop -= 1
+                if utils.breakLoop > 0 or utils.return_value != None:
+                    utils.breakLoop -= 1
                     break
                 after.simplify()
             frameStack.pop(-1)
+        elif n.operator.name == 'in':
+            n = n.simplify()
+            frameStack.append({})
+            var, collection = n.var, n.collection.simplify()
+            while not isinstance(collection, Nil):
+                assign(var, head(collection)) 
+                expr.simplify()
+                if utils.breakLoop > 0 or utils.return_value != None:
+                    utils.breakLoop -= 1
+                    break
+                if utils.continueLoop > 0:
+                    utils.continueLoop -= 1
+                collection = tail(collection)
+            frameStack.pop(-1)
+        else:
+            n = n.simplify()
+            for i in range(n.value):
+                expr.simplify()
+                if utils.continueLoop > 0:
+                    utils.continueLoop -= 1
+                if utils.breakLoop > 0:
+                    utils.breakLoop -= 1
+                    break
     else:
         n = n.simplify()
         for i in range(n.value):
             expr.simplify()
-            if utils.continueLoop:
-                utils.continueLoop = False
-            if utils.breakLoop:
-                utils.breakLoop = False
+            if utils.continueLoop > 0:
+                utils.continueLoop -= 1
+            if utils.breakLoop > 0:
+                utils.breakLoop -= 1
 
     return Int(0)
 
@@ -452,21 +452,31 @@ def whileLoop(cond, expr):
     while cond.simplify().value:
         expr.simplify()
         import utils
-        if utils.continueLoop:
-            utils.continueLoop = False
-        if utils.breakLoop or utils.return_value != None:
-            utils.breakLoop = False
+        if utils.continueLoop > 0:
+            utils.continueLoop -= 1
+        if utils.breakLoop > 0 or utils.return_value != None:
+            utils.breakLoop -= 1
             break
     return Int(0)
 
 def breakCurrentLoop():
     import utils
-    utils.breakLoop = True
+    utils.breakLoop = 1
     return Int(0)
 
 def continueCurrentLoop():
     import utils
-    utils.continueLoop = True
+    utils.continueLoop = 1
+    return Int(0)
+
+def breakout(n):
+    import utils
+    utils.breakLoop += n.value
+    return Int(0)
+
+def skipout(n):
+    import utils
+    utils.continueLoop += n.value
     return Int(0)
     
 def ifStatement(cond, expr):

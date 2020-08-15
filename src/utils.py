@@ -6,10 +6,9 @@ Created on Mon Jun 22 11:24:28 2020
 """
 import List, Maybe, IO
 import Prelude
-from Types import Variable, Int, Float, Bool, Alias, EnumValue, Object, Structure, Char
+from Types import Variable, Int, Float, Bool, EnumValue, Object, Structure, Char
 from List import Nil, Cons, head, tail, Range
 from Tuple import functionNamesTuple, Tuple
-from Stack import Stack
 '''
 global builtInState, static_mode, functional_mode, frameStack, enumNames
 global typeNames, structNames, operators, keywords, continueLoop, breakLoop 
@@ -17,7 +16,7 @@ global return_value, functionNames
 '''
 builtInState = {}
 static_mode = False
-functional_mode = False 
+functional_mode = False
 frameStack = [builtInState]
 enumNames = []
 typeNames = ['int', 'float', 'char', 'bool', 'var', 'list', 'tuple', 'string',
@@ -35,10 +34,10 @@ keywords = ('class', 'def', 'struct', 'interface', 'extends',
             'if', 'else', 'then', 'enum', 'oper', 'break', 'continue',
             'cascade', 'in', 'True', 'False', 'let', 'import', 'return',
             'int', 'float', 'bool', 'char', 'var', 'do', '?', 'list', 'tuple',
-            'string', 'Num', 'from', 'type', 'union') 
+            'string', 'Num', 'from', 'type', 'union', 'breakout', 'skipout') 
 
-continueLoop = False
-breakLoop = False
+continueLoop = 0
+breakLoop = 0
 return_value = None
 functionNames = Prelude.functionNamesPrelude
 functionNames += List.functionNamesList 
@@ -287,19 +286,21 @@ def optimise(expr):
 
 def replaceVariables(expr):
     from Expression import BinaryExpr
+    from Types import Collection
     if isinstance(expr, Variable):
-        if expr.name in frameStack[-1].keys():
-            return expr.simplify()
-    if isinstance(expr, BinaryExpr):
+        expr = expr.simplify()
+    elif isinstance(expr, BinaryExpr):
         left = expr.leftExpr
-        if expr.operator.name != '=':
+        if expr.operator.name not in ('=', 'where'):
             left = replaceVariables(expr.leftExpr)
         right = replaceVariables(expr.rightExpr)
-        return BinaryExpr(expr.operator, left, right)
-    if isinstance(expr, Cons):
-        return Cons(replaceVariables(expr.item), replaceVariables(expr.tail))
-    if isinstance(expr, Tuple):
-        return Tuple(list(map(lambda exp: replaceVariables(exp), expr.tup)))
+        expr = BinaryExpr(expr.operator, left, right)
+    elif isinstance(expr, Cons):
+        expr = Cons(replaceVariables(expr.item), replaceVariables(expr.tail))
+    elif isinstance(expr, Tuple):
+        expr = Tuple(list(map(lambda exp: replaceVariables(exp), expr.tup)))
+    elif isinstance(expr, Collection):
+        expr = Collection(list(map(lambda exp: replaceVariables(exp), expr.items)), expr.operator)        
     return expr
 
 def convertToList(expr):

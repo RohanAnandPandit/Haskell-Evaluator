@@ -1,9 +1,1 @@
-def rev [] = []
-
-def rev xs = rev2 xs [] where (
-	def rev2 [] ys = ys
-	def rev2 (x:xs) ys = rev2 xs (x:ys) 
-)
-
-printLn (rev [1,2,3])
-
+(((((def  split)  n)  xs) = ((((split2  xs)  [])  []) where ((((((def  split2)  [])  l)  r) = {l, r}) ; (((((def  split2)  (x : xs))  l)  r) = (((if  (x <= n))  (return  (((split2  xs)  (x : l))  r))) ; ((if  (x > n))  (return  (((split2  xs)  l)  (x : r))))))))) ; ((((def  quicksort)  []) = []) ; ((((def  quicksort)  (x : xs)) = ((((quicksort  left) ++ [x]) ++ (quicksort  right)) where ({left, right} = ((split  x)  xs)))) ; (printLn  (quicksort  [5, 2, 7, 2, 7, 3, 0])))))

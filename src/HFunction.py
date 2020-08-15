@@ -186,6 +186,7 @@ class Lambda:
         utils.frameStack.append(state)
         if self.expr != None:
             value = self.expr.simplify()
+            #value = utils.replaceVariables(self.expr)
         else:
             value = None
         utils.frameStack.pop(-1)
