@@ -177,6 +177,12 @@ def greaterThan(a, b):
 def greaterThanOrEqual(a, b):
     return Bool(greaterThan(a, b).value or equals(a, b).value)
 
+def rem(a, b):
+    return Int(a.value % b.value)
+
+def quot(a, b):
+    return Int(a.value // b.value)
+
 def equals(a, b):
     if a == None or b == None:
         return Bool(False)
@@ -692,7 +698,7 @@ def then_clause(cond, expr):
 def else_clause(cond, expr):
     value = cond.simplify()
     from Operator_Functions import equals
-    if equals(value, Int(None)):
+    if equals(value, Int(None)).value:
         return expr.simplify()
     return value
 

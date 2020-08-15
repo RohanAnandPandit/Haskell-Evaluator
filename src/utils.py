@@ -24,10 +24,10 @@ typeNames = ['int', 'float', 'char', 'bool', 'var', 'list', 'tuple', 'string',
 structNames = []
 operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
              '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
-             '$', ';', '>>', '>>=', '=', '->', '--', '\\',  ' where ', '|', '@',
-             '<-', '<<', '&', '}', '¦', ' then ', ' else ', '#', '{', '=>', '~',
-             ',,', '\n', '.', ' extends ', ' implements ', '!=', ' in ',
-             '+=', '-=', '*=', '/=', '^=']
+             '$', ';', '>>', '>>=', '=', '->', '--', '\\',  ' where ', '|',
+             '@', '<-', '<<', '&', '}', '¦', ' then ', ' else ', '#', '{',
+             '=>', '~', ',,', '\n', '.', ' extends ', ' implements ', '!=',
+             ' in ', '+=', '-=', '*=', '/=', '^=', '//', '%']
 
 keywords = ('class', 'def', 'struct', 'interface', 'extends',
             'where', 'implements', 'while', 'for', 'case', 'default',
@@ -189,7 +189,7 @@ def typeMatch(type_, expr):
                     return True
         elif isinstance(expr, Structure):
             return type_.name == expr.type.name
-        elif isinstance(expr, Object):
+        elif isinstance(expr, Object):#hello hi bye
             return type_.name == expr.classType.name
         elif isPrimitive(expr):
             if type_.name == 'Num' and isinstance(expr, (Int, Float)):
@@ -288,7 +288,8 @@ def replaceVariables(expr):
     from Expression import BinaryExpr
     from Types import Collection
     if isinstance(expr, Variable):
-        expr = expr.simplify()
+        if expr.name not in typeNames:
+            expr = expr.simplify()
     elif isinstance(expr, BinaryExpr):
         left = expr.leftExpr
         if expr.operator.name not in ('=', 'where'):

@@ -26,6 +26,8 @@ less_than = HFunction(4, Associativity.NONE, Operator_Functions.lessThan, 2, '<'
 greater_than = HFunction(4, Associativity.NONE, Operator_Functions.greaterThan, 2, '>')
 less_than_or_equal = HFunction(4, Associativity.NONE, Operator_Functions.lessThanOrEqual, 2, '<=')
 greater_than_or_equal = HFunction(4, Associativity.NONE, Operator_Functions.greaterThanOrEqual, 2, '>=')
+int_div = HFunction(4, Associativity.NONE, Operator_Functions.quot, 2, '//')
+remainder = HFunction(4, Associativity.NONE, Operator_Functions.rem, 2, '%')
 colon = HFunction(5, Associativity.RIGHT, Operator_Functions.cons, 2, ':')
 logical_and = HFunction(3, Associativity.RIGHT, Operator_Functions.AND, 2, '&&')
 concatenate = HFunction(5, Associativity.LEFT, Operator_Functions.concatenate, 2, '++')
@@ -120,6 +122,8 @@ class Operator(Enum):
     MULTIPLY_BY = multiply_by
     DIVIDE_BY = divide_by
     RAISE_TO = raise_to
+    DOUBLE_SLASH = int_div
+    PERCENT = remainder
     
 def initialiseFunctions(state):
     state['fst'] = HFunction(8, Associativity.LEFT, Prelude.fst, 1, 'fst')
@@ -247,6 +251,8 @@ operatorsDict = {'=' : Operator.EQUAL,
                  '<' : Operator.LESS_THAN,
                  '<=': Operator.LESS_THAN_OR_EQUAL,
                  '>' : Operator.GREATER_THAN,
+                 '//': Operator.DOUBLE_SLASH,
+                 '%' : Operator.PERCENT,
                  '>=': Operator.GREATER_THAN_OR_EQUAL, 
                  '&&': Operator.DOUBLE_AMPERSAND,
                  '||': Operator.DOUBLE_BAR,

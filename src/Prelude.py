@@ -32,7 +32,6 @@ def rem(a, b):
 def quot(a, b):
     return utils.getData(a.value // b.value)
 
-
 def div(a, b):
     return utils.getData(a.value // b.value)
 
