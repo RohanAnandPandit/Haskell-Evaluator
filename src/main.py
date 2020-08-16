@@ -48,10 +48,10 @@ def execute(text):
         utils.evaluate(part)
 
 lightmode = {'bg' : 'white', 'fg' : 'black', 'operators' : 'orange',
-             'insert' : 'black', 'keywords' : 'orange'}
+             'insert' : 'black', 'keywords' : 'orange', 'string' : 'lime green'}
 darkmode = {'bg' : 'black', 'fg' : 'white', 'operators' : 'yellow', 
             'insert' : 'white', 'keywords' : 'cyan', 'string' : 'lime green'}
-mode = darkmode
+mode = lightmode
   
 def ide():
     root = tk.Tk()
@@ -68,7 +68,7 @@ def ide():
     
     text.configure(yscrollcommand = scrollb.set)
     text.tag_config('bracket', foreground = 'red')
-    root.bind('<KeyPress>', lambda event: analyse(event, text))
+    root.bind('<Return>', lambda event: enter(text))
     root.bind('<KeyPress>', lambda event: analyse(event, text))
     root.bind('<Control-s>', lambda event: save_code(text))
     root.bind('<F5>', lambda event: execute(text))
@@ -77,8 +77,33 @@ def ide():
 def save_code(text):
     file = open('code.txt', 'w')
     file.write(text.get(1.0, tk.END))
-    
+
+def enter(text):
+    if (text.get('insert-2c') == '(' and text.get('insert') == ')' or 
+        text.get('insert-2c') == '{' and text.get('insert') == '}'):
+        text.mark_set('insert', 'insert-1lines')
+        pos = 'insert'
+        tabs = 0
+        while text.get(pos) == '\t':
+            tabs += 1
+            pos += '+1c'
+        text.mark_set('insert', 'insert lineend+1c')
+        text.insert(tk.INSERT, (tabs + 1) * '\t' + '\n' + tabs * '\t')
+        text.mark_set('insert', 'insert-' + str(tabs + 1) + 'c')
+        return
+    text.mark_set('insert', 'insert-1lines')
+    pos = 'insert'
+    tabs = 0
+    while text.get(pos) == '\t':
+        tabs += 1
+        pos += '+1c'
+    text.mark_set('insert', 'insert lineend+1c')
+    text.insert(tk.INSERT, tabs* '\t')
+        
 def analyse(event, text):
+    if event.keysym == 'Return':
+        enter(text)
+        return
     if len(event.char) == 1 and event.keysym != 'BackSpace':
         if text.get('insert-1c') == '{':
             text.insert(tk.INSERT, '}')
@@ -169,15 +194,17 @@ def analyse(event, text):
         pos1 = text.search("'", start, stopindex = tk.END)
         if not pos1:
             break 
-        start = pos1 + '+1c'
-        pos2 = text.search("'", start, stopindex = tk.END)
-        if not pos2:
-            break 
-        pos2 += '+1c'
-        text.tag_add("string", pos1, pos2)
-        start = pos2
+        if text.get(pos1 + '+1c') == "'":
+            start = pos1 + '+2c'
+            continue
+        if not text.get(pos1 + '+2c'): break 
+        elif text.get(pos1 + '+2c') == "'":
+            text.tag_add("string", pos1, pos1 + '+3c')
+            start = pos1 + '+3c'
+        else:
+            start = pos1 + '+1c'
     text.tag_config("string", foreground = mode['string'])
-                
+
 #way = input('Do you want to write on command-line or IDE?: ')
 #if way == 'ide':
 #try:

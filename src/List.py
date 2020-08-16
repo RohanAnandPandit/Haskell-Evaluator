@@ -4,7 +4,6 @@ Created on Tue Jun 23 20:381 2020
 
 @author: rohan
 """
-from Maybe import Just, Nothing
 from Tuple import Tuple
 from Types import Int, Char, Bool, Variable
 
@@ -213,10 +212,10 @@ def mapHaskell(a, b):
     x, xs = head(b), tail(b)
     if (isinstance(b, Nil)):
         return b
-    from Expression import BinaryExpr
-    from Operators import operatorFromString
-    expr = BinaryExpr(operatorFromString(' '), func, x)
-    return Cons(expr, mapHaskell(func, xs))
+    #from Expression import BinaryExpr
+    #from Operators import operatorFromString
+    #expr = BinaryExpr(operatorFromString(' '), func, x)
+    return Cons(func.apply(x), mapHaskell(func, xs))
         
 
 def words(a):

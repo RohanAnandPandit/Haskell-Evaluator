@@ -598,7 +598,7 @@ def toInt(expr):
     if isinstance(expr, (Int, Float)):
         return Int(int(expr.value))
     if isinstance(expr, Cons):
-        return toInt(getData(str(expr)[1:-1]))
+        return toInt(getData(str(expr)))
     if isinstance(expr, Bool):
         if expr.value:
             return Int(1)
@@ -611,7 +611,7 @@ def toFloat(expr):
     if isinstance(expr, (Int, Float)):
         return Float(float(expr.value))
     if isinstance(expr, Cons):
-        return toFloat(getData(str(expr)[1:-1]))
+        return toFloat(getData(str(expr)))
     if isinstance(expr, Bool):
         if expr.value:
             return Float(1.0)

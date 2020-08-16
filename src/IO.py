@@ -27,5 +27,5 @@ def show(a):
 
 def inputHaskell(question):
     from utils import convertToList
-    inp = input(str(question)[1:-1])
+    inp = input(str(question))
     return  convertToList(list(map(Char, str(inp)))).simplify()

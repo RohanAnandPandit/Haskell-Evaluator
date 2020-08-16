@@ -4,7 +4,7 @@ Created on Mon Jun 22 11:24:28 2020
 
 @author: rohan
 """
-import List, Maybe, IO
+import List, IO
 import Prelude
 from Types import Variable, Int, Float, Bool, EnumValue, Object, Structure, Char
 from List import Nil, Cons, head, tail, Range
@@ -34,18 +34,18 @@ keywords = ('class', 'def', 'struct', 'interface', 'extends',
             'if', 'else', 'then', 'enum', 'oper', 'break', 'continue',
             'cascade', 'in', 'True', 'False', 'let', 'import', 'return',
             'int', 'float', 'bool', 'char', 'var', 'do', '?', 'list', 'tuple',
-            'string', 'Num', 'from', 'type', 'union', 'breakout', 'skipout') 
+            'string', 'Num', 'from', 'type', 'union', 'breakout', 'skipout')
 
 continueLoop = 0
 breakLoop = 0
 return_value = None
 functionNames = Prelude.functionNamesPrelude
 functionNames += List.functionNamesList 
-functionNames += Maybe.functionNamesMaybe 
 #functionNames += Char.functionNamesChar
 functionNames += functionNamesTuple
 functionNames += IO.functionNamesIO
-functionNames += ['eval', 'read', 'range', 'toInt', 'toBool', 'toChar', 'toFloat']
+functionNames += ['eval', 'read', 'range', 'toInt', 'toBool', 'toChar',
+                  'toFloat']
 
 def reset_state():
     import utils

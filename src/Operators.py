@@ -165,8 +165,6 @@ def initialiseFunctions(state):
     state['product'] = HFunction(8, Associativity.LEFT, Prelude.product, 1, 'product')
     state['flip'] = HFunction(8, Associativity.LEFT, Prelude.flip, 1, 'flip')
     state['last'] = HFunction(8, Associativity.LEFT, Prelude.last, 1, 'last')
-    state['just'] = HFunction(8, Associativity.LEFT, Prelude.just, 1, 'Just')
-    state['fromJust'] = HFunction(8, Associativity.LEFT, Prelude.fromJust, 1, 'fromJust')
     state['printLn'] = HFunction(8, Associativity.LEFT, Prelude.printLn, 1, 'printLn')
     state['print'] = HFunction(8, Associativity.LEFT, Prelude.printHaskell, 1, 'print')
     state['show'] = HFunction(8, Associativity.LEFT, Prelude.show, 1, 'show')

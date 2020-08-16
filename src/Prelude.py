@@ -10,7 +10,6 @@ import utils
 from Types import Bool
 from List import *
 from Tuple import *
-from Maybe import *
 from Char import *
 from IO import *
 
