@@ -27,7 +27,7 @@ operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&',
              '$', ';', '>>', '>>=', '=', '->', '--', '\\',  ' where ', '|',
              '@', '<-', '<<', '&', '}', '¦', ' then ', ' else ', '#', '{',
              '=>', '~', ',,', '\n', '.', ' extends ', ' implements ', '!=',
-             ' in ', '+=', '-=', '*=', '/=', '^=', '//', '%']
+             ' in ', '+=', '-=', '*=', '/=', '^=', '//', '%'] 
 
 keywords = ('class', 'def', 'struct', 'interface', 'extends',
             'where', 'implements', 'while', 'for', 'switch', 'default',
@@ -52,59 +52,6 @@ lazy_eval = ('=', '->', 'where', '|', '.', '\n', ';', '+=', '-=', '*=', '/=',
              'class', 'interface', 'def', 'switch', 'if', 'let',
              'import', 'do', 'int', 'float', 'char', 'bool', 'string', 'list',
              'from', 'type', 'union', 'where', 'in')
-
-def reset_state():
-    import utils
-    utils.builtInState = {}
-    utils.static_mode = False
-    utils.functional_mode = False 
-    utils.frameStack = [builtInState]
-    utils.enumNames = []
-    utils.typeNames = ['Int', 'Float', 'Char', 'Bool']
-    utils.structNames = []
-    utils.operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
-                 '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
-                 '$', ';', '>>', '>>=', '=', '->', '--', '\\',  ' where ', '|', '@',
-                 '<-', '<<', '&', '}', '¦', ' then ', ' else ', '#', '{', '=>', '~',
-                 ',,', '\n', '.', ' extends ', ';;', ' implements ', '!=', ' in ']
-    
-    utils.keywords = ('class', 'def', 'struct', 'interface', 'extends',
-                'where', 'implements', 'while', 'for', 'case', 'default',
-                'if', 'else', 'then', 'enum', 'oper', 'break', 'continue',
-                'cascade', 'in', 'True', 'False', 'let', 'import', 'return', 'do')
-    
-    utils.continueLoop = False
-    utils.breakLoop = False
-    utils.return_value = None
-    utils.functionNames = Prelude.functionNamesPrelude
-    utils.functionNames += List.functionNamesList 
-    utils.functionNames += Char.functionNamesChar
-    utils.functionNames += functionNamesTuple
-    utils.functionNames += IO.functionNamesIO
-    utils.functionNames += ['eval', 'read', 'range', 'toInt', 'toBool',
-                            'toChar', 'toFloat']
-
-
-closer = {'[' : ']', '(' : ')'}
-
-brackets = ['[', ']','(', ')']
-
-def stringToList(string):
-    from List import List, Nil
-    from Operators import Operator
-    from Expression import Data
-    from Parser import addBinaryExpr
-    from Stack import Stack
-    chars = Stack()
-    operators = Stack()
-    for char in string:
-        chars.push(Data(char))
-        operators.push(Operator.COLON.value)
-    chars.push(Data(Nil()))
-    while operators.peek() != None:
-        addBinaryExpr(operators, chars)
-    return List(chars.pop())
-        
 
 def getData(exp):
     if isPrimitive(exp):
@@ -195,8 +142,8 @@ def typeMatch(type_, expr):
                     return True
         elif isinstance(expr, Structure):
             return type_.name == expr.type.name
-        elif isinstance(expr, Object):#hello hi bye
-            return type_.name == expr.classType.name
+        elif isinstance(expr, Object):
+            return type_.name == expr.class_.name.split(' ')[0]
         elif isPrimitive(expr):
             if type_.name == 'Num' and isinstance(expr, (Int, Float)):
                 return True
@@ -213,7 +160,8 @@ def typeMatch(type_, expr):
     elif isinstance(type_, Nil) and (isinstance(expr, (Nil, Cons))):
         return True
     elif isinstance(type_, Cons) and isinstance(expr, Cons):
-        return typeMatch(head(type_), head(expr)) and typeMatch(tail(type_), tail(expr))
+        return (typeMatch(head(type_), head(expr)) 
+                and typeMatch(tail(type_), tail(expr)))
     elif isinstance(type_, Tuple) and isinstance(expr, Tuple):
         if len(type_.tup) != len(expr.tup):
             return False
@@ -307,7 +255,8 @@ def replaceVariables(expr):
     elif isinstance(expr, Tuple):
         expr = Tuple(list(map(lambda exp: replaceVariables(exp), expr.tup)))
     elif isinstance(expr, Collection):
-        expr = Collection(list(map(lambda exp: replaceVariables(exp), expr.items)), expr.operator)        
+        expr = Collection(list(map(lambda exp: replaceVariables(exp),
+                                   expr.items)), expr.operator)        
     return expr
 
 def convertToList(expr):
@@ -317,129 +266,3 @@ def convertToList(expr):
     for i in range(len(expr) - 1, -1, -1):
         xs = Cons(expr[i], xs)
     return xs
-    
-def indexOfClosing(c, exp):
-    closer = {'[' : ']', '(' : ')'}
-    index = 0
-    count = 0
-    for char in exp:
-        if (char == c):
-            count += 1
-        elif (char == closer[c]):
-            count -= 1
-            if (count == 0):
-                return index
-        index += 1
-    return None
-
-def closingQuote(exp):    
-    index = 0
-    insideString = False
-    for char in exp:
-        if (char == "\""):
-            if (insideString):
-                return index
-        if (char == "\""):
-            insideString = True
-        index += 1
-    return None
-
-def balancedBrackets(c, exp):
-    count = 0
-    for char in exp:
-        if (char == c):
-            count += 1
-        elif (char == closer[c]):
-            if (count == 0):
-                return False
-            else:
-                count -= 1
-    return count == 0
-
-
-def splitAtCommas(exp):
-    brackets = 0
-    for i in range(0, len(exp)):
-        char = exp[i]
-        if (char in ["[", '(']):
-            brackets += 1
-        elif (char in [']', ')']):
-            brackets -= 1
-        elif (char == ',' and brackets == 0):
-            return [exp[0:i]] + splitAtCommas(exp[i + 1:])
-    return [exp]
-    
-    
-def removeSpaces(exp):
-    l = []
-    for char in exp:
-        if (char != " "):
-            l.append(char)
-    return ''.join(l)
-            
-def getString(c, exp):
-    index = 0
-    count = -1
-    for char in exp:
-        if (char == c and count == 0):
-            return index
-        if (char == c):
-            count += 1
-        index += 1
-     
-def removeUnwantedSpaces(exp):
-    exp = list(exp)
-    i = 0
-    prev = " "
-    l = len(exp)
-    while (i < l):
-        current = exp[i]
-        if (current == " " and prev in [" ", ',']):
-            del exp[i]
-            l -= 1
-            pass
-        else:
-            prev = current
-            i += 1
-    return "".join(exp)
-
-def removeSpaceAroundOperators(exp):
-    from Haskell_Evaluate import operators
-    i = 0
-    l = len(exp)
-    while (i < l):
-        string = exp[i]
-        if string in operators:
-            if (string not in brackets):
-                if (i > 0):
-                    if (exp[i - 1] == " "):
-                        del exp[i - 1]
-                        i -= 1
-                        l -= 1
-                if (i < l - 1):
-                    if (exp[i + 1] == " "):
-                        del exp[i + 1]
-                        i -= 1
-                        l -= 1
-        i += 1
-    return ''.join(exp)
-
-
-def specialMin(a, b):
-    if (a == None):
-        return b
-    if (b == None):
-        return a
-    return min(a, b)
-
-def dimensionOf(l):
-    dim = 0
-    initialType = type(l)
-    while (type(l) == initialType and initialType in [list, tuple]):
-        dim += 1
-        if (len(l) > 0):
-            l = l[0]
-        else:
-            break
-    return dim
-

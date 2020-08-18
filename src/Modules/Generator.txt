@@ -1,5 +1,10 @@
-class Iterate (
-	def init {func, seed} (
+interface Generator (
+	def next = _
+	def toString = _
+)
+
+class Iterate implements Generator (
+	def Iterate {func, seed} (
 		this.func = func
 		this.seed = seed
 		this.first = True
@@ -14,8 +19,8 @@ class Iterate (
 	def toString = "[" ++ show this.seed ++ ".." ++ show func ++ " n" ++ "]"
 )
 
-class Cycle (
-	def init {xs} (
+class Cycle implements Generator (
+	def Cycle {xs} (
 		this.list = xs
 		this.curr = xs
 	)

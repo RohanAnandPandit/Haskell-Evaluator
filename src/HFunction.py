@@ -123,7 +123,8 @@ class Function(Func):
             if noOfArgs == 0:
                 return self.checkCases(inputs)        
 
-        return Function(self.name, noOfArgs, cases = self.cases, inputs = inputs)
+        return Function(self.name, noOfArgs,
+                        cases = self.cases, inputs = inputs)
     
     def checkCases(self, inputs):
         for case in self.cases:

@@ -195,7 +195,8 @@ def quot(a, b):
 def equals(a, b):
     if a == None or b == None:
         return Bool(False)
-    if isinstance(a, (Variable, BinaryExpr)) or isinstance(b, (Variable, BinaryExpr)):
+    if (isinstance(a, (Variable, BinaryExpr)) 
+        or isinstance(b, (Variable, BinaryExpr))):
         return Bool(False)
     if issubclass(type(a), List) and issubclass(type(b), List):
         if isinstance(a, Nil) and isinstance(b, Nil):
@@ -332,8 +333,9 @@ def createStruct(name, fields):
 def createOperator(symbol, precedence, associativity, func):
     from utils import operators
     from Operators import operatorsDict, Op, Associativity
-    associativityMap = {'left' : Associativity.LEFT, 'right' : Associativity.LEFT,
-                'none' : Associativity.NONE}
+    associativityMap = {'left' : Associativity.LEFT,
+                        'right' : Associativity.LEFT,
+                        'none' : Associativity.NONE}
     precedence = precedence.value
     associativity = associativityMap[associativity.name]
     symbol = str(symbol)[1:-1]
@@ -347,13 +349,9 @@ def createOperator(symbol, precedence, associativity, func):
     operatorsDict[symbol] = Op(func)
     return func
 
-def createClass(name, methodsExpr):
-    state = frameStack[-1]
+def createClass(name):
     name = name.name
-    typeNames.append(name)
-    cls = Class(name, methodsExpr)
-    state[name] = cls
-    functionNames.append(name)
+    cls = Class(name)
     return cls
 
 def createInterface(name, declarationsExpr):
@@ -479,7 +477,7 @@ def breakCurrentLoop():
     utils.breakLoop = 1
     return Int(0)
 
-def continueCurrentLoop():
+def continue_loop():
     import utils
     utils.continueLoop = 1
     return Int(0)
@@ -499,17 +497,16 @@ def ifStatement(cond, expr):
         return expr.simplify()
     return Int(None)
 
-def inherits(subclass, superclass):
+def extends(subclass, constr):
+     superclass = constr.class_  
      subclass.state['super'] = superclass
      for name in superclass.state.keys():
          if name not in subclass.state.keys():
              subclass.state[name] = superclass.state[name]
      return subclass
 
-def checkImplements(subclass, interface):
-    for methodName in interface.methods:
-        if methodName not in subclass.state.keys():
-            print("Missing definition for " + methodName)
+def implements(subclass, interface):
+    subclass.interface = interface
     return subclass
 
 def definition(name_var, args_tup, expr):
@@ -526,7 +523,7 @@ def definition(name_var, args_tup, expr):
             functionNames.append(name) 
     return case
         
-def match(value, expr):
+def switch(value, expr):
     cases = []
     while True:
         if not (isinstance(expr, BinaryExpr) and expr.operator.name == ';'):
@@ -536,16 +533,18 @@ def match(value, expr):
         expr = expr.rightExpr
     followThrough = False
     for case in cases:
-        if (isinstance(case.leftExpr, Variable) and case.leftExpr.name == 'default' 
+        if (isinstance(case.leftExpr, Variable) 
+            and case.leftExpr.name == 'default' 
             or patternMatch(case.leftExpr.simplify(), value.simplify())
             or followThrough):
+            
             case.rightExpr.simplify()
             followThrough = True
             if case.operator.name == '=>':
                 break
     return Int(0)
 
-def evaluate_in_scope(assign, expr):
+def let(assign, expr):
     state = {}
     frameStack.append(state)
     assign.simplify()
@@ -633,20 +632,30 @@ def doLoop(expr, loop, cond):
     if loop.name == 'for':
         return forLoop(cond, expr)
         
-def incrementBy(var, val):
-    return assign(var, add(var.simplify(), val.simplify()))
+def incrementBy(var, val): 
+    value = var.simplify()
+    assign(var, add(value, val.simplify()))
+    return value
 
 def decrementBy(var, val):
-    return assign(var, subtract(var.simplify(), val.simplify()))
+    value = var.simplify()
+    assign(var, subtract(var.simplify(), val.simplify()))
+    return value
 
 def multiplyBy(var, val):
-    return assign(var, multiply(var.simplify(), val.simplify()))
+    value = var.simplify()
+    assign(var, multiply(var.simplify(), val.simplify()))
+    return value
 
 def divideBy(var, val):
-    return assign(var, divide(var.simplify(), val.simplify()))
+    value = var.simplify()
+    assign(var, divide(var.simplify(), val.simplify()))
+    return value
 
 def raiseTo(var, val):
-    return assign(var, power(var.simplify(), val.simplify()))
+    value = var.simplify()
+    assign(var, power(var.simplify(), val.simplify()))
+    return value
 
 def defaultInt(var):
     frameStack[-1][var.name] = Int(0)
