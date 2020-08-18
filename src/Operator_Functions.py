@@ -5,20 +5,20 @@ Created on Sat Jun 27 16:19:04 2020
 @author: rohan
 """
 import utils
-from utils import frameStack, builtInState, functionNames, getData, enumNames, isPrimitive, typeNames, structNames, replaceVariables
+from utils import frameStack, functionNames, getData, enumNames, isPrimitive
+from utils import typeNames, structNames, patternMatch
 from HFunction import HFunction, Composition, Function, Lambda
 from List import List, Nil, Cons, Iterator, head, tail
 from Tuple import Tuple
-from Types import Int, Float, Bool, Variable, Alias, Enum, EnumValue, Struct, Class, Interface, Char, Module, Object
+from Types import Int, Float, Bool, Variable, Alias, Enum, EnumValue, Struct
+from Types import Class, Interface, Char, Module, Object
 from Expression import BinaryExpr
 
 def assign(a, b, state = None):
     var, value = a, b
     if isPrimitive(var) or isinstance(var, Nil):
         return 
-    if state == None:
-        state = frameStack[-1] 
-
+ 
     if isinstance(var, Variable):
         value = b.simplify()
         if utils.functional_mode:
@@ -34,12 +34,20 @@ def assign(a, b, state = None):
                                     'of type',
                                     str(varType), 'with value of type',
                                     str(valType),
-                                    'in STATIC-MODE.')
-
+                                    'in STATIC-MODE.') 
+        if state == None:
+            for curr in frameStack[::-1]: 
+                if var.name in curr.keys():
+                    curr[var.name] = value 
+                    return
+            state = frameStack[-1]
         state[var.name] = value
         return value
     
-    elif isinstance(var, Tuple):
+    if state == None:
+        state = frameStack[-1]
+        
+    if isinstance(var, Tuple):
         value = value.simplify()
         varTup = var.tup
         valTup =  value.tup
@@ -89,7 +97,8 @@ def assign(a, b, state = None):
                 if isinstance(args, (Variable, Nil, Cons, Tuple)):
                     arguments.insert(0, args)
                     break
-            if isinstance(arguments[0], Variable) and arguments[0].name in structNames:
+            if (isinstance(arguments[0], Variable) 
+                and arguments[0].name in structNames):
                 if isinstance(arguments[1], Tuple):
                     assign(arguments[1], Tuple(value.values), state) 
                 else:
@@ -136,7 +145,7 @@ def index(a, b):
             return x
         return index(xs, Int(n - 1))
     elif isinstance(a, Enum):
-        return builtInState[a.values[n]].simplify()
+        return a.values[n]
     elif isinstance(a, Tuple):
         return a.tup[n]
 
@@ -379,7 +388,7 @@ def bitwise_and(x, y):
     return Int(x.value & y.value)
 
 def access(a, b):
-    obj, field = a, b       
+    obj, field = a.simplify(), b       
     return obj.state[field.name].simplify()
 
 def forLoop(n, expr, reset_break = True):
@@ -516,23 +525,8 @@ def definition(name_var, args_tup, expr):
             state[name] = func
             functionNames.append(name) 
     return case
-
-
-def switch(value, expr):
-    cases = []
-    while True:
-        if not ((isinstance(expr, BinaryExpr) and expr.operator.name == ';')):
-            cases.append(expr)
-            break
-        cases.insert(0, expr.leftExpr)
-        expr = expr.rightExpr
-    for case in cases:
-        if (isinstance(case.cond, Variable) and case.cond.name == 'default' 
-            or equals(value.simplify(), case.cond.simplify()).value):
-            return case.ret.simplify()
-    return Int(None)
         
-def cascade(value, expr):
+def match(value, expr):
     cases = []
     while True:
         if not (isinstance(expr, BinaryExpr) and expr.operator.name == ';'):
@@ -542,14 +536,12 @@ def cascade(value, expr):
         expr = expr.rightExpr
     followThrough = False
     for case in cases:
-        if (isinstance(case.cond, Variable) and case.cond.name == 'default' 
-            or equals(value.simplify(), case.cond.simplify()).value
+        if (isinstance(case.leftExpr, Variable) and case.leftExpr.name == 'default' 
+            or patternMatch(case.leftExpr.simplify(), value.simplify())
             or followThrough):
-            case.ret.simplify()
+            case.rightExpr.simplify()
             followThrough = True
-            import utils
-            if utils.breakLoop:
-                utils.breakLoop = False 
+            if case.operator.name == '=>':
                 break
     return Int(0)
 

@@ -30,9 +30,9 @@ operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&',
              ' in ', '+=', '-=', '*=', '/=', '^=', '//', '%']
 
 keywords = ('class', 'def', 'struct', 'interface', 'extends',
-            'where', 'implements', 'while', 'for', 'case', 'default',
+            'where', 'implements', 'while', 'for', 'switch', 'default',
             'if', 'else', 'then', 'enum', 'oper', 'break', 'continue',
-            'cascade', 'in', 'True', 'False', 'let', 'import', 'return',
+            'in', 'True', 'False', 'let', 'import', 'return',
             'int', 'float', 'bool', 'char', 'var', 'do', '?', 'list', 'tuple',
             'string', 'Num', 'from', 'type', 'union', 'breakout', 'skipout')
 
@@ -46,6 +46,12 @@ functionNames += functionNamesTuple
 functionNames += IO.functionNamesIO
 functionNames += ['eval', 'read', 'range', 'toInt', 'toBool', 'toChar',
                   'toFloat']
+
+lazy_eval = ('=', '->', 'where', '|', '.', '\n', ';', '+=', '-=', '*=', '/=',
+             '^=', '=>', ':', 'while', 'for', 'struct', 'enum', 'oper', 
+             'class', 'interface', 'def', 'switch', 'if', 'let',
+             'import', 'do', 'int', 'float', 'char', 'bool', 'string', 'list',
+             'from', 'type', 'union', 'where', 'in')
 
 def reset_state():
     import utils
@@ -72,11 +78,11 @@ def reset_state():
     utils.return_value = None
     utils.functionNames = Prelude.functionNamesPrelude
     utils.functionNames += List.functionNamesList 
-    utils.functionNames += Maybe.functionNamesMaybe 
     utils.functionNames += Char.functionNamesChar
     utils.functionNames += functionNamesTuple
     utils.functionNames += IO.functionNamesIO
-    utils.functionNames += ['eval', 'read', 'range', 'toInt', 'toBool', 'toChar', 'toFloat']
+    utils.functionNames += ['eval', 'read', 'range', 'toInt', 'toBool',
+                            'toChar', 'toFloat']
 
 
 closer = {'[' : ']', '(' : ')'}

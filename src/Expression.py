@@ -4,20 +4,18 @@ Created on Tue Jun 23 13:38:23 2020
 
 @author: rohan
 """
+import utils
 from utils import functionNames
-from HFunction import HFunction
+from HFunction import Func
 
-class Expression:
-    pass
-
-class BinaryExpr(Expression):
+class BinaryExpr():
     def __init__(self, operator, left, right): 
         self.operator = operator
         self.leftExpr = left
         self.rightExpr = right
         
     def __str__(self):        
-        if (self.operator.name in functionNames or self.operator.name == '\\'):
+        if self.operator.name in functionNames or self.operator.name == '\\':
             buf = '(' + self.operator.name
             for i in range(self.operator.noOfArgs):
                 buf += ' '
@@ -46,43 +44,30 @@ class BinaryExpr(Expression):
         return buf
 
     def simplifyRightExpr(self, leftExpr):
-        return not (self.operator.name in ('=', '->', 'where', '|', '.', '\n',
-                                           ';', '+=', '-=', '*=', '/=', '^=',
-                                           '=>', ':') 
+        return not (self.operator.name.split(' ')[0] in utils.lazy_eval 
                     or self.operator.name == ' ' 
-                    and isinstance(leftExpr, HFunction) 
-                    and leftExpr.name in ('while', 'for', 'struct', 'enum', 
-                                          'oper', 'class', 'interface', 'def',
-                                          'case', 'if', 'cascade', 'let',
-                                          'import', 'do', 'int', 'float', 'char',
-                                          'bool', 'string', 'list', 'from',
-                                          'type', 'union'))
+                    and issubclass(type(leftExpr), Func) 
+                    and leftExpr.name.split(' ')[0] in utils.lazy_eval)
 
-    def simplify(self, simplifyVariables = True):
-        simplifyRightVariables = simplifyLeftVariables = simplifyVariables 
-        if (self.operator.name in ('=', 'where', '|')):
-            simplifyRightVariables = simplifyLeftVariables = False
-
+    def simplify(self):
         operator = self.operator
         if operator.noOfArgs == 0:
             operator.apply()
         if self.leftExpr != None:
             leftExpr = self.leftExpr
-            if (self.operator.name not in (':', '->', '=', '\n', ';', 'in', 
-                                           'where', '+=', '-=', '*=', '/=', 
-                                           '^=', '=>', '|')):
-                leftExpr = leftExpr.simplify(simplifyLeftVariables)
+            if (self.operator.name.split(' ')[0] not in utils.lazy_eval):
+                leftExpr = leftExpr.simplify()
             operator = operator.apply(leftExpr)
             if (self.rightExpr != None):
                 rightExpr = self.rightExpr
                 if self.simplifyRightExpr(leftExpr):
-                    rightExpr = self.rightExpr.simplify(simplifyRightVariables)
+                    rightExpr = self.rightExpr.simplify()
                 operator = operator.apply(rightExpr)       
                 return operator
         if self.rightExpr != None:
             rightExpr = self.rightExpr
             if self.simplifyRightExpr(self.leftExpr):
-                rightExpr = rightExpr.simplify(simplifyRightVariables)
+                rightExpr = rightExpr.simplify()
             operator = operator.apply(arg1 = None, arg2 = rightExpr)  
         return operator
     

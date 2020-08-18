@@ -5,14 +5,15 @@ Created on Tue Jun 23 20:381 2020
 @author: rohan
 """
 from Tuple import Tuple
-from Types import Int, Char, Bool, Variable
+from Types import Int, Char, Bool
 
-functionNamesList = ['length', 'head', 'tail', 'last', 'concat', 'init', 'maximum',
-                 'minimum', 'elem', 'notElem', 'reverse', 'take', 'drop', 'map',
-                 'words', 'unwords', 'takeWhile', 'dropWhile', 'zip', 'unzip',
-                 'foldl', 'foldr', 'foldl1', 'foldr1', 'and', 'or', 'any', 'all', 'filter', 'sum',
-                 'product', 'lookup', 'concatMap', 'splitAt', 'span', 'replicate',
-                 'iterate', 'repeat', 'zipWith', 'zip3', 'zipWith3', 'cycle', 'append']
+functionNamesList = ['length', 'head', 'tail', 'last', 'concat', 'init',
+                     'maximum', 'minimum', 'elem', 'notElem', 'reverse',
+                     'take', 'drop', 'map', 'words', 'unwords', 'takeWhile',
+                     'dropWhile', 'zip', 'unzip', 'foldl', 'foldr', 'foldl1',
+                     'foldr1', 'and', 'or', 'any', 'all', 'filter', 'sum',
+                     'product', 'lookup', 'concatMap', 'splitAt', 'span',
+                     'replicate', 'zipWith', 'zip3', 'zipWith3', 'append']
 class List:
     pass
       
@@ -23,7 +24,7 @@ class Nil(List):
     def __str__(self):
         return '[]'
     
-    def simplify(self, simplifyVariables = True):
+    def simplify(self):
         return self
         
 class Cons(List):
@@ -54,7 +55,7 @@ class Cons(List):
             self.item.apply(arg1, arg2)
         return self
     
-    def simplify(self, simplifyVariables = True):
+    def simplify(self):
         from utils import replaceVariables
         return replaceVariables(self)
         #return self
@@ -64,7 +65,7 @@ class Iterator(List):
         self.var = var
         self.collection = collection.simplify()
             
-    def simplify(self, simplifyVariables = True):
+    def simplify(self):
         return self
 
     def __str__(self):
@@ -90,7 +91,8 @@ class Range:
         return self
     
     def __str__(self):
-        string = '[' + str(self.curr) + ', ' + str(self.curr.value + self.step.value)
+        string = '[' + str(self.curr) + ', ' 
+        string += str(self.curr.value + self.step.value)
         string += '..'
         string += str(self.end) + ']'
         return string
@@ -110,9 +112,9 @@ def head(a):
         return a.next()
 
 def tail(a):
-    if (isinstance(a, Nil)):
+    if isinstance(a, Nil):
         return None
-    if (isinstance(a, Cons)):
+    if isinstance(a, Cons):
         return a.tail
     elif isinstance(a, Range):
         from Operator_Functions import add, greaterThan
@@ -390,16 +392,3 @@ def replicate(a, b, l = Nil()):
     if (n == 0):
         return l
     return replicate(n - 1, x, Cons(x, l))
-
-def iterate(a, b):
-    (func, value) = (a, b)
-    return Cons(Iterator(func = func, item = value, iteratorType = 'general'), Nil())
-
-def repeat(a):
-    import Operators
-    iterator = Iterator(func = Operators.func_id, item = a, iteratorType = 'general')
-    return Cons(iterator, Nil())
-
-def cycle(a):
-    iterator = Iterator(cycleList = a, iteratorType = 'cycle')
-    return Cons(iterator, Nil())

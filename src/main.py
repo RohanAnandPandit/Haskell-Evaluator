@@ -51,15 +51,17 @@ lightmode = {'bg' : 'white', 'fg' : 'black', 'operators' : 'orange',
              'insert' : 'black', 'keywords' : 'orange', 'string' : 'lime green'}
 darkmode = {'bg' : 'black', 'fg' : 'white', 'operators' : 'yellow', 
             'insert' : 'white', 'keywords' : 'cyan', 'string' : 'lime green'}
-mode = lightmode
+mode = darkmode
   
 def ide():
     root = tk.Tk()
     root.title('Beaver')
     root.attributes('-topmost', True)
     root.geometry('1700x1600+0+0')
-    text = tk.Text(root, width = 80, height = 35, font = ('Consolas', 14, 'normal'), bg = mode['bg'],
-                   fg = mode['fg'], insertbackground = mode['insert'], tabs = ('1c'))
+    text = tk.Text(root, width = 80, height = 35,
+                   font = ('Consolas', 14, 'normal'), bg = mode['bg'],
+                   fg = mode['fg'], insertbackground = mode['insert'],
+                   tabs = ('1c'))
     tk.Button(root, text = 'Run', command = lambda: execute(text)).grid(column = 2, row = 0)
     text.grid(column = 0, row = 0)
     
@@ -69,28 +71,25 @@ def ide():
     text.configure(yscrollcommand = scrollb.set)
     text.tag_config('bracket', foreground = 'red')
     root.bind('<Return>', lambda event: enter(text))
+    root.bind('<BackSpace>', lambda event: backspace(text))
     root.bind('<KeyPress>', lambda event: analyse(event, text))
     root.bind('<Control-s>', lambda event: save_code(text))
     root.bind('<F5>', lambda event: execute(text))
     root.mainloop() 
 
+def backspace(text):
+    while text.get('insert-1c') in ' \n':
+        char = text.get('insert-1c')
+        text.delete('insert-1c', 'insert')
+        if char == '\n': break
+    
 def save_code(text):
     file = open('code.txt', 'w')
     file.write(text.get(1.0, tk.END))
 
 def enter(text):
-    if (text.get('insert-2c') == '(' and text.get('insert') == ')' or 
-        text.get('insert-2c') == '{' and text.get('insert') == '}'):
-        text.mark_set('insert', 'insert-1lines')
-        pos = 'insert'
-        tabs = 0
-        while text.get(pos) == '\t':
-            tabs += 1
-            pos += '+1c'
-        text.mark_set('insert', 'insert lineend+1c')
-        text.insert(tk.INSERT, (tabs + 1) * '\t' + '\n' + tabs * '\t')
-        text.mark_set('insert', 'insert-' + str(tabs + 1) + 'c')
-        return
+    prev_char = text.get('insert-2c')
+    next_char = text.get('insert')
     text.mark_set('insert', 'insert-1lines')
     pos = 'insert'
     tabs = 0
@@ -98,12 +97,14 @@ def enter(text):
         tabs += 1
         pos += '+1c'
     text.mark_set('insert', 'insert lineend+1c')
-    text.insert(tk.INSERT, tabs* '\t')
+    text.insert(tk.INSERT, tabs * '\t')
+    if prev_char in '({':
+        text.insert(tk.INSERT, '\t')
+        if next_char in ')}':
+            text.insert(tk.INSERT, '\n' + tabs * '\t')
+            text.mark_set('insert', 'insert-' + str(tabs + 1) + 'c')
         
 def analyse(event, text):
-    if event.keysym == 'Return':
-        enter(text)
-        return
     if len(event.char) == 1 and event.keysym != 'BackSpace':
         if text.get('insert-1c') == '{':
             text.insert(tk.INSERT, '}')

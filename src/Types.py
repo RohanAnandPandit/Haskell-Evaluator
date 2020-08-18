@@ -11,16 +11,11 @@ class Variable:
     def __init__(self, name):
         self.name = name
     
-    def simplify(self, simplifyVariable = True):
+    def simplify(self):
         from utils import frameStack
-        if (simplifyVariable):
-            curr = len(frameStack) - 1
-            while (curr >= 0):
-                frame = frameStack[curr]
-                if (self.name in frame.keys()):
-                    value = frame[self.name]
-                    return value.simplify()
-                curr -= 1
+        for curr in frameStack[::-1]:
+            if self.name in curr.keys():
+                return curr[self.name].simplify()
         #raise Exception('Variable', self.name, 'is not defined') 
         return self
     
@@ -33,7 +28,7 @@ class Int:
         self.type = 'int'
         self.value = value
     
-    def simplify(self, simplifyVariable = True):
+    def simplify(self):
         return self
     
     def __str__(self):
@@ -46,7 +41,7 @@ class Float:
         self.type = 'float'
         self.value = value
     
-    def simplify(self, simplifyVariable = True):
+    def simplify(self):
         return self
     
     def __str__(self):
@@ -58,7 +53,7 @@ class Bool:
         self.type = 'bool'
         self.value = value
     
-    def simplify(self, simplifyVariable = True):
+    def simplify(self):
         return self
     
     def __str__(self):
@@ -71,7 +66,7 @@ class Char:
         self.type = 'char'
         self.value = value
     
-    def simplify(self, simplifyVariable = True):
+    def simplify(self):
         return self
     
     def __str__(self):
@@ -93,7 +88,7 @@ class Collection:
         self.items = items
         self.operator = operator
     
-    def simplify(self, simplifyVariables = True):
+    def simplify(self):
         if len(self.items) == 2:
             left = self.items[0]
             if left: left = left.simplify()
@@ -120,7 +115,7 @@ class EnumValue:
         self.name = name
         self.value = value
     
-    def simplify(self, a = True):
+    def simplify(self):
         return self 
     
     def __str__(self):
@@ -131,7 +126,7 @@ class Enum:
         self.name = name
         self.values = values
     
-    def simplify(self, a = True):
+    def simplify(self):
         return self
     
     def __str__(self):
@@ -142,11 +137,11 @@ class Struct:
         self.name = name
         self.fields = fields
     
-    def simplify(self, a = True):
+    def simplify(self):
         return self
     
     def apply(self, values):
-        if (isinstance(values, Tuple)):
+        if isinstance(values, Tuple):
             values = values.tup
         else:
             values = [values]
@@ -161,7 +156,7 @@ class Structure:
         self.values = values 
         self.state = dict(zip(self.type.fields, values))
             
-    def simplify(self, a = True):
+    def simplify(self):
         return self
     
     def __str__(self):
@@ -227,7 +222,7 @@ class Object:
         self.classType = classType
         self.state = {'this' : self}
         
-    def simplify(self, a = True):
+    def simplify(self):
         return self
     
     def __str__(self):
@@ -258,14 +253,14 @@ class Module:
         self.state = {}
         import utils
         utils.frameStack.append(self.state)
-        utils.evaluate(code)
+        utils.evaluate(code) 
         #utils.frameStack.pop(-1)
     
-    def simplify(self, a = True):
+    def simplify(self):
         return self
     
     def __str__(self):
-        self.name
+        return self.name
         
 
 class Type:

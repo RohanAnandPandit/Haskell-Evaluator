@@ -1,6 +1,6 @@
-class Generator (
+class Iterate (
 	def init {func, seed} (
-		this.func = func	
+		this.func = func
 		this.seed = seed
 		this.first = True
 	)
@@ -11,5 +11,23 @@ class Generator (
 		return seed
 	)
 
-	def toString = "{" ++ show this.seed ++ ".." ++ "}"
+	def toString = "[" ++ show this.seed ++ ".." ++ show func ++ " n" ++ "]"
+)
+
+class Cycle (
+	def init {xs} (
+		this.list = xs
+		this.curr = xs
+	)
+	
+	def next = (
+		item = head curr
+		this.curr = tail curr
+		if (curr == []) (
+			this.curr = this.list
+		)
+		return item
+	)
+	
+	def toString = "[" ++ head this.list ++ ".." ++ head this.list ++ "]" 
 )
