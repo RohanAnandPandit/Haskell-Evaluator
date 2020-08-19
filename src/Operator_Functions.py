@@ -7,7 +7,7 @@ Created on Sat Jun 27 16:19:04 2020
 import utils
 from utils import frameStack, functionNames, getData, enumNames, isPrimitive
 from utils import typeNames, structNames, patternMatch
-from HFunction import HFunction, Composition, Function, Lambda
+from HFunction import HFunction, Composition, Function, Lambda, Func
 from List import List, Nil, Cons, Iterator, head, tail
 from Tuple import Tuple
 from Types import Int, Float, Bool, Variable, Alias, Enum, EnumValue, Struct
@@ -97,6 +97,7 @@ def assign(a, b, state = None):
                 if isinstance(args, (Variable, Nil, Cons, Tuple)):
                     arguments.insert(0, args)
                     break
+                
             if (isinstance(arguments[0], Variable) 
                 and arguments[0].name in structNames):
                 if isinstance(arguments[1], Tuple):
@@ -104,11 +105,22 @@ def assign(a, b, state = None):
                 else:
                     assign(arguments[1], value, state)
                 return value
+            
             if (isinstance(arguments[0], (Nil, Cons, Tuple)) 
                 or arguments[0].name in typeNames):
                 assign(arguments[1], value, state)
+                
+                from Operator_Functions import (make_public, make_private,
+                                                make_hidden)
+                if arguments[0].name == 'global':
+                    make_public(arguments[1])
+                elif arguments[0].name == 'local':
+                    make_private(arguments[1])
+                elif arguments[0].name == 'hidden':
+                    make_hidden(arguments[1])
                 return value
-            elif arguments[0].name == 'def':
+            
+            elif arguments[0].name in 'def':
                 name = arguments[1].name
                 arguments = arguments[2:]
                 case = Lambda(name, arguments = arguments, expr = value)
@@ -124,10 +136,11 @@ def assign(a, b, state = None):
 
     return value
     
-def space(a, b):
+def application(a, b):
     func, arg = (a, b)
-    if isinstance(func, Variable):
-        func = func.simplify()
+    if not (issubclass(type(func), Func) 
+        and func.name.split(' ')[0] in utils.lazy_eval):
+        arg = arg.simplify()
     return func.apply(arg)
 
 def compose(a, b):
@@ -349,9 +362,10 @@ def createOperator(symbol, precedence, associativity, func):
     operatorsDict[symbol] = Op(func)
     return func
 
-def createClass(name):
-    name = name.name
+def createClass(nameVar):
+    name = nameVar.name
     cls = Class(name)
+    assign(nameVar, cls)
     return cls
 
 def createInterface(name, declarationsExpr):
@@ -501,8 +515,7 @@ def extends(subclass, constr):
      superclass = constr.class_  
      subclass.state['super'] = superclass
      for name in superclass.state.keys():
-         if name not in subclass.state.keys():
-             subclass.state[name] = superclass.state[name]
+         subclass.state[name] = superclass.state[name]
      return subclass
 
 def implements(subclass, interface):
@@ -658,20 +671,36 @@ def raiseTo(var, val):
     return value
 
 def defaultInt(var):
-    frameStack[-1][var.name] = Int(0)
-    return Int(0)
+    if isinstance(var.simplify(), Tuple):
+        for name in var.simplify().tup:
+            defaultInt(name)
+    else:
+        frameStack[-1][var.name] = Int(0)
+    return var
 
 def defaultFloat(var):
-    frameStack[-1][var.name] = Float(0)
-    return Float(0)
+    if isinstance(var, Tuple):
+        for name in var.simplify().tup:
+            defaultFloat(name)
+    else:
+        frameStack[-1][var.name] = Float(0)
+    return var
 
 def defaultBool(var):
-    frameStack[-1][var.name] = Bool(False)
-    return Bool(False)
+    if isinstance(var, Tuple):
+        for name in var.simplify().tup:
+            defaultBool(name)
+    else:
+        frameStack[-1][var.name] = Bool(False)
+    return var
 
 def defaultChar(var):
-    frameStack[-1][var.name] = toChar(Int(97))
-    return toChar(Int(97))
+    if isinstance(var, Tuple):
+        for name in var.simplify().tup:
+            defaultChar(name)
+    else:
+        frameStack[-1][var.name] = toChar(Int(97))
+    return var
     
 def defaultList(var):
     frameStack[-1][var.name] = Nil()
@@ -680,7 +709,7 @@ def defaultList(var):
 def type_synonym(typeVar, typeExpr):
     from Types import Type
     type_ = Type(typeExpr)
-    assign(typeVar, type_)
+    assign(typeVar, type_) 
     typeNames.append(typeVar.name)
     return type_
 
@@ -708,3 +737,15 @@ def read_as(var, struct):
 
 def create_iterator(var, xs):
     return Iterator(var, xs)
+
+def make_public(var):
+    frameStack[-1]['this'].public.append(var.name)
+    return var
+
+def make_private(var):
+    frameStack[-1]['this'].private.append(var.name)
+    return var
+
+def make_hidden(var):
+    frameStack[-1]['this'].hidden.append(var.name)
+    return var

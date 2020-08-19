@@ -1,0 +1,14 @@
+def partition n xs = partition' xs [] [] where (
+	def partition' [] l r = {l, r}
+	def partition' (x:xs) l r = (
+		if (x <= n) (return (partition' xs (x:l) r))
+		return (partition' xs l (x:r))
+	)
+)
+
+def quicksort [] = []
+def quicksort (x:xs) = left ++ [x] ++ right where (
+	{var l, var r} = partition x xs
+	var left = quicksort l
+	var right = quicksort r
+)

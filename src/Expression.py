@@ -45,9 +45,7 @@ class BinaryExpr():
 
     def simplifyRightExpr(self, leftExpr):
         return not (self.operator.name.split(' ')[0] in utils.lazy_eval 
-                    or self.operator.name == ' ' 
-                    and issubclass(type(leftExpr), Func) 
-                    and leftExpr.name.split(' ')[0] in utils.lazy_eval)
+                    or self.operator.name == ' ')
 
     def simplify(self):
         operator = self.operator
@@ -55,7 +53,7 @@ class BinaryExpr():
             operator.apply()
         if self.leftExpr != None:
             leftExpr = self.leftExpr
-            if (self.operator.name.split(' ')[0] not in utils.lazy_eval):
+            if self.operator.name.split(' ')[0] not in utils.lazy_eval:  
                 leftExpr = leftExpr.simplify()
             operator = operator.apply(leftExpr)
             if (self.rightExpr != None):

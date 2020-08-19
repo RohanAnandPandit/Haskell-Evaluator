@@ -59,7 +59,7 @@ left_bracket = HFunction(8, Associativity.RIGHT, None, 1, '[')
 
 right_bracket = HFunction(8, Associativity.LEFT, None, 1, ']')
 
-dollar = HFunction(0, Associativity.RIGHT, op_func.space, 2, '$')
+dollar = HFunction(0, Associativity.RIGHT, op_func.application, 2, '$')
 
 composition = HFunction(9, Associativity.RIGHT,
                         op_func.compose, 2, '~')
@@ -135,7 +135,7 @@ raise_to = HFunction(2.5, Associativity.RIGHT,
 
 class Operator(Enum):
     EQUAL = equals
-    SPACE = HFunction(9, Associativity.LEFT, op_func.space, 2, ' ')
+    SPACE = HFunction(9, Associativity.LEFT, op_func.application, 2, ' ')
     SLASH = HFunction(7, Associativity.LEFT, op_func.divide, 2, '/')
     ASTERISK = HFunction(7, Associativity.LEFT, op_func.multiply, 2, '*')
     PLUS = HFunction(6, Associativity.LEFT, op_func.add, 2, '+')
@@ -356,7 +356,13 @@ def initialiseFunctions(state):
                                  op_func.breakout, 1, 'breakout') 
     state['skipout'] = HFunction(8, Associativity.LEFT,
                                  op_func.skipout, 1, 'skipout') 
-
+    state['global'] = HFunction(8, Associativity.LEFT,
+                                 op_func.make_public, 1, 'global') 
+    state['local'] = HFunction(8, Associativity.LEFT,
+                                 op_func.make_private, 1, 'local') 
+    state['hidden'] = HFunction(8, Associativity.LEFT,
+                                 op_func.make_hidden, 1, 'hidden') 
+    
 class Op:
     def __init__(self, hfunc):
         self.value = hfunc

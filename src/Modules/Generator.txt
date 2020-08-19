@@ -1,6 +1,6 @@
 interface Generator (
 	def next = _
-	def toString = _
+	def toString _
 )
 
 class Iterate implements Generator (

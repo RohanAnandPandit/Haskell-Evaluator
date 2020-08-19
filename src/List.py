@@ -43,7 +43,8 @@ class Cons(List):
         sep = ', '
         if (tail == '[]'):
             sep = ''
-        value = str(self.item.simplify())
+        value = str(self.item)
+        #value = str(self.item.simplify())
         if (isinstance(self.item, Iterator)):
             value = value[1 : -1]
             if (tail != '[]'):
@@ -156,21 +157,18 @@ def init(a):
 
 def maximum(a, m = None):
     (x, xs) = (head(a), tail(a))
-    if (isinstance(a, Nil)):
+    if isinstance(a, Nil):
         return m
-    if (isinstance(a, Cons)):
+    if isinstance(a, Cons):
         if (m == None):
             m = x
         return maximum(xs, max(x, m))
 
 def minimum(a, m = None):
-    from utils import isPrimitive
     (x, xs) = (head(a), tail(a))
-    if (isinstance(a, Nil)):
+    if isinstance(a, Nil):
         return m
-    if (not isPrimitive(x)):
-        x = x.simplify()
-    if (isinstance(a, Cons)):
+    if isinstance(a, Cons):
         if (m == None):
             m = x
         return minimum(xs, min(x, m))
@@ -212,12 +210,13 @@ def drop(a, b):
 def mapHaskell(a, b):    
     func = a
     x, xs = head(b), tail(b)
-    if (isinstance(b, Nil)):
+    if isinstance(b, Nil):
         return b
+    from Operator_Functions import application
     #from Expression import BinaryExpr
     #from Operators import operatorFromString
     #expr = BinaryExpr(operatorFromString(' '), func, x)
-    return Cons(func.apply(x), mapHaskell(func, xs))
+    return Cons(application(func, x), mapHaskell(func, xs))
         
 
 def words(a):

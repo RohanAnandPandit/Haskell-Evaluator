@@ -1,17 +1,16 @@
-class Cycle (
-	def init {xs} (
-		this.list = xs
-		this.curr = this.list 
-	)
+class Point (
+	open $ int x
+	open $ int y
+	hidden $ int z
 	
-	def next = (
-		item = head curr
-		this.curr = tail curr
-		if (curr == []) (
-			this.curr = this.list
-		)
-		return item
+	open Point; hidden Point
+	def Point {x, y} (
+		this.x = x
+		this.y = y
 	)
-	
-	def toString = "[" ++ head this.list ++ ".." ++ head this.list ++ "]" 
 )
+
+p = Point {1, 2}
+printLn p.x
+printLn p.y
+

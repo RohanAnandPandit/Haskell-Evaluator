@@ -167,48 +167,40 @@ class Structure:
 class Class(Func):
     def __init__(self, name):
         self.name = 'class ' + name
-        self.state = {} 
+        self.state = {'this' : self} 
         self.interface = None
+        self.private = self.public = self.hidden = []
+        self.isConstructor = False
 
-    def apply(self, methodsExpr):
+    def apply(self, expr):
         import utils
-        utils.frameStack.append(self.state)
-        methodsExpr.simplify()
-        utils.frameStack.pop(-1)
-        utils.typeNames.append(self.name.split(' ')[1])
-        utils.functionNames.append(self.name.split(' ')[1])
-        constr = Constructor(self)
-        utils.frameStack[-1][self.name.split(' ')[1]] = constr
-        return constr
-    
-    def __str__(self):
-        return self.name
-    
-    def simplify(self):
-        return self
-
-class Constructor(Func):
-    def __init__(self, class_):
-        self.name = class_.name.split(' ')[1]
-        self.class_ = class_
-
-    def apply(self, values):
-        obj = Object(self.class_)
+        if not self.isConstructor:
+            methods = expr
+            self.isConstructor = True
+            self.name = self.name.split(' ')[1]
+            utils.frameStack.append(self.state)
+            methods.simplify()
+            utils.frameStack.pop(-1)
+            utils.typeNames.append(self.name)
+            utils.functionNames.append(self.name)
+            
+            return self
+        else:
+            values = expr
+            obj = Object(self)
+            for name in self.state.keys():
+                if isinstance(self.state[name], (Function, Lambda)):
+                    obj.state[name] = Method(obj, self.state[name])
+                else:
+                    obj.state[name] = self.state[name]
+            obj.state['this'] = obj
+            if self.name in self.state.keys():
+                obj.state[self.name].apply(values)
+            if 'init' in self.state.keys():
+                obj.state['init'].apply(values)
+            
+            return obj
         
-        for name in self.class_.state.keys():
-            if isinstance(self.class_.state[name], (Function, Lambda)):
-                obj.state[name] = Method(obj, self.class_.state[name])
-            else:
-                obj.state[name] = self.class_.state[name]
-                
-        if self.name in self.class_.state.keys():
-            obj.state[self.name].apply(values)
-            
-        if 'init'  in self.class_.state.keys():
-            obj.state['init'].apply(values)
-            
-        return obj
-    
     def __str__(self):
         return self.name
     

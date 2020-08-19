@@ -20,21 +20,22 @@ functional_mode = False
 frameStack = [builtInState]
 enumNames = []
 typeNames = ['int', 'float', 'char', 'bool', 'var', 'list', 'tuple', 'string',
-             'Num']
+             'Num', 'private', 'public', 'hidden']
 structNames = []
 operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
              '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
              '$', ';', '>>', '>>=', '=', '->', '--', '\\',  ' where ', '|',
              '@', '<-', '<<', '&', '}', '¦', ' then ', ' else ', '#', '{',
-             '=>', '~', ',,', '\n', '.', ' extends ', ' implements ', '!=',
+             '=>', '~', ',,', '\n', '.', ' inherits ', ' implements ', '!=',
              ' in ', '+=', '-=', '*=', '/=', '^=', '//', '%'] 
 
-keywords = ('class', 'def', 'struct', 'interface', 'extends',
+keywords = ('class', 'def', 'struct', 'interface', 'inherits',
             'where', 'implements', 'while', 'for', 'switch', 'default',
             'if', 'else', 'then', 'enum', 'oper', 'break', 'continue',
             'in', 'True', 'False', 'let', 'import', 'return',
             'int', 'float', 'bool', 'char', 'var', 'do', '?', 'list', 'tuple',
-            'string', 'Num', 'from', 'type', 'union', 'breakout', 'skipout')
+            'string', 'Num', 'from', 'type', 'union', 'breakout', 'skipout', 
+            'global', 'local', 'hidden')  
 
 continueLoop = 0
 breakLoop = 0
@@ -51,10 +52,11 @@ lazy_eval = ('=', '->', 'where', '|', '.', '\n', ';', '+=', '-=', '*=', '/=',
              '^=', '=>', ':', 'while', 'for', 'struct', 'enum', 'oper', 
              'class', 'interface', 'def', 'switch', 'if', 'let',
              'import', 'do', 'int', 'float', 'char', 'bool', 'string', 'list',
-             'from', 'type', 'union', 'where', 'in')
+             'from', 'type', 'union', 'where', 'in', 'global', 'local', 
+             'hidden')
 
 def getData(exp):
-    if isPrimitive(exp):
+    if isPrimitive(exp): 
         return exp
 
     if '.' in str(exp):
