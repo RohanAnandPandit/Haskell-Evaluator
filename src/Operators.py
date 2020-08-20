@@ -50,7 +50,7 @@ left_parentheses = HFunction(8, Associativity.RIGHT, None, 1, '(')
 
 right_parentheses = HFunction(8, Associativity.LEFT, None, 1, ')')
 
-comma = HFunction(2, Associativity.NONE, None, 2, ',')
+comma = HFunction(2, Associativity.NONE, op_func.comma, 2, ',')
 
 tuple_cons = HFunction(2.6, Associativity.LEFT,
                        op_func.comma, 2, ',,')
@@ -188,6 +188,7 @@ class Operator(Enum):
     RAISE_TO = raise_to
     DOUBLE_SLASH = int_div
     PERCENT = remainder
+    DOUBLE_COLON = HFunction(5, Associativity.LEFT, op_func.pass_arg, 2, '::')
     
 def initialiseFunctions(state):
     state['fst'] = HFunction(8, Associativity.LEFT, Prelude.fst, 1, 'fst')
@@ -195,8 +196,7 @@ def initialiseFunctions(state):
     state['not'] = HFunction(8, Associativity.LEFT, Prelude.notHaskell,
          1, 'not')
     state['swap'] = HFunction(8, Associativity.LEFT, Prelude.swap, 1, 'swap')
-    state['map'] = HFunction(8, Associativity.LEFT,
-                             Prelude.mapHaskell, 2, 'map')
+    state['map'] = HFunction(8, Associativity.LEFT, Prelude.map_, 2, 'map')
     state['succ'] = HFunction(8, Associativity.LEFT, Prelude.succ, 1, 'succ')
     state['length'] = HFunction(8, Associativity.LEFT,
                                  Prelude.length, 1, 'length')
@@ -429,7 +429,8 @@ operatorsDict = {'=' : Operator.EQUAL,
                  '-=' : Operator.DECREMENT_BY,
                  '*=' : Operator.MULTIPLY_BY,
                  '/=' : Operator.DIVIDE_BY,
-                 '^=' : Operator.RAISE_TO}
+                 '^=' : Operator.RAISE_TO,
+                 '::' : Operator.DOUBLE_COLON}
     
 def operatorFromString(string):
     return operatorsDict[string].value   

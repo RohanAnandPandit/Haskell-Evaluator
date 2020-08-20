@@ -89,6 +89,8 @@ class Collection:
         self.operator = operator
     
     def simplify(self):
+        if self.operator.name == ',':
+            return Tuple(self.items)
         if len(self.items) == 2:
             left = self.items[0]
             if left: left = left.simplify()

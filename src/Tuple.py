@@ -15,7 +15,13 @@ class Tuple:
         return Tuple(list(map(lambda expr: replaceVariables(expr), self.tup)))
     
     def __str__(self):
-        return '{' + ', '.join(list(map(str, self.tup))) + '}'
+        tup = []
+        for item in self.tup:
+            if item == None:
+                tup.append('')
+            else:
+                tup.append(str(item.simplify()))
+        return '(' + ', '.join(tup) + ')'
 
 def fst(tup):
     return tup.tup[0]

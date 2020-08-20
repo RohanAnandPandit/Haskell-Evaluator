@@ -27,7 +27,7 @@ operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&',
              '$', ';', '>>', '>>=', '=', '->', '--', '\\',  ' where ', '|',
              '@', '<-', '<<', '&', '}', '¦', ' then ', ' else ', '#', '{',
              '=>', '~', ',,', '\n', '.', ' inherits ', ' implements ', '!=',
-             ' in ', '+=', '-=', '*=', '/=', '^=', '//', '%'] 
+             ' in ', '+=', '-=', '*=', '/=', '^=', '//', '%', '::'] 
 
 keywords = ('class', 'def', 'struct', 'interface', 'inherits',
             'where', 'implements', 'while', 'for', 'switch', 'default',
@@ -49,7 +49,7 @@ functionNames += ['eval', 'read', 'range', 'toInt', 'toBool', 'toChar',
                   'toFloat']
 
 lazy_eval = ('=', '->', 'where', '|', '.', '\n', ';', '+=', '-=', '*=', '/=',
-             '^=', '=>', ':', 'while', 'for', 'struct', 'enum', 'oper', 
+             '^=', '=>', ':', '::',  'while', 'for', 'struct', 'enum', 'oper', 
              'class', 'interface', 'def', 'switch', 'if', 'let',
              'import', 'do', 'int', 'float', 'char', 'bool', 'string', 'list',
              'from', 'type', 'union', 'where', 'in', 'global', 'local', 

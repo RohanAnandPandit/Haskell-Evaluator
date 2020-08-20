@@ -97,6 +97,24 @@ class Range:
         string += '..'
         string += str(self.end) + ']'
         return string
+
+
+class Array:
+    def __init__(self, items = []):
+        self.items = items
+        
+    def simplify(self):
+        from utils import replaceVariables
+        return Array(list(map(lambda expr: replaceVariables(expr), self.items)))
+    
+    def __str__(self):
+        tup = []
+        for item in self.items:
+            if item == None:
+                tup.append('')
+            else:
+                tup.append(str(item.simplify()))
+        return '{' + ', '.join(tup) + '}'
         
 def length(a):
     xs = tail(a)
@@ -207,7 +225,7 @@ def drop(a, b):
         return b
     return drop(Int(n.value - 1), tail(b))
 
-def mapHaskell(a, b):    
+def map_(a, b):    
     func = a
     x, xs = head(b), tail(b)
     if isinstance(b, Nil):
@@ -216,7 +234,7 @@ def mapHaskell(a, b):
     #from Expression import BinaryExpr
     #from Operators import operatorFromString
     #expr = BinaryExpr(operatorFromString(' '), func, x)
-    return Cons(application(func, x), mapHaskell(func, xs))
+    return Cons(application(func, x), map_(func, xs))
         
 
 def words(a):

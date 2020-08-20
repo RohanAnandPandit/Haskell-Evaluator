@@ -749,3 +749,14 @@ def make_private(var):
 def make_hidden(var):
     frameStack[-1]['this'].hidden.append(var.name)
     return var
+
+def pass_arg(arg, funcs):
+    if isinstance(funcs.simplify(), Tuple):
+        items = []
+        for func in funcs.simplify().tup:
+            items.append(pass_arg(arg, func))
+        return Tuple(items)
+    if not isinstance(arg, Variable):
+        arg = arg.simplify()
+    return application(funcs.simplify(), arg)
+     
