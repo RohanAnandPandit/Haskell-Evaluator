@@ -3,7 +3,7 @@ e = 2.718281828
 phi = 1.618
 
 class Complex (
-	def init {a, b} (this.real = a; this.imag = b)
+	def Complex {a, b} (this.real = a; this.imag = b)
 
 	def i = Complex {0, 1}
 		

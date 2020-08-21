@@ -127,8 +127,8 @@ def analyse(event, text):
             if not pos:
                 break
             end = pos + '+' + str(len(name)) + 'c'
-            if (text.get(end) in ' \n)]}~$;,`' 
-                and (pos == '1.0' or text.get(pos + '-1c') in ' \n\t([{~$;,`')):
+            if (text.get(end) in utils.operators 
+                and (pos == '1.0' or text.get(pos + '-1c') in utils.operators)):
                 text.tag_add("function", pos, end) 
             start = end 
     text.tag_config("function", foreground = 'magenta')
@@ -154,8 +154,8 @@ def analyse(event, text):
             if not pos:
                 break
             end = pos + '+' + str(len(keyword)) + 'c'
-            if (text.get(end) in ' \n)]}~$;,'
-                and (pos == '1.0' or text.get(pos + '-1c') in ' \n\t([{~$;,')):
+            if (text.get(end) in utils.operators
+                and (pos == '1.0' or text.get(pos + '-1c') in utils.operators)):
                 text.tag_add("keyword", pos, end) 
             start = end 
     text.tag_config("keyword", foreground = mode['keywords'])

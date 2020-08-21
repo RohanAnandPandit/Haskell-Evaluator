@@ -1,5 +1,5 @@
 class Stack (
-	def init {} (this.list = [])
+	def Stack {} (this.list = [])
 
 	def push item = (this.list = item : list)
 

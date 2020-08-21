@@ -4,7 +4,7 @@ interface Generator (
 )
 
 class Iterate implements Generator (
-	def Iterate {func, seed} (
+	def Iterate(func, seed) (
 		this.func = func
 		this.seed = seed
 		this.first = True
@@ -20,7 +20,7 @@ class Iterate implements Generator (
 )
 
 class Cycle implements Generator (
-	def Cycle {xs} (
+	def Cycle(xs) (
 		this.list = xs
 		this.curr = xs
 	)

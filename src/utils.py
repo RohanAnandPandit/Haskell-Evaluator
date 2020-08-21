@@ -20,22 +20,22 @@ functional_mode = False
 frameStack = [builtInState]
 enumNames = []
 typeNames = ['int', 'float', 'char', 'bool', 'var', 'list', 'tuple', 'string',
-             'Num', 'private', 'public', 'hidden']
+             'Num', 'global', 'local', 'hidden']
 structNames = []
 operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
              '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
              '$', ';', '>>', '>>=', '=', '->', '--', '\\',  ' where ', '|',
-             '@', '<-', '<<', '&', '}', '¦', ' then ', ' else ', '#', '{',
+             '@', '<-', '<<', '&', '}', '¦', ' then ', ' else ', '\t', '{',
              '=>', '~', ',,', '\n', '.', ' inherits ', ' implements ', '!=',
              ' in ', '+=', '-=', '*=', '/=', '^=', '//', '%', '::'] 
 
-keywords = ('class', 'def', 'struct', 'interface', 'inherits',
-            'where', 'implements', 'while', 'for', 'switch', 'default',
-            'if', 'else', 'then', 'enum', 'oper', 'break', 'continue',
-            'in', 'True', 'False', 'let', 'import', 'return',
-            'int', 'float', 'bool', 'char', 'var', 'do', '?', 'list', 'tuple',
-            'string', 'Num', 'from', 'type', 'union', 'breakout', 'skipout', 
-            'global', 'local', 'hidden')  
+keywords = ('class', 'def', 'struct', 'interface', 'inherits', 'where',
+            'implements', 'while', 'for', 'switch', 'default', 'if', 'else',
+            'then', 'enum', 'oper', 'break', 'continue', 'in', 'True', 
+            'False', 'let', 'import', 'return', 'int', 'float', 'bool',
+            'char', 'var', 'do', '?', 'list', 'tuple', 'string', 'Num',
+            'from', 'type', 'union', 'breakout', 'skipout', 'global', 'local',
+            'hidden')  
 
 continueLoop = 0
 breakLoop = 0
@@ -98,7 +98,7 @@ def evaluate(exp):
 
 def patternMatch(expr1, expr2):
     from Operator_Functions import equals
-    from Expression import BinaryExpr #hello bye hi shy
+    from Expression import BinaryExpr
     if expr1 == expr2 == None:
         return True
     if isinstance(expr1, Variable):
@@ -113,13 +113,13 @@ def patternMatch(expr1, expr2):
         return (patternMatch(head(expr1), head(expr2)) 
                 and patternMatch(tail(expr1), tail(expr2)))
     if isinstance(expr1, Cons):
-            return (patternMatch(head(expr1), head(expr2)) 
+            return (patternMatch(head(expr1), head(expr2).simplify()) 
                     and patternMatch(tail(expr1), tail(expr2)))
     if isinstance(expr1, Tuple) and isinstance(expr2, Tuple):
         if len(expr1.tup) != len(expr2.tup):
             return False
         for i in range(len(expr1.tup)):
-            if not patternMatch(expr1.tup[i], expr2.tup[i]):
+            if not patternMatch(expr1.tup[i], expr2.tup[i].simplify()):
                 return False
         return True
     if isinstance(expr1, BinaryExpr): 

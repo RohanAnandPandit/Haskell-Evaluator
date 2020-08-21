@@ -20,7 +20,10 @@ class Tuple:
             if item == None:
                 tup.append('')
             else:
-                tup.append(str(item.simplify()))
+                try:
+                    tup.append(str(item.simplify()))
+                except:
+                    tup.append(str(item))
         return '(' + ', '.join(tup) + ')'
 
 def fst(tup):

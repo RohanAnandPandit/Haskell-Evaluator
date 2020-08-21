@@ -89,7 +89,7 @@ inheritance = HFunction(9, Associativity.LEFT,
 implements = HFunction(9, Associativity.LEFT,
                        op_func.implements, 2, 'implements')
 
-bitwise_or = HFunction(1, Associativity.LEFT,
+bitwise_or = HFunction(5, Associativity.LEFT,
                        op_func.bitwise_or, 2, '¦')
 
 bitwise_and = HFunction(1, Associativity.LEFT,
@@ -188,7 +188,7 @@ class Operator(Enum):
     RAISE_TO = raise_to
     DOUBLE_SLASH = int_div
     PERCENT = remainder
-    DOUBLE_COLON = HFunction(5, Associativity.LEFT, op_func.pass_arg, 2, '::')
+    DOUBLE_COLON = HFunction(1, Associativity.LEFT, op_func.pass_arg, 2, '::')
     
 def initialiseFunctions(state):
     state['fst'] = HFunction(8, Associativity.LEFT, Prelude.fst, 1, 'fst')

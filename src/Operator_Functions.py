@@ -111,7 +111,7 @@ def assign(a, b, state = None):
                 assign(arguments[1], value, state)
                 
                 from Operator_Functions import (make_public, make_private,
-                                                make_hidden)
+                                                make_hidden) 
                 if arguments[0].name == 'global':
                     make_public(arguments[1])
                 elif arguments[0].name == 'local':

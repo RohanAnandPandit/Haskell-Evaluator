@@ -1,10 +1,10 @@
 class Pair (
-	def init {first, second} (this.first = first; this.second = second)
+	def Pair {first, second} (this.first = first; this.second = second)
 	def toString = "{" ++ show first ++ ", " ++ show second ++ "}"
 )
 
 class Map (
-	def init {} (this.pairs = [])
+	def Map {} (this.pairs = [])
 	
 	def get key = (
 		for p in pairs (

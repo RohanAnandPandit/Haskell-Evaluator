@@ -89,10 +89,11 @@ class Lexer:
                 del self.tokens[-1] 
         
         if op == '(':
-            if (len(self.tokens) > 0 
-                and (not isinstance(self.tokens[-1], HFunction) 
-                or  self.tokens[-1].name == ')')):
-                self.tokens.append(operatorFromString('*'))
+            if (len(self.tokens) > 0):
+                if isinstance(self.tokens[-1], Variable):
+                    self.addSpace(' ')
+                elif self.tokens[-1].name == ')': 
+                    self.tokens.append(operatorFromString('*'))
         self.tokens.append(operatorFromString(op))
     
     def addData(self):

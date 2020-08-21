@@ -84,6 +84,8 @@ class Range:
     
     def apply(self, end):
         self.end = end.simplify()
+        if self.curr.value > self.end.value:
+            self.step = Int(-1)
         return self
     
     def simplify(self):
@@ -105,7 +107,8 @@ class Array:
         
     def simplify(self):
         from utils import replaceVariables
-        return Array(list(map(lambda expr: replaceVariables(expr), self.items)))
+        return Array(list(map(lambda expr: replaceVariables(expr),
+                              self.items)))
     
     def __str__(self):
         tup = []
@@ -136,9 +139,11 @@ def tail(a):
     if isinstance(a, Cons):
         return a.tail
     elif isinstance(a, Range):
-        from Operator_Functions import add, greaterThan
+        from Operator_Functions import add
         start = add(a.curr, a.step)
-        if a.end != None and greaterThan(start, a.end.simplify()).value:
+        if (a.end != None and (
+                a.step.value > 0 and start.value > a.end.simplify().value
+                or a.step.value < 0 and start.value < a.end.simplify().value)):
             return Nil()
         end = a.end
         if end != None:

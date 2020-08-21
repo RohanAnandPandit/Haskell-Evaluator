@@ -79,7 +79,7 @@ def pushOperand(operand, operands, operators):
             operands.push(None)  
         #print(operands.arr)
 
-def parse(lexer, inside_collection = False):
+def parse(lexer, infix = False):
     from utils import convertToList
     # Empty stacks will be created whenever the function is called again
     operands = Stack()
@@ -141,17 +141,18 @@ def parse(lexer, inside_collection = False):
                     result = Array([result])
                 return result
 
+            elif token.name == '`':
+                    if infix:
+                        break
+                    else:
+                        func = parse(lexer, infix = True)
+                        operands.pop() == None
+                        expr = BinaryExpr(operatorFromString(' '), func, operands.pop())
+                        pushOperand(expr, operands, operators)
+                        operators.push(operatorFromString(' '))
             else:
-                if token.name == '`':
-                    func = lexer.nextToken()
-                    lexer.nextToken() == '`'
-                    operands.pop() == None
-                    expr = BinaryExpr(operatorFromString(' '), func, operands.pop())
-                    pushOperand(expr, operands, operators)
-                    operators.push(operatorFromString(' '))
-                else:
-                    # Compares the current operator with the operators on the stack
-                    addOperator(token, operands, operators)
+                # Compares the current operator with the operators on the stack
+                addOperator(token, operands, operators)
         else:
             pushOperand(token, operands, operators)
         # Gets next token
