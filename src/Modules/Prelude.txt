@@ -1,0 +1,31 @@
+import tuple
+import list
+
+union Num (int, float)
+
+def id x = x
+def succ = (+1)
+def pred = (+(-1))
+def flip (Func func) = (\x y -> func y x)
+def const x _ = x
+def uncurry (Func func) = (\(x, y) -> func x y)
+def curry (Func func) = (\x y -> func (x, y))
+def null = (== ?)
+def empty = (== [])
+
+def not True = False
+def not False = True
+
+def max x y = (
+    switch (x < y) (
+        True => y
+        default => x    
+    )
+)
+
+def min x y = (
+    switch (x < y) (
+        True => x
+        default => y    
+    )
+)

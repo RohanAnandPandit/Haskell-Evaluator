@@ -191,45 +191,19 @@ class Operator(Enum):
     DOUBLE_COLON = HFunction(1, Associativity.LEFT, op_func.pass_arg, 2, '::')
     
 def initialiseFunctions(state):
-    state['fst'] = HFunction(8, Associativity.LEFT, Prelude.fst, 1, 'fst')
-    state['snd'] = HFunction(8, Associativity.LEFT, Prelude.snd, 1, 'snd')
-    state['not'] = HFunction(8, Associativity.LEFT, Prelude.notHaskell,
-         1, 'not')
-    state['swap'] = HFunction(8, Associativity.LEFT, Prelude.swap, 1, 'swap')
-    state['map'] = HFunction(8, Associativity.LEFT, Prelude.map_, 2, 'map')
-    state['succ'] = HFunction(8, Associativity.LEFT, Prelude.succ, 1, 'succ')
-    state['length'] = HFunction(8, Associativity.LEFT,
-                                 Prelude.length, 1, 'length')
-    state['pred'] = HFunction(8, Associativity.LEFT, Prelude.pred, 1, 'pred')
-    state['take'] = HFunction(8, Associativity.LEFT, Prelude.take, 2, 'take')
-    state['drop'] = HFunction(8, Associativity.LEFT, Prelude.drop, 2, 'drop')
-    state['even'] = HFunction(8, Associativity.LEFT, Prelude.even, 1, 'even')
-    state['odd'] = HFunction(8, Associativity.LEFT, Prelude.odd, 1, 'odd')
-    state['maximum'] = HFunction(8, Associativity.LEFT,
-                                 Prelude.maximum, 1, 'maximum')
     state['minimum'] = HFunction(8, Associativity.LEFT,
                                  Prelude.minimum, 1, 'minimum')
     state['elem'] = HFunction(8, Associativity.LEFT, Prelude.elem, 2, 'elem')
     state['notElem'] = HFunction(8, Associativity.LEFT,
-                                 Prelude.empty, 1, 'notElem')
-    state['empty'] = HFunction(8, Associativity.LEFT,
-                                 Prelude.empty, 1, 'notElem')
-    state['null'] = HFunction(8, Associativity.LEFT, Prelude.null, 1, 'null')
+                                 Prelude.notElem, 1, 'notElem')
     state['zip'] = HFunction(8, Associativity.LEFT,
                              Prelude.zipHaskell, 2, 'zip')
-    state['div'] = HFunction(8, Associativity.LEFT, Prelude.div, 2, 'div')
-    state['mod'] = HFunction(8, Associativity.LEFT, Prelude.mod, 2, 'mod')
     state['zipWith'] = HFunction(8, Associativity.LEFT, 
                                  Prelude.zipWith, 3, 'zipWith')
     state['takeWhile'] = HFunction(8, Associativity.LEFT, Prelude.takeWhile,
          2, 'takeWhile')
     state['dropWhile'] = HFunction(8, Associativity.LEFT, Prelude.dropWhile,
          2, 'dropWhile')
-    state['id'] = HFunction(8, Associativity.LEFT, Prelude.idHaskell, 1, 'id')
-    state['const'] = HFunction(8, Associativity.LEFT,
-                                Prelude.const, 2, 'const')
-    state['for'] = HFunction(8, Associativity.LEFT,
-                             Prelude.forHaskell, 5, 'for')
     state['concatMap'] = HFunction(8, Associativity.LEFT, Prelude.concatMap,
          2, 'concatMap')
     state['splitAt'] = HFunction(8, Associativity.LEFT, Prelude.splitAt, 2,
@@ -245,7 +219,7 @@ def initialiseFunctions(state):
                              Prelude.sumHaskell, 1, 'sum')
     state['product'] = HFunction(8, Associativity.LEFT, Prelude.product, 1,
          'product')
-    state['flip'] = HFunction(8, Associativity.LEFT, Prelude.flip, 1, 'flip')
+    #state['flip'] = HFunction(8, Associativity.LEFT, Prelude.flip, 1, 'flip')
     state['last'] = HFunction(8, Associativity.LEFT, Prelude.last, 1, 'last')
     state['printLn'] = HFunction(8, Associativity.LEFT,
                                  Prelude.printLn, 1, 'printLn')
@@ -257,20 +231,6 @@ def initialiseFunctions(state):
     state['init'] = HFunction(8, Associativity.LEFT, Prelude.init, 1, 'init')
     state['unzip'] = HFunction(8, Associativity.LEFT,
                              Prelude.unzip, 1, 'unzip')
-    state['uncurry'] = HFunction(8, Associativity.LEFT,
-                                 Prelude.uncurry, 1, 'uncurry')
-    state['curry'] = HFunction(8, Associativity.LEFT,
-                                 Prelude.curry, 1, 'curry')
-    state['foldl'] = HFunction(8, Associativity.LEFT,
-                                 Prelude.foldl, 3, 'foldl')
-    state['foldr'] = HFunction(8, Associativity.LEFT,
-                                 Prelude.foldr, 3, 'foldr')
-    state['foldl1'] = HFunction(8, Associativity.LEFT,
-                                 Prelude.foldl1, 2, 'foldl1')
-    state['foldr1'] = HFunction(8, Associativity.LEFT,
-                                 Prelude.foldr1, 2, 'foldr1')
-    state['reverse'] = HFunction(8, Associativity.LEFT,
-                                 Prelude.reverse, 1, 'reverse')
     state['words'] = HFunction(8, Associativity.LEFT,
                                  Prelude.words, 1, 'words')
     state['unwords'] = HFunction(8, Associativity.LEFT,
@@ -344,10 +304,6 @@ def initialiseFunctions(state):
                              op_func.defaultBool, 1, 'bool')
     state['char'] = HFunction(8, Associativity.LEFT, 
                              op_func.defaultChar, 1, 'char')
-    state['list'] = HFunction(8, Associativity.LEFT,
-                             op_func.defaultList, 1, 'list')
-    state['string'] = HFunction(8, Associativity.LEFT,
-                             op_func.defaultList, 1, 'string') 
     state['type'] = HFunction(8, Associativity.LEFT,
                              op_func.type_synonym, 2, 'type') 
     state['union'] = HFunction(8, Associativity.LEFT,
@@ -362,6 +318,9 @@ def initialiseFunctions(state):
                                  op_func.make_private, 1, 'local') 
     state['hidden'] = HFunction(8, Associativity.LEFT,
                                  op_func.make_hidden, 1, 'hidden') 
+    state['match'] = HFunction(8, Associativity.LEFT,
+                                 op_func.match, 2, 'match') 
+    utils.evaluate('import Prelude')
     
 class Op:
     def __init__(self, hfunc):

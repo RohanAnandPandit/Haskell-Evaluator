@@ -8,7 +8,7 @@ import utils
 from utils import frameStack, functionNames, getData, enumNames, isPrimitive
 from utils import typeNames, structNames, patternMatch
 from HFunction import HFunction, Composition, Function, Lambda, Func
-from List import List, Nil, Cons, Iterator, head, tail
+from List import List, Nil, Cons, Iterator, head, tail, Array
 from Tuple import Tuple
 from Types import Int, Float, Bool, Variable, Alias, Enum, EnumValue, Struct
 from Types import Class, Interface, Char, Module, Object
@@ -47,12 +47,10 @@ def assign(a, b, state = None):
     if state == None:
         state = frameStack[-1]
         
-    if isinstance(var, Tuple):
+    if isinstance(var, (Tuple, Array)):
         value = value.simplify()
-        varTup = var.tup
-        valTup =  value.tup
-        for i in range(len(varTup)): 
-            assign(varTup[i], valTup[i], state)
+        for i in range(len(var.items)): 
+            assign(var.items[i], value.items[i], state) 
         return value
 
     elif isinstance(var, Cons):
@@ -94,7 +92,7 @@ def assign(a, b, state = None):
  
                 arguments.insert(0, arg)
                 args = args.leftExpr
-                if isinstance(args, (Variable, Nil, Cons, Tuple)):
+                if isinstance(args, (Variable, Nil, Cons, Tuple, Array)):
                     arguments.insert(0, args)
                     break
                 
@@ -106,18 +104,19 @@ def assign(a, b, state = None):
                     assign(arguments[1], value, state)
                 return value
             
-            if (isinstance(arguments[0], (Nil, Cons, Tuple)) 
+            if (isinstance(arguments[0], (Nil, Cons, Tuple, Array)) 
                 or arguments[0].name in typeNames):
                 assign(arguments[1], value, state)
                 
                 from Operator_Functions import (make_public, make_private,
                                                 make_hidden) 
-                if arguments[0].name == 'global':
-                    make_public(arguments[1])
-                elif arguments[0].name == 'local':
-                    make_private(arguments[1])
-                elif arguments[0].name == 'hidden':
-                    make_hidden(arguments[1])
+                if isinstance(arguments[0], Variable):
+                    if arguments[0].name == 'global':
+                        make_public(arguments[1])
+                    elif arguments[0].name == 'local':
+                        make_private(arguments[1])
+                    elif arguments[0].name == 'hidden':
+                        make_hidden(arguments[1])
                 return value
             
             elif arguments[0].name in 'def':
@@ -129,7 +128,7 @@ def assign(a, b, state = None):
                         func = state[name]
                         func.cases.append(case)
                     else:
-                        func = Function(name, len(arguments), [case])
+                        func = Function(name, [case])
                         state[name] = func
                         functionNames.append(name) 
                 return case
@@ -149,18 +148,27 @@ def compose(a, b):
 
 def index(a, b):
     from List import head, tail
-    n = b.value
-    if n < 0 or isinstance(a, Nil):
-        return None
-    if isinstance(a, Cons):
-        x, xs = head(a), tail(a) 
-        if n == 0:
-            return x
-        return index(xs, Int(n - 1))
-    elif isinstance(a, Enum):
-        return a.values[n]
-    elif isinstance(a, Tuple):
-        return a.tup[n]
+    if isinstance(b, Int):
+        n = b.value
+        if n < 0 or isinstance(a, Nil):
+            return None
+        if isinstance(a, Cons):
+            x, xs = head(a), tail(a) 
+            if n == 0:
+                return x
+            return index(xs, Int(n - 1))
+        elif isinstance(a, Enum):
+            return a.values[n]
+        elif isinstance(a, Tuple):
+            return a.tup[n]
+        
+    elif isinstance(b, Cons):
+        start, b = head(b), tail(b)
+        if isinstance(b, Nil):
+            return a.items[start.value]
+        else:
+            end = head(b)
+            return Array(a.items[start.value : end.value])
 
 def power(a, b):
     (a, b) = (a.value, b.value)
@@ -253,8 +261,9 @@ def comma(a, b):
     return Tuple([a, b])
     
 def cons(a, b):
+    from utils import replaceVariables
     x, xs = a, b
-    return Cons(x, xs)    
+    return Cons(replaceVariables(x), xs.simplify())    
 
 def concatenate(a, b): 
     from List import head, tail
@@ -307,14 +316,15 @@ def chain(a, b):
     return b.apply(a.simplify())
 
 def createLambda(args, expr):
+    from utils import replaceVariables
     arguments = []
     while True:
         if isinstance(args, (Variable, HFunction)):
             name = args.name
             break
-        arguments.insert(0, args.rightExpr.simplify(False))
+        arguments.insert(0, args.rightExpr)
         args = args.leftExpr
-    case = Lambda(name, arguments = arguments, expr = expr)
+    case = Lambda(name, arguments = arguments, expr = replaceVariables(expr))
     return case
 
 def createEnum(name, values):
@@ -405,6 +415,7 @@ def access(a, b):
 
 def forLoop(n, expr, reset_break = True):
     import utils
+    from List import List
     if isinstance(n, Tuple):
         generators = n.tup       
         frameStack.append({})
@@ -424,6 +435,7 @@ def forLoop(n, expr, reset_break = True):
                 utils.continueLoop -= 1
             collection = tail(collection)
         frameStack.pop(-1)
+        
     elif isinstance(n, BinaryExpr):
         if n.operator.name == ';':
             init, n = n.leftExpr, n.rightExpr
@@ -441,20 +453,33 @@ def forLoop(n, expr, reset_break = True):
                     break
                 after.simplify()
             frameStack.pop(-1)
+            
         elif n.operator.name == 'in':
             n = n.simplify()
             frameStack.append({})
             var, collection = n.var, n.collection.simplify()
-            while not isinstance(collection, Nil):
-                assign(var, head(collection)) 
-                expr.simplify()
-                if utils.breakLoop > 0 or utils.return_value != None:
-                    utils.breakLoop -= 1
-                    break
-                if utils.continueLoop > 0:
-                    utils.continueLoop -= 1
-                collection = tail(collection)
+            if issubclass(type(collection), List):
+                while not isinstance(collection, Nil):
+                    assign(var, head(collection)) 
+                    expr.simplify()
+                    if utils.breakLoop > 0 or utils.return_value != None:
+                        utils.breakLoop -= 1
+                        break
+                    if utils.continueLoop > 0:
+                        utils.continueLoop -= 1
+                    collection = tail(collection)
+                    
+            elif isinstance(collection, Tuple):
+                for item in collection.tup:
+                    assign(var, item) 
+                    expr.simplify()
+                    if utils.breakLoop > 0 or utils.return_value != None:
+                        utils.breakLoop -= 1
+                        break
+                    if utils.continueLoop > 0:
+                        utils.continueLoop -= 1
             frameStack.pop(-1)
+            
         else:
             n = n.simplify()
             for i in range(n.value):
@@ -464,6 +489,7 @@ def forLoop(n, expr, reset_break = True):
                 if utils.breakLoop > 0:
                     utils.breakLoop -= 1
                     break
+                
     else:
         n = n.simplify()
         for i in range(n.value):
@@ -551,10 +577,10 @@ def switch(value, expr):
             or patternMatch(case.leftExpr.simplify(), value.simplify())
             or followThrough):
             
-            case.rightExpr.simplify()
+            value = case.rightExpr.simplify()
             followThrough = True
             if case.operator.name == '=>':
-                break
+                return value
     return Int(0)
 
 def let(assign, expr):
@@ -759,4 +785,7 @@ def pass_arg(arg, funcs):
     if not isinstance(arg, Variable):
         arg = arg.simplify()
     return application(funcs.simplify(), arg)
-     
+
+def match(a, b):
+    from utils import patternMatch
+    return Bool(patternMatch(a, b))     

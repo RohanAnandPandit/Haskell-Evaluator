@@ -9,6 +9,7 @@ functionNamesTuple = ['fst', 'snd', 'swap']
 class Tuple:
     def __init__(self, tup):
         self.tup = tup
+        self.items = tup
        
     def simplify(self, simplifyVariables = True): 
         from utils import replaceVariables
@@ -25,14 +26,3 @@ class Tuple:
                 except:
                     tup.append(str(item))
         return '(' + ', '.join(tup) + ')'
-
-def fst(tup):
-    return tup.tup[0]
-
-def snd(tup):
-    return tup.tup[1]
-
-def swap(a):
-    tup = a
-    tup.tup = (tup.tup[1], tup.tup[0])
-    return tup

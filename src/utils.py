@@ -6,9 +6,11 @@ Created on Mon Jun 22 11:24:28 2020
 """
 import List, IO
 import Prelude
-from Types import Variable, Int, Float, Bool, EnumValue, Object, Structure, Char
-from List import Nil, Cons, head, tail, Range
+from Types import (Variable, Int, Float, Bool, EnumValue, Object, Structure,
+                   Char)
+from List import Nil, Cons, head, tail, Range, Array
 from Tuple import functionNamesTuple, Tuple
+from HFunction import Func
 '''
 global builtInState, static_mode, functional_mode, frameStack, enumNames
 global typeNames, structNames, operators, keywords, continueLoop, breakLoop 
@@ -19,8 +21,8 @@ static_mode = False
 functional_mode = False
 frameStack = [builtInState]
 enumNames = []
-typeNames = ['int', 'float', 'char', 'bool', 'var', 'list', 'tuple', 'string',
-             'Num', 'global', 'local', 'hidden']
+typeNames = ['int', 'float', 'char', 'bool', 'var', 'Num', 'global', 'local',
+             'hidden', 'Func']
 structNames = []
 operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
              '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
@@ -33,9 +35,8 @@ keywords = ('class', 'def', 'struct', 'interface', 'inherits', 'where',
             'implements', 'while', 'for', 'switch', 'default', 'if', 'else',
             'then', 'enum', 'oper', 'break', 'continue', 'in', 'True', 
             'False', 'let', 'import', 'return', 'int', 'float', 'bool',
-            'char', 'var', 'do', '?', 'list', 'tuple', 'string', 'Num',
-            'from', 'type', 'union', 'breakout', 'skipout', 'global', 'local',
-            'hidden')  
+            'char', 'var', 'do', '?', 'Num', 'from', 'type', 'union', 
+            'breakout', 'skipout', 'global', 'local', 'hidden', 'Func')  
 
 continueLoop = 0
 breakLoop = 0
@@ -46,14 +47,14 @@ functionNames += List.functionNamesList
 functionNames += functionNamesTuple
 functionNames += IO.functionNamesIO
 functionNames += ['eval', 'read', 'range', 'toInt', 'toBool', 'toChar',
-                  'toFloat']
+                  'toFloat', 'match']
 
 lazy_eval = ('=', '->', 'where', '|', '.', '\n', ';', '+=', '-=', '*=', '/=',
              '^=', '=>', ':', '::',  'while', 'for', 'struct', 'enum', 'oper', 
              'class', 'interface', 'def', 'switch', 'if', 'let',
              'import', 'do', 'int', 'float', 'char', 'bool', 'string', 'list',
              'from', 'type', 'union', 'where', 'in', 'global', 'local', 
-             'hidden')
+             'hidden', 'match')
 
 def getData(exp):
     if isPrimitive(exp): 
@@ -99,7 +100,7 @@ def evaluate(exp):
 def patternMatch(expr1, expr2):
     from Operator_Functions import equals
     from Expression import BinaryExpr
-    if expr1 == expr2 == None:
+    if expr1 == None:
         return True
     if isinstance(expr1, Variable):
         return True
@@ -109,17 +110,16 @@ def patternMatch(expr1, expr2):
         return equals(expr1, expr2).value
     if isinstance(expr1, Nil) and isinstance(expr2, Nil):
         return True
-    if isinstance(expr1, Range) and isinstance(expr2, Range):
-        return (patternMatch(head(expr1), head(expr2)) 
-                and patternMatch(tail(expr1), tail(expr2)))
-    if isinstance(expr1, Cons):
+    if isinstance(expr1, Nil) or isinstance(expr2, Nil): 
+        return False
+    if isinstance(expr1, (Cons, Range)):
             return (patternMatch(head(expr1), head(expr2).simplify()) 
                     and patternMatch(tail(expr1), tail(expr2)))
-    if isinstance(expr1, Tuple) and isinstance(expr2, Tuple):
-        if len(expr1.tup) != len(expr2.tup):
+    if type(expr1) == type(expr2) and type(expr1) in (Tuple, Array):
+        if len(expr1.items) != len(expr2.items):
             return False
-        for i in range(len(expr1.tup)):
-            if not patternMatch(expr1.tup[i], expr2.tup[i].simplify()):
+        for i in range(len(expr1.items)):
+            if not patternMatch(expr1.items[i], expr2.items[i].simplify()):
                 return False
         return True
     if isinstance(expr1, BinaryExpr): 
@@ -133,7 +133,6 @@ def patternMatch(expr1, expr2):
 
 def typeMatch(type_, expr):
     from Types import Type, Union
-    from Expression import BinaryExpr
     if isinstance(type_,  Variable):
         if isinstance(type_.simplify(), Type):
             return typeMatch(type_.simplify().expr, expr)
@@ -147,28 +146,20 @@ def typeMatch(type_, expr):
         elif isinstance(expr, Object):
             return type_.name == expr.class_.name.split(' ')[0]
         elif isPrimitive(expr):
-            if type_.name == 'Num' and isinstance(expr, (Int, Float)):
-                return True
             return type_.name == expr.type
-        elif type_.name == 'list' and isinstance(expr, (Nil, Cons)):
-            return True
-        elif type_.name == 'tuple' and isinstance(expr, Tuple):
-            return True
-        elif (type_.name == 'string' 
-              and (isinstance(expr, Nil) or isinstance(expr, BinaryExpr) 
-              and expr.operator.name == ':' 
-              and isinstance(expr.leftExpr, Char))):
-            return True
+        elif issubclass(type(expr), Func):
+            return type_.name == 'Func'
+
     elif isinstance(type_, Nil) and (isinstance(expr, (Nil, Cons))):
         return True
     elif isinstance(type_, Cons) and isinstance(expr, Cons):
         return (typeMatch(head(type_), head(expr)) 
                 and typeMatch(tail(type_), tail(expr)))
-    elif isinstance(type_, Tuple) and isinstance(expr, Tuple):
-        if len(type_.tup) != len(expr.tup):
+    elif type(type_) == type(expr) and type(type_) in (Tuple, Array):
+        if len(type_.item) != len(expr.tup) and len(type_.item) != 0:
             return False
-        for i in range(len(type_.tup)):
-            if not typeMatch(type_.tup[i], expr.tup[i]):
+        for i in range(len(type_.items)):
+            if not typeMatch(type_.items[i], expr.items[i]): 
                 return False
         return True
     return False

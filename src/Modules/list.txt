@@ -1,0 +1,38 @@
+def len [] = 0
+def len (_:xs) = 1 + len xs 
+
+def take _ [] = []
+def take 0 xs = []
+def take n (x:xs) = x : take (n - 1) xs
+
+def drop _ [] = []
+def drop 0 xs = xs
+def drop n (x:xs) = drop (n - 1) xs
+
+def map _ [] = []
+def map (Func func) (x:xs) = func x : map func xs 
+
+def max [] = 0
+def max ([] xs) = foldl max 0 xs
+
+def min ([] xs) = foldl min 0 xs
+
+def rev [] = []
+def rev ([] xs) = rev' xs [] where (
+    def rev' [] bs = bs
+    def rev' (a:as) bs = rev' as (a:bs)
+)
+
+def foldr _ u [] = u
+def foldr (Func func) u (x:xs) = func x (foldr func u xs)
+
+def foldr1 (Func func) (x:y:xs) = foldr func (func x y) xs
+
+def foldl _ u [] = u
+def foldl (Func func) u (x:xs) = foldl func (func u x) xs
+
+def foldl1 (Func func) (x:y:xs) = foldl func (func x y) xs 
+
+def zip [] ([] ys) = []
+def zip ([] xs) [] = []
+def zip (x:xs) (y:ys) = (x, y) : zip xs ys 

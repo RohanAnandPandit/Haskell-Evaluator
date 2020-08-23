@@ -80,9 +80,8 @@ class Composition(Func):
         return self
 
 class Function(Func):
-    def __init__(self, name, noOfArgs, cases = [], inputs = []):
+    def __init__(self, name, cases = [], inputs = []):
         self.name = name
-        self.noOfArgs = noOfArgs
         self.cases = cases
         self.inputs = inputs
         from Operators import Associativity
@@ -90,13 +89,14 @@ class Function(Func):
         self.precedence = 8
     
     def clone(self):
-        return Function(self.name, self.noOfArgs,
+        return Function(self.name,
                         cases = map(lambda case: case.clone(), self.cases),
                         inputs = self.inputs.copy())
         
     def simplify(self):
-        if self.noOfArgs == 0:
-            return self.cases[0].simplify()
+        value = self.checkCases(self.inputs)
+        if value != None:
+            return value
         return self
     
     def __str__(self):
@@ -104,40 +104,37 @@ class Function(Func):
     
     def apply(self, arg1 = None, arg2 = None):
         inputs = self.inputs.copy()
-        noOfArgs = self.noOfArgs
         if arg1 != None:
-            noOfArgs -= 1
             if len(inputs) > 2 and inputs[-2] == None:
                 inputs[-1] = arg1
             else:
                 inputs.append(arg1)
             if arg2 != None:
                 inputs.append(arg2)
-                noOfArgs -= 1                
-            if noOfArgs == 0:
-                return self.checkCases(inputs)
+
         elif arg2 != None:
             inputs.append(None)
             inputs.append(arg2)
-            noOfArgs -= 1
-            if noOfArgs == 0:
-                return self.checkCases(inputs)        
 
-        return Function(self.name, noOfArgs,
-                        cases = self.cases, inputs = inputs)
+        value = self.checkCases(inputs)
+        if value != None:
+            return value
+        
+        return Function(self.name, cases = self.cases, inputs = inputs)
     
     def checkCases(self, inputs):
         for case in self.cases:
             arguments = case.arguments
-            if self.matchCase(arguments, inputs):
-                for i in range(len(arguments)):
-                    case = case.apply(inputs[i])
-                if case == None:
-                    continue
-                return case
+            if len(arguments) == len(inputs):
+                if self.matchCase(arguments, inputs):
+                    for i in range(len(arguments)):
+                        case = case.apply(inputs[i]) 
+                    if case == None:
+                        continue
+                    return case
 
-        raise Exception('''Pattern match on arguments failed for all 
-                        definitions of function''', self.name) 
+        #raise Exception('''Pattern match on arguments failed for all 
+                        #definitions of function''', self.name) 
         return None
 
     def matchCase(self, arguments, inputs):
@@ -150,7 +147,7 @@ class Function(Func):
         return True
 
 class Lambda(Func):
-    def __init__(self, name = None, arguments = [], expr = None, state = {}):
+    def __init__(self, name = '\\', arguments = [], expr = None, state = {}):
         self.name = name
         self.arguments = arguments
         self.expr = expr

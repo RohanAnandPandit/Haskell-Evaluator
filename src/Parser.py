@@ -34,11 +34,6 @@ def printState(operands, operators):
 def createExpression(operators, operands):
     operator = operators.pop()
     right, left = operands.pop(), operands.pop()
-    if operator.name == '-':
-        if left == None or isinstance(left, Collection):
-            if isinstance(left, Collection):
-                pushOperand(left, operands, operators)
-            left = Int(0)
     expr = BinaryExpr(operator, left, right)
     operands.push(expr)
  
@@ -54,14 +49,16 @@ def createCollection(operators, operands):
 
 def addOperator(current, operands, operators):
     topOperator = operators.peek()
-    # Checks if a BinaryExpr should be created using the operator on the top of the stack
+    # Checks if a BinaryExpr should be created using the operator on the 
+    # top of the stack
     while topOperator != None:
         if (topOperator.precedence > current.precedence
             or topOperator.precedence == current.precedence 
                 and topOperator.associativity == Associativity.LEFT):
             createExpression(operators, operands)
         elif (topOperator.precedence == current.precedence
-              and current.associativity == topOperator.associativity == Associativity.NONE):
+              and current.associativity == topOperator.associativity == 
+              Associativity.NONE):
             createCollection(operators, operands)
         else:
             break
@@ -69,12 +66,20 @@ def addOperator(current, operands, operators):
     operators.push(current)
 
 def pushOperand(operand, operands, operators):
-        # If the top of the operands is None it will be replaced with the current value
+        # If the top of the operands is None it will be replaced with the 
+        # current value
         if operands.peek() == None:
             operands.pop()
+            
+        if (operators.peek() != None and operators.peek().name == '-' and 
+            operands.peek() == None):
+            operators.pop()
+            operand = BinaryExpr(operatorFromString('*'), Int(-1), operand)
+            
         operands.push(operand)
-        # If there are no operators means the current value is the left operand and
-        # the right one is undecided yet so None is added 
+
+        # If there are no operators means the current value is the left
+        # operand and the right one is undecided yet so None is added 
         if operators.peek() == None:
             operands.push(None)  
         #print(operands.arr)

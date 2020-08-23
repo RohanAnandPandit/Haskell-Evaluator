@@ -44,7 +44,10 @@ class Cons(List):
         if (tail == '[]'):
             sep = ''
         value = str(self.item)
-        #value = str(self.item.simplify())
+        try:
+            value = str(self.item.simplify())
+        except:
+            value = str(self.item)
         if (isinstance(self.item, Iterator)):
             value = value[1 : -1]
             if (tail != '[]'):
@@ -72,7 +75,7 @@ class Iterator(List):
     def __str__(self):
         return '(' + str(self.var) + ' in ' + str(self.collection) + ')'
 
-class Range:
+class Range(List):
     def __init__(self, start, end, step):
         self.curr = start
         self.end = end
@@ -196,7 +199,6 @@ def minimum(a, m = None):
             m = x
         return minimum(xs, min(x, m))
 
-
 def elem(a, b):  
     from Operator_Functions import equals
     value = a
@@ -208,13 +210,6 @@ def elem(a, b):
 
 def notElem(a, b): 
     return Bool(not elem(a, b).value)
-
-def reverse(a, l = Nil()):
-    if (isinstance(a, Nil)):
-        return l
-    (x, xs) = (head(a), tail(a))
-    return reverse(xs, Cons(x, l))
-    
 
 def take(a, b):
     n = a
