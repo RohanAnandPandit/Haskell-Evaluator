@@ -81,6 +81,9 @@ class Lexer:
             self.tokens.append(Variable('\\'))
             self.addSpace()
             return
+        elif op == '...':
+            self.tokens.append(Variable('...'))
+            return
 
         if op not in '[({':
             if (len(self.tokens) > 0 

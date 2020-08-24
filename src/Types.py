@@ -12,6 +12,8 @@ class Variable:
         self.name = name
     
     def simplify(self):
+        if self.name == '_':
+            return self
         from utils import frameStack
         for curr in frameStack[::-1]:
             if self.name in curr.keys():
@@ -90,7 +92,7 @@ class Collection:
     
     def simplify(self):
         if self.operator.name == ',':
-            return Tuple(self.items)
+            return Tuple(list(filter(lambda item: item != None, self.items)))
         if len(self.items) == 2:
             left = self.items[0]
             if left: left = left.simplify()
@@ -104,11 +106,8 @@ class Collection:
         return Bool(True)
     
     def __str__(self):
-        string = (' '+ self.operator.name + ' ').join(list(map(str,
-                                                                 self.items)))
-        if self.operator.name == ':':
-            string += ' : []'
-        return '(' + string + ')'
+        string = list(map(str,self.items))
+        return '(' + (' '+ self.operator.name + ' ').join(string) + ')'
 
 
 class EnumValue:

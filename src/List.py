@@ -52,17 +52,10 @@ class Cons(List):
             value = value[1 : -1]
             if (tail != '[]'):
                 value += ','
-        return '[' + value + sep + tail[1 : -1] + ']'
-
-    def apply(self, arg1 = None, arg2 = None):
-        if (isinstance(self.item, Iterator)):
-            self.item.apply(arg1, arg2)
-        return self
+        return '[' + value + sep + tail[1 : -1] + ']' 
     
     def simplify(self):
-        from utils import replaceVariables
-        return replaceVariables(self)
-        #return self
+        return self
 
 class Iterator(List):
     def __init__(self, var, collection):
@@ -109,9 +102,7 @@ class Array:
         self.items = items
         
     def simplify(self):
-        from utils import replaceVariables
-        return Array(list(map(lambda expr: replaceVariables(expr),
-                              self.items)))
+        return self
     
     def __str__(self):
         tup = []

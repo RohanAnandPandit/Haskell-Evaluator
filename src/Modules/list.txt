@@ -1,25 +1,28 @@
 def len [] = 0
 def len (_:xs) = 1 + len xs 
 
-def take _ [] = []
+def take (int _) [] = []
 def take 0 xs = []
-def take n (x:xs) = x : take (n - 1) xs
+def take (int n) (x:xs) = x : take (n - 1) xs
 
-def drop _ [] = []
+def drop (int _) [] = []
 def drop 0 xs = xs
-def drop n (x:xs) = drop (n - 1) xs
+def drop (int n) (x:xs) = drop (n - 1) xs
 
-def map _ [] = []
+def map (Func _) [] = []
 def map (Func func) (x:xs) = func x : map func xs 
 
-def max [] = 0
-def max ([] xs) = foldl max 0 xs
+def max ([] xs) = foldl max 0 xs 
 
 def min ([] xs) = foldl min 0 xs
 
+def sum ([] xs) = foldl (+) 0 xs
+
+def product ([] xs) = foldl (*) 1 xs
+
 def rev [] = []
 def rev ([] xs) = rev' xs [] where (
-    def rev' [] bs = bs
+    def rev' [] bs = bs 
     def rev' (a:as) bs = rev' as (a:bs)
 )
 
@@ -36,3 +39,34 @@ def foldl1 (Func func) (x:y:xs) = foldl func (func x y) xs
 def zip [] ([] ys) = []
 def zip ([] xs) [] = []
 def zip (x:xs) (y:ys) = (x, y) : zip xs ys 
+
+def elem x [] = False
+def elem x (y:ys) = x == y || elem x ys
+
+def takewhile (Func _) [] = []
+def takewhile (Func func) (x:xs) = (
+	if (func x) (
+		return (x : takewhile func xs)
+	)
+	return []
+)
+
+def dropwhile (Func _) [] = []
+def dropwhile (Func func) (x:xs) = (
+	if (func x) (
+		return (dropwhile func xs)
+	)
+	return (x:xs)
+)
+
+def filter (Func func) [] = []
+def filter (Func func) (x:xs) = (
+	if (func x) (
+		return (x : filter func xs)
+	)
+	return (filter func xs)
+)
+
+def zipwith (Func _) [] ([] ys) = []
+def zipwith (Func _) ([] xs) [] = []
+def zipwith (Func func) (x:xs) (y:ys) = func x y : zipwith func xs ys

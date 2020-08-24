@@ -191,21 +191,8 @@ class Operator(Enum):
     DOUBLE_COLON = HFunction(1, Associativity.LEFT, op_func.pass_arg, 2, '::')
     
 def initialiseFunctions(state):
-    state['minimum'] = HFunction(8, Associativity.LEFT,
-                                 Prelude.minimum, 1, 'minimum')
-    state['elem'] = HFunction(8, Associativity.LEFT, Prelude.elem, 2, 'elem')
-    state['notElem'] = HFunction(8, Associativity.LEFT,
-                                 Prelude.notElem, 1, 'notElem')
-    state['zip'] = HFunction(8, Associativity.LEFT,
-                             Prelude.zipHaskell, 2, 'zip')
     state['zipWith'] = HFunction(8, Associativity.LEFT, 
                                  Prelude.zipWith, 3, 'zipWith')
-    state['takeWhile'] = HFunction(8, Associativity.LEFT, Prelude.takeWhile,
-         2, 'takeWhile')
-    state['dropWhile'] = HFunction(8, Associativity.LEFT, Prelude.dropWhile,
-         2, 'dropWhile')
-    state['concatMap'] = HFunction(8, Associativity.LEFT, Prelude.concatMap,
-         2, 'concatMap')
     state['splitAt'] = HFunction(8, Associativity.LEFT, Prelude.splitAt, 2,
          'splitAt')
     state['replicate'] = HFunction(8, Associativity.LEFT, Prelude.replicate,
@@ -215,11 +202,6 @@ def initialiseFunctions(state):
     state['tail'] = HFunction(8, Associativity.LEFT, Prelude.tail, 1, 'tail')
     state['concat'] = HFunction(8, Associativity.LEFT, Prelude.concat, 1,
          'concat')
-    state['sum'] = HFunction(8, Associativity.LEFT,
-                             Prelude.sumHaskell, 1, 'sum')
-    state['product'] = HFunction(8, Associativity.LEFT, Prelude.product, 1,
-         'product')
-    #state['flip'] = HFunction(8, Associativity.LEFT, Prelude.flip, 1, 'flip')
     state['last'] = HFunction(8, Associativity.LEFT, Prelude.last, 1, 'last')
     state['printLn'] = HFunction(8, Associativity.LEFT,
                                  Prelude.printLn, 1, 'printLn')
@@ -228,7 +210,6 @@ def initialiseFunctions(state):
     state['show'] = HFunction(8, Associativity.LEFT, Prelude.show, 1, 'show')
     state['input'] = HFunction(8, Associativity.LEFT,
                                  Prelude.inputHaskell, 1, 'input')
-    state['init'] = HFunction(8, Associativity.LEFT, Prelude.init, 1, 'init')
     state['unzip'] = HFunction(8, Associativity.LEFT,
                              Prelude.unzip, 1, 'unzip')
     state['words'] = HFunction(8, Associativity.LEFT,
@@ -243,8 +224,6 @@ def initialiseFunctions(state):
                              Prelude.anyHaskell, 2, 'any')
     state['all'] = HFunction(8, Associativity.LEFT,
                              Prelude.allHaskell, 2, 'all')
-    state['filter'] = HFunction(8, Associativity.LEFT,
-                                 Prelude.filterHaskell, 2, 'filter')
     state['zip3'] = HFunction(8, Associativity.LEFT, Prelude.zip3, 3, 'zip3')
     state['zipWith3'] = HFunction(8, Associativity.LEFT,
                                      Prelude.zipWith3, 4, 'zipWith3')
@@ -257,7 +236,7 @@ def initialiseFunctions(state):
     state['while'] = HFunction(8, Associativity.LEFT,
                                  op_func.whileLoop, 2, 'while')
     state['if'] = HFunction(8, Associativity.LEFT, 
-         op_func.ifStatement, 2, 'if')
+                             op_func.ifStatement, 2, 'if')
     state['struct'] = HFunction(8, Associativity.LEFT, 
                                  op_func.createStruct, 2, 'struct')
     state['enum'] = HFunction(8, Associativity.LEFT,
@@ -308,10 +287,10 @@ def initialiseFunctions(state):
                              op_func.type_synonym, 2, 'type') 
     state['union'] = HFunction(8, Associativity.LEFT,
                                  op_func.types_union, 2, 'union') 
-    state['breakout'] = HFunction(8, Associativity.LEFT,
-                                 op_func.breakout, 1, 'breakout') 
-    state['skipout'] = HFunction(8, Associativity.LEFT,
-                                 op_func.skipout, 1, 'skipout') 
+    state['stop'] = HFunction(8, Associativity.LEFT,
+                                 op_func.breakout, 1, 'stop') 
+    state['skip'] = HFunction(8, Associativity.LEFT,
+                                 op_func.skipout, 1, 'skip') 
     state['global'] = HFunction(8, Associativity.LEFT,
                                  op_func.make_public, 1, 'global') 
     state['local'] = HFunction(8, Associativity.LEFT,

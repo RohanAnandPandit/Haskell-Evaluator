@@ -20,6 +20,8 @@ def assign(a, b, state = None):
         return 
  
     if isinstance(var, Variable):
+        if var.name == '_ ...': return
+        
         value = b.simplify()
         if utils.functional_mode:
             if var.name in state.keys():
@@ -62,6 +64,9 @@ def assign(a, b, state = None):
         if var.operator.name == '@':
             assign(var.leftExpr, value, state)
             assign(var.rightExpr, value, state)
+            
+        if var.operator.name == '!!':
+            var.leftExpr.simplify().items[head(var.rightExpr).value] = value 
 
         if var.operator.name == ':':
             assign(var.leftExpr, head(value), state)
@@ -72,24 +77,11 @@ def assign(a, b, state = None):
             obj = var.leftExpr.simplify()
             obj.state[var.rightExpr.name] = value.simplify()
             
-        elif var.operator.name == ',,':
-            assign(var.simplify(), value.simplify(), state) 
-            
         elif var.operator.name == ' ':
             arguments = []
             args = var 
             while True:
-                arg = args.rightExpr
-                if isinstance(arg, BinaryExpr):
-                    if arg.operator.name == ' ':
-                        if isinstance(arg.leftExpr, (Nil, Cons, Tuple)):
-                            pass
-                        if (isinstance(arg.leftExpr, Variable) 
-                            and arg.leftExpr.name not in typeNames):
-                            arg = arg.simplify()
-                    else: 
-                        arg = arg.simplify()
- 
+                arg = args.rightExpr 
                 arguments.insert(0, arg)
                 args = args.leftExpr
                 if isinstance(args, (Variable, Nil, Cons, Tuple, Array)):
@@ -107,16 +99,6 @@ def assign(a, b, state = None):
             if (isinstance(arguments[0], (Nil, Cons, Tuple, Array)) 
                 or arguments[0].name in typeNames):
                 assign(arguments[1], value, state)
-                
-                from Operator_Functions import (make_public, make_private,
-                                                make_hidden) 
-                if isinstance(arguments[0], Variable):
-                    if arguments[0].name == 'global':
-                        make_public(arguments[1])
-                    elif arguments[0].name == 'local':
-                        make_private(arguments[1])
-                    elif arguments[0].name == 'hidden':
-                        make_hidden(arguments[1])
                 return value
             
             elif arguments[0].name in 'def':
@@ -248,12 +230,14 @@ def notEqual(a, b):
     return Bool(not equals(a, b).value)
 
 def AND(a, b):
-    a, b = a.value, b.value
-    return Bool(a and b)
+    if not a.simplify().value: 
+        return Bool(False)
+    return b.simplify()
 
 def OR(a, b):
-    a, b = a.value, b.value
-    return Bool(a or b)
+    if a.simplify().value: 
+        return Bool(True)
+    return b.simplify()
 
 def comma(a, b):
     if isinstance(a, Tuple):
@@ -469,8 +453,8 @@ def forLoop(n, expr, reset_break = True):
                         utils.continueLoop -= 1
                     collection = tail(collection)
                     
-            elif isinstance(collection, Tuple):
-                for item in collection.tup:
+            elif isinstance(collection, (Tuple, Array)):
+                for item in collection.items:
                     assign(var, item) 
                     expr.simplify()
                     if utils.breakLoop > 0 or utils.return_value != None:
@@ -581,7 +565,7 @@ def switch(value, expr):
             followThrough = True
             if case.operator.name == '=>':
                 return value
-    return Int(0)
+    return Int(None)
 
 def let(assign, expr):
     state = {}

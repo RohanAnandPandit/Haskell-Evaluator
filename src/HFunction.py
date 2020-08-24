@@ -132,7 +132,6 @@ class Function(Func):
                     if case == None:
                         continue
                     return case
-
         #raise Exception('''Pattern match on arguments failed for all 
                         #definitions of function''', self.name) 
         return None

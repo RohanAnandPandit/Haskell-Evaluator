@@ -18,11 +18,11 @@ class Tuple:
     def __str__(self):
         tup = []
         for item in self.tup:
-            if item == None:
-                tup.append('')
-            else:
-                try:
-                    tup.append(str(item.simplify()))
-                except:
-                    tup.append(str(item))
-        return '(' + ', '.join(tup) + ')'
+            try:
+                tup.append(str(item.simplify()))
+            except:
+                tup.append(str(item))
+        string = ', '.join(tup)
+        if len(tup) == 1:
+            string += ','
+        return '(' + string + ')'

@@ -44,7 +44,12 @@ def createCollection(operators, operands):
         left.items.append(right)
         expr = left
     else:
-        expr = Collection([left, right], operator)
+        if right == None and operator.name == ',':
+            expr = Collection([left], operator)
+        elif left == None and operator.name == ',':
+            expr = Collection([right], operator)
+        else:
+            expr = Collection([left, right], operator)
     pushOperand(expr, operands, operators)
 
 def addOperator(current, operands, operators):
@@ -56,6 +61,7 @@ def addOperator(current, operands, operators):
             or topOperator.precedence == current.precedence 
                 and topOperator.associativity == Associativity.LEFT):
             createExpression(operators, operands)
+            
         elif (topOperator.precedence == current.precedence
               and current.associativity == topOperator.associativity == 
               Associativity.NONE):

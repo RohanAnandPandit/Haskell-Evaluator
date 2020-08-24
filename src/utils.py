@@ -29,14 +29,14 @@ operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&',
              '$', ';', '>>', '>>=', '=', '->', '--', '\\',  ' where ', '|',
              '@', '<-', '<<', '&', '}', '¦', ' then ', ' else ', '\t', '{',
              '=>', '~', ',,', '\n', '.', ' inherits ', ' implements ', '!=',
-             ' in ', '+=', '-=', '*=', '/=', '^=', '//', '%', '::'] 
+             ' in ', '+=', '-=', '*=', '/=', '^=', '//', '%', '::', '...'] 
 
 keywords = ('class', 'def', 'struct', 'interface', 'inherits', 'where',
             'implements', 'while', 'for', 'switch', 'default', 'if', 'else',
             'then', 'enum', 'oper', 'break', 'continue', 'in', 'True', 
             'False', 'let', 'import', 'return', 'int', 'float', 'bool',
             'char', 'var', 'do', '?', 'Num', 'from', 'type', 'union', 
-            'breakout', 'skipout', 'global', 'local', 'hidden', 'Func')  
+            'stop', 'skip', 'global', 'local', 'hidden', 'Func')  
 
 continueLoop = 0
 breakLoop = 0
@@ -51,10 +51,9 @@ functionNames += ['eval', 'read', 'range', 'toInt', 'toBool', 'toChar',
 
 lazy_eval = ('=', '->', 'where', '|', '.', '\n', ';', '+=', '-=', '*=', '/=',
              '^=', '=>', ':', '::',  'while', 'for', 'struct', 'enum', 'oper', 
-             'class', 'interface', 'def', 'switch', 'if', 'let',
-             'import', 'do', 'int', 'float', 'char', 'bool', 'string', 'list',
-             'from', 'type', 'union', 'where', 'in', 'global', 'local', 
-             'hidden', 'match')
+             'class', 'interface', 'def', 'switch', 'if', 'let', 'import',
+             'do', 'int', 'float', 'char', 'bool', 'from', 'type', 'union',
+             'where', 'in', 'global', 'local', 'hidden', 'match', '||', '&&')
 
 def getData(exp):
     if isPrimitive(exp): 
@@ -102,26 +101,44 @@ def patternMatch(expr1, expr2):
     from Expression import BinaryExpr
     if expr1 == None:
         return True
+    
     if isinstance(expr1, Variable):
         return True
+    
     if isinstance(expr1, BinaryExpr) and expr1.operator.name == '@':
         return patternMatch(expr1.expr, expr2)
+    
     if isPrimitive(expr1) and isPrimitive(expr2):
         return equals(expr1, expr2).value
+    
     if isinstance(expr1, Nil) and isinstance(expr2, Nil):
         return True
-    if isinstance(expr1, Nil) or isinstance(expr2, Nil): 
-        return False
+    
     if isinstance(expr1, (Cons, Range)):
             return (patternMatch(head(expr1), head(expr2).simplify()) 
                     and patternMatch(tail(expr1), tail(expr2)))
+            
+    if isinstance(expr1, BinaryExpr) and expr1.operator.name == ':':
+            return (patternMatch(expr1.leftExpr, head(expr2).simplify()) 
+                    and patternMatch(expr1.rightExpr, tail(expr2)))    
+    
     if type(expr1) == type(expr2) and type(expr1) in (Tuple, Array):
+
         if len(expr1.items) != len(expr2.items):
-            return False
-        for i in range(len(expr1.items)):
-            if not patternMatch(expr1.items[i], expr2.items[i].simplify()):
+            if (isinstance(expr1.items[-1], Variable) and 
+                expr1.items[-1].name == '...'):
+                if len(expr1.items) - 1 > len(expr2.items):
+                    return False
+            else:
                 return False
-        return True
+            
+        if (len(expr1.items) > 0 and isinstance(expr1.items[0], Variable) and 
+              expr1.items[0].name == '...'):
+            return True
+        
+        return (patternMatch(expr1.items[0], expr2.items[0]) and
+                patternMatch(Tuple(expr1.items[1:]), Tuple(expr2.items[1:]))) 
+
     if isinstance(expr1, BinaryExpr): 
         if typeMatch(expr1.leftExpr, expr2):
             if isinstance(expr2, Structure):
@@ -129,7 +146,6 @@ def patternMatch(expr1, expr2):
             else:
                 return patternMatch(expr1.rightExpr, expr2)
     return False
-
 
 def typeMatch(type_, expr):
     from Types import Type, Union
@@ -150,18 +166,32 @@ def typeMatch(type_, expr):
         elif issubclass(type(expr), Func):
             return type_.name == 'Func'
 
-    elif isinstance(type_, Nil) and (isinstance(expr, (Nil, Cons))):
+    elif isinstance(type_, Nil) and isinstance(expr, (Nil, Cons)):
         return True
+    
     elif isinstance(type_, Cons) and isinstance(expr, Cons):
         return (typeMatch(head(type_), head(expr)) 
                 and typeMatch(tail(type_), tail(expr)))
-    elif type(type_) == type(expr) and type(type_) in (Tuple, Array):
-        if len(type_.item) != len(expr.tup) and len(type_.item) != 0:
-            return False
-        for i in range(len(type_.items)):
-            if not typeMatch(type_.items[i], expr.items[i]): 
-                return False
+
+    if (type(expr) in (Tuple, Array) and isinstance(type_, Variable) and
+        type_.name == '...'): 
         return True
+    
+    elif type(type_) == type(expr) and type(type_) in (Tuple, Array):
+        if len(type_.items) == 0:
+            return True
+        elif (isinstance(type_.items[0], Variable) and 
+              type_.items[0].name == '...'):
+            return True
+        elif len(type_.items) != len(expr.items):
+            if (isinstance(type_.items[-1], Variable) and 
+                type_.items[-1].name == '...'):
+                if len(type_.items) - 1 > len(expr.items):
+                    return False
+            else:
+                return False
+        return (typeMatch(type_.items[0], expr.items[0]) and
+                typeMatch(Tuple(type_.items[1:]), Tuple(expr.items[1:])))
     return False
     
 def optimise(expr):
