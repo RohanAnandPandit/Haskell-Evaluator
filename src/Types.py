@@ -193,7 +193,8 @@ class Class(Func):
                 if isinstance(self.state[name], (Function, Lambda)):
                     obj.state[name] = Method(obj, self.state[name])
                 else:
-                    obj.state[name] = self.state[name]
+                    obj.state[name] = self.state[name] 
+                    
             obj.state['this'] = obj
             if self.name in self.state.keys():
                 obj.state[self.name].apply(values)
@@ -215,26 +216,21 @@ class Method(Func):
     
     def apply(self, arg1 = None, arg2 = None):
         from utils import frameStack
-        if (self.func.noOfArgs == 1 and arg1 != None 
-            or self.func.noOfArgs == 0):
-            state = self.obj.state
-            frameStack.append(state)
-            value = self.func.apply(arg1, arg2)
-            frameStack.pop(-1)
-            return value
-        
-        func = self.func.apply(arg1, arg2)
-        return Method(self.obj, func) 
+        state = self.obj.state
+        frameStack.append(state)
+        value = self.func.apply(arg1, arg2)
+        frameStack.pop(-1)
+        if issubclass(type(value), Func):
+            return Method(self.obj, value) 
+        return value
 
     def simplify(self):
         from utils import frameStack
-        if self.func.noOfArgs == 0:
-            state = self.obj.state
-            frameStack.append(state)
-            value = self.func.simplify()
-            frameStack.pop(-1)
-            return value
-        return self
+        state = self.obj.state
+        frameStack.append(state)
+        value = self.func.simplify()
+        frameStack.pop(-1) 
+        return value
     
     def __str__(self):
         return str(self.obj) + ' ' + str(self.func)

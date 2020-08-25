@@ -6,7 +6,6 @@ Created on Tue Jun 23 13:38:23 2020
 """
 import utils
 from utils import functionNames
-from HFunction import Func
 
 class BinaryExpr():
     def __init__(self, operator, left, right): 

@@ -131,7 +131,7 @@ class Function(Func):
                         case = case.apply(inputs[i]) 
                     if case == None:
                         continue
-                    return case
+                    return case.simplify()
         #raise Exception('''Pattern match on arguments failed for all 
                         #definitions of function''', self.name) 
         return None
@@ -165,12 +165,14 @@ class Lambda(Func):
             if arg2 != None:
                 assign(arguments[0], arg2, state)
                 arguments = arguments[1:]
-                if arguments == []:
-                    return self.returnValue(state)
+
         elif arg2 != None:
             assign(arguments[1], arg2, state)
             arguments = arguments[0] + arguments[2:]
-
+            
+        if arguments == []:
+            return self.returnValue(state)
+        
         return Lambda(arguments = arguments, expr = self.expr, state = state)
 
     def __str__(self):

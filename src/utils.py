@@ -123,7 +123,8 @@ def patternMatch(expr1, expr2):
                     and patternMatch(expr1.rightExpr, tail(expr2)))    
     
     if type(expr1) == type(expr2) and type(expr1) in (Tuple, Array):
-
+        if len(expr1.items) == 0:
+            return True
         if len(expr1.items) != len(expr2.items):
             if (isinstance(expr1.items[-1], Variable) and 
                 expr1.items[-1].name == '...'):
