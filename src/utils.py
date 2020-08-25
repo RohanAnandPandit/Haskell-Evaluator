@@ -85,12 +85,12 @@ def evaluate(exp):
     if isinstance(exp, Cons):
         exp = str(exp)[1:-1]
     lexer = Lexer(exp)
-    print("tokens : ", end = '')
-    lexer.printTokens() 
+    #print("tokens : ", end = '')
+    #lexer.printTokens() 
     expr = parse(lexer)
     #expr = optimise(expr)
-    print("expression : ", str(expr)) 
-    print("result : ", end = '')
+    #print("expression : ", str(expr)) 
+    #print("result : ", end = '')
     #try:
     return expr.simplify()
     #except Exception as error:
@@ -137,7 +137,7 @@ def patternMatch(expr1, expr2):
               expr1.items[0].name == '...'):
             return True
         
-        return (patternMatch(expr1.items[0], expr2.items[0]) and
+        return (patternMatch(expr1.items[0], expr2.items[0].simplify()) and
                 patternMatch(Tuple(expr1.items[1:]), Tuple(expr2.items[1:]))) 
 
     if isinstance(expr1, BinaryExpr): 
@@ -161,7 +161,7 @@ def typeMatch(type_, expr):
         elif isinstance(expr, Structure):
             return type_.name == expr.type.name
         elif isinstance(expr, Object):
-            return type_.name == expr.class_.name.split(' ')[0]
+            return type_.name == expr.class_.name
         elif isPrimitive(expr):
             return type_.name == expr.type
         elif issubclass(type(expr), Func):
@@ -269,6 +269,11 @@ def replaceVariables(expr):
         if expr.name not in typeNames:
             expr = expr.simplify()
     elif isinstance(expr, BinaryExpr):
+        if expr.operator.name == '.':
+            try:
+                return expr.simplify()
+            except:
+                pass
         left = expr.leftExpr
         if expr.operator.name not in ('=', 'where'):
             left = replaceVariables(expr.leftExpr)

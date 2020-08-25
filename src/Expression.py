@@ -7,7 +7,7 @@ Created on Tue Jun 23 13:38:23 2020
 import utils
 from utils import functionNames
 
-class BinaryExpr():
+class BinaryExpr:
     def __init__(self, operator, left, right): 
         self.operator = operator
         self.leftExpr = left

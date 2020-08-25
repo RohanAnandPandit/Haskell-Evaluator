@@ -184,7 +184,6 @@ class Class(Func):
             utils.frameStack.pop(-1)
             utils.typeNames.append(self.name)
             utils.functionNames.append(self.name)
-            
             return self
         else:
             values = expr
@@ -196,8 +195,7 @@ class Class(Func):
                     obj.state[name] = self.state[name] 
                     
             obj.state['this'] = obj
-            if self.name in self.state.keys():
-                obj.state[self.name].apply(values)
+
             if 'init' in self.state.keys():
                 obj.state['init'].apply(values)
             

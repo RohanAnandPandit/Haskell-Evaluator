@@ -2,9 +2,10 @@
 """
 Created on Mon Jun 29 10:19:03 2020
 
-@author: rohan\
+@author: rohan
 """
 functionNamesTuple = ['fst', 'snd', 'swap']
+
 
 class Tuple:
     def __init__(self, tup):
@@ -16,12 +17,18 @@ class Tuple:
         return Tuple(list(map(lambda expr: replaceVariables(expr), self.tup)))
     
     def __str__(self):
+        import utils
+        from Expression import BinaryExpr
         tup = []
         for item in self.tup:
-            try:
-                tup.append(str(item.simplify()))
-            except:
-                tup.append(str(item))
+            value = item
+            '''
+            if not (isinstance(item, BinaryExpr) and (item.operator.name == ' '
+                    and item.leftExpr.name.split(' ')[0] in utils.lazy_eval or
+                    item.operator.name == '.')):
+                value = item.simplify() 
+            '''
+            tup.append(str(value))
         string = ', '.join(tup)
         if len(tup) == 1:
             string += ','

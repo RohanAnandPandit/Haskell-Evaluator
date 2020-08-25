@@ -153,27 +153,56 @@ def index(a, b):
             return Array(a.items[start.value : end.value])
 
 def power(a, b):
+    if isinstance(a, Object):
+        if 'pow' in a.state.keys():
+            return a.state['pow'].apply(b) 
+        
     (a, b) = (a.value, b.value)
     return getData(a ** b)
 
 def divide(a, b):
+    if isinstance(a, Object):
+        if 'div' in a.state.keys():
+            return a.state['div'].apply(b)
+        
     (a, b) = (a.value, b.value)
     return getData(a / b)
 
 def multiply(a, b):
+    if isinstance(a, Object):
+        if 'mul' in a.state.keys():
+            return a.state['mul'].apply(b) 
+    elif isinstance(b, Object):
+        if 'mul' in b.state.keys():
+            return b.state['mul'].apply(a)
+        
     (a, b) = (a.value, b.value)
     return getData(a * b)
 
 def add(a, b):
+    if isinstance(a, Object):
+        if 'add' in a.state.keys():
+            return a.state['add'].apply(b) 
+    elif isinstance(b, Object):
+        if 'add' in b.state.keys():
+            return b.state['add'].apply(a)
+        
     (a, b) = (a.value, b.value)
     return getData(a + b)
 
 def subtract(a, b):
+    if isinstance(a, Object):
+        if 'sub' in a.state.keys():
+            return a.state['sub'].apply(b) 
+    elif isinstance(b, Object):
+        if 'sub' in b.state.keys():
+            return b.state['sub'].apply(a)
+        
     (a, b) = (a.value, b.value)
     return getData(a - b)
-   
+
 def lessThan(a, b):
-    if isinstance(a, Object) and isinstance(b, Object):
+    if isinstance(a, Object):
         if 'lessThan' in a.state.keys():
             return a.state['lessThan'].apply(b)
         return Bool(False)

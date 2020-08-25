@@ -3,13 +3,14 @@ e = 2.718281828
 phi = 1.618
 
 class Complex (
-	def Complex (int real, int imag)  = (
+
+	def init(Num real, Num imag) (
 		this.real = real
 		this.imag = imag
 	)
 		
 	def toString = (
-		str = ""
+		[] str = ""
 		if (real != 0) (
 			str = "(" ++ show real
 			if (imag >= 0) (
@@ -31,14 +32,27 @@ class Complex (
 	def sub num = Complex (real - num, imag)
 
 	def mul (Complex num) = (
-		Complex (real * num.real - imag * num.imag, real * num.imag + imag * num.real)
+		Complex (real * num.real - imag * num.imag,
+			 real * num.imag + imag * num.real)
 	)
-	def mul n = Complex (real * n, imag * n)
+
+	def mul (Num n) = Complex (real * n, imag * n)
+	
+	def pow (int n) = (
+		if (n == 0) (
+			return (this * 1)
+		)
+		prod = this
+		for (n - 1) (
+			prod *= this
+		)
+		return prod
+	)
 
 	def conjugate = Complex (real, -imag)
 )
 
-#i = Complex (0, 1)#
+i = Complex (0, 1)
 
 
 
