@@ -81,8 +81,6 @@ returns = HFunction(2, Associativity.RIGHT,
 whereclause = HFunction(2.6, Associativity.LEFT,
                         op_func.where, 2, 'where')
 
-append_tail = HFunction(3, Associativity.LEFT, Prelude.append, 2, '<-')
-
 inheritance = HFunction(9, Associativity.LEFT,
                         op_func.extends, 2, 'extends')
 
@@ -179,7 +177,7 @@ class Operator(Enum):
     NEWLINE = newline
     INHERITANCE = inheritance
     IMPLEMENTS = implements
-    BACK_ARROW = append_tail
+    BACK_ARROW = HFunction(3, Associativity.LEFT, op_func.append, 2, '<-')
     DOUBLE_PERIOD = comprehension
     INCREMENT_BY = increment_by
     DECREMENT_BY = decrement_by
@@ -191,8 +189,7 @@ class Operator(Enum):
     DOUBLE_COLON = HFunction(1, Associativity.LEFT, op_func.pass_arg, 2, '::')
     
 def initialiseFunctions(state):
-    state['zipWith'] = HFunction(8, Associativity.LEFT, 
-                                 Prelude.zipWith, 3, 'zipWith')
+    from Types import Type
     state['splitAt'] = HFunction(8, Associativity.LEFT, Prelude.splitAt, 2,
          'splitAt')
     state['replicate'] = HFunction(8, Associativity.LEFT, Prelude.replicate,
@@ -202,7 +199,6 @@ def initialiseFunctions(state):
     state['tail'] = HFunction(8, Associativity.LEFT, Prelude.tail, 1, 'tail')
     state['concat'] = HFunction(8, Associativity.LEFT, Prelude.concat, 1,
          'concat')
-    state['last'] = HFunction(8, Associativity.LEFT, Prelude.last, 1, 'last')
     state['printLn'] = HFunction(8, Associativity.LEFT,
                                  Prelude.printLn, 1, 'printLn')
     state['print'] = HFunction(8, Associativity.LEFT, 
@@ -266,7 +262,7 @@ def initialiseFunctions(state):
     state['return'] = HFunction(8, Associativity.LEFT,
                              op_func.return_statement, 1, 'return')
     state['toInt'] = HFunction(8, Associativity.LEFT, 
-                             op_func.toInt, 1, 'roInt')
+                             op_func.toInt, 1, 'toInt')
     state['toFloat'] = HFunction(8, Associativity.LEFT, 
                              op_func.toFloat, 1, 'toFloat')
     state['toBool'] = HFunction(8, Associativity.LEFT,
@@ -275,14 +271,10 @@ def initialiseFunctions(state):
                                  op_func.toChar, 1, 'toChar')
     state['do'] = HFunction(8, Associativity.LEFT, 
                              op_func.doLoop, 3, 'do')
-    state['int'] = HFunction(8, Associativity.LEFT,
-                             op_func.defaultInt, 1, 'int') 
-    state['float'] = HFunction(8, Associativity.LEFT,
-                             op_func.defaultFloat, 1, 'float')
-    state['bool'] = HFunction(8, Associativity.LEFT, 
-                             op_func.defaultBool, 1, 'bool')
-    state['char'] = HFunction(8, Associativity.LEFT, 
-                             op_func.defaultChar, 1, 'char')
+    state['int'] = Type('int') 
+    state['float'] = Type('float') 
+    state['bool'] = Type('bool') 
+    state['char'] = Type('char') 
     state['type'] = HFunction(8, Associativity.LEFT,
                              op_func.type_synonym, 2, 'type') 
     state['union'] = HFunction(8, Associativity.LEFT,

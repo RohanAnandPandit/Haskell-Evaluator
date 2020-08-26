@@ -144,21 +144,6 @@ def tail(a):
             end = end.simplify()
         return Range(start, end, a.step)
 
-def last(a):    
-    (x, xs) = (head(a), tail(a)) 
-    if isinstance(a, Nil):
-        return None
-    if isinstance(xs, Nil):
-        return x 
-    return last(xs)
-
-def append(a, b):    
-    (x, xs) = (head(a), tail(a)) 
-    item = b
-    if isinstance(a, Nil):
-        return Cons(item, Nil())
-    return Cons(x, append(xs, item))
-
 def concat(a):
     from Operators import operatorFromString
     return foldl(operatorFromString('++'), Nil(), a)
@@ -172,61 +157,7 @@ def init(a):
             return Nil()
         return Cons(x, init(xs))  
 
-def maximum(a, m = None):
-    (x, xs) = (head(a), tail(a))
-    if isinstance(a, Nil):
-        return m
-    if isinstance(a, Cons):
-        if (m == None):
-            m = x
-        return maximum(xs, max(x, m))
 
-def minimum(a, m = None):
-    (x, xs) = (head(a), tail(a))
-    if isinstance(a, Nil):
-        return m
-    if isinstance(a, Cons):
-        if (m == None):
-            m = x
-        return minimum(xs, min(x, m))
-
-def elem(a, b):  
-    from Operator_Functions import equals
-    value = a
-    x, xs = head(b), tail(b)
-    if isinstance(b, Nil):
-        return Bool(False)
-    elif isinstance(b, Cons):
-        return Bool(equals(x, value).value or elem(value, xs).value)
-
-def notElem(a, b): 
-    return Bool(not elem(a, b).value)
-
-def take(a, b):
-    n = a
-    x, xs = head(b), tail(b)
-    if (n.value <= 0 or isinstance(b, Nil)):
-        return Nil()
-    return Cons(x, take(Int(n.value - 1), xs))
-        
-
-def drop(a, b):    
-    n = a
-    if (n.value <= 0 or isinstance(b, Nil)):
-        return b
-    return drop(Int(n.value - 1), tail(b))
-
-def map_(a, b):    
-    func = a
-    x, xs = head(b), tail(b)
-    if isinstance(b, Nil):
-        return b
-    from Operator_Functions import application
-    #from Expression import BinaryExpr
-    #from Operators import operatorFromString
-    #expr = BinaryExpr(operatorFromString(' '), func, x)
-    return Cons(application(func, x), map_(func, xs))
-        
 
 def words(a):
     if (isinstance(a, Nil)):
@@ -248,28 +179,8 @@ def unwords(a):
         return x
     return concatenate(x, Cons(' ', unwords(xs)))
 
-def takeWhile(a, b):
-    func = a
-    if (isinstance(b, Nil)):
-        return Nil()
-    (x, xs) = (head(b), tail(b))
-    if func.apply(x).value:
-        return Cons(x, takeWhile(func, xs))
-    return Nil()
 
-def dropWhile(a, b):
-    (func, xs) = (a, b)
-    if isinstance(xs, Nil):
-        return Nil()
-    if func.apply(head(xs)).value:
-        return dropWhile(func, tail(xs))
-    return xs 
-
-
-def zipHaskell(a, b):
-    from Operators import operatorFromString
-    return zipWith(operatorFromString(',,'), a, b)
-   
+ 
 def zip3(a, b, c):
     if isinstance(a, Nil) or isinstance(b, Nil) or isinstance(c, Nil):
         return Nil()
@@ -305,30 +216,6 @@ def zipWith3(a, b, c, d):
     y, ys = head(c), tail(c)
     z, zs = head(d), tail(d)
     return Cons(func.apply(x, y).apply(z), zipWith3(func, xs, ys, zs))    
-    
-def foldr(a, b, c):
-    func, u, xs = a, b, c
-    if (isinstance(xs, Nil)):
-        return u
-    else:
-        return func.apply(head(xs), foldr(func, u, tail(xs)))
-    
-def foldr1(func, xs):
-    if (isinstance(xs, Nil)):
-        return None
-    return foldr(func, head(xs), tail(xs))
-
-def foldl(a, b, c):
-    func, u, xs = a, b, c
-    if (isinstance(xs, Nil)):
-        return u
-    return foldl(func, func.apply(u, head(xs)), tail(xs))
-
-def foldl1(func, b):
-    if (isinstance(b, Nil)):
-        return None
-    x, xs = head(b), tail(b)
-    return foldl(func, x, xs)
 
 def andHaskell(a): 
     from Operators import operatorFromString
@@ -355,23 +242,6 @@ def allHaskell(a, b):
     if (not func.apply(x).value):
         return False
     return allHaskell(func, xs)
-
-def filterHaskell(a, b):
-    func = a
-    if isinstance(b, Nil):
-        return b
-    x, xs = head(b), tail(b)
-    if func.apply(x).value:
-        return Cons(x, filterHaskell(func, xs))
-    return filterHaskell(func, xs)
-
-def sumHaskell(a):
-    from Operators import operatorFromString
-    return foldl(operatorFromString('+'), Int(0), a)
-
-def product(a):
-    from Operators import operatorFromString
-    return foldl(operatorFromString('*'), Int(1), a)
 
 def lookup(a, b):
     from Prelude import fst, snd

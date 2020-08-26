@@ -103,6 +103,8 @@ def assign(a, b, state = None):
             
             elif arguments[0].name in 'def':
                 name = arguments[1].name
+                if name == "rev'":
+                    pass
                 arguments = arguments[2:]
                 case = Lambda(name, arguments = arguments, expr = value)
                 if name != None:
@@ -193,10 +195,7 @@ def add(a, b):
 def subtract(a, b):
     if isinstance(a, Object):
         if 'sub' in a.state.keys():
-            return a.state['sub'].apply(b) 
-    elif isinstance(b, Object):
-        if 'sub' in b.state.keys():
-            return b.state['sub'].apply(a)
+            return a.state['sub'].apply(b)
         
     (a, b) = (a.value, b.value)
     return getData(a - b)
@@ -426,7 +425,7 @@ def access(a, b):
     obj, field = a.simplify(), b       
     return obj.state[field.name].simplify()
 
-def forLoop(n, expr, reset_break = True):
+def forLoop(n, expr):
     import utils
     from List import List
     if isinstance(n, Tuple):
@@ -439,10 +438,9 @@ def forLoop(n, expr, reset_break = True):
             if len(generators) == 1:
                 expr.simplify()
             else:
-                forLoop(Tuple(generators[1:]), expr, False)
+                forLoop(Tuple(generators[1:]), expr)
             if utils.breakLoop > 0 or utils.return_value != None:
-                if reset_break:
-                    utils.breakLoop -= 1
+                utils.breakLoop -= 1
                 break
             if utils.continueLoop > 0:
                 utils.continueLoop -= 1
@@ -747,7 +745,7 @@ def defaultList(var):
 
 def type_synonym(typeVar, typeExpr):
     from Types import Type
-    type_ = Type(typeExpr)
+    type_ = Type(typeVar.name, typeExpr)
     assign(typeVar, type_) 
     typeNames.append(typeVar.name)
     return type_
@@ -759,7 +757,7 @@ def types_union(typeVar, types):
     typeNames.append(typeVar.name)
     return union
 
-def then_clause(cond, expr):
+def then_clause(cond, expr): 
     if cond.simplify().value:
         return expr.simplify()
     return Int(None)
@@ -801,4 +799,9 @@ def pass_arg(arg, funcs):
 
 def match(a, b):
     from utils import patternMatch
-    return Bool(patternMatch(a, b))     
+    return Bool(patternMatch(a, b))   
+
+def append(a, b):
+    if isinstance(a, (Tuple, Array)):
+        a.items.append(b)
+    return a

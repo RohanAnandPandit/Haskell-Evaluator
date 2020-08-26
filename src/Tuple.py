@@ -4,8 +4,8 @@ Created on Mon Jun 29 10:19:03 2020
 
 @author: rohan
 """
-functionNamesTuple = ['fst', 'snd', 'swap']
 
+functionNamesTuple = ['fst', 'snd', 'swap']
 
 class Tuple:
     def __init__(self, tup):
@@ -17,17 +17,11 @@ class Tuple:
         return Tuple(list(map(lambda expr: replaceVariables(expr), self.tup)))
     
     def __str__(self):
-        import utils
+        import utils 
         from Expression import BinaryExpr
         tup = []
         for item in self.tup:
             value = item
-            '''
-            if not (isinstance(item, BinaryExpr) and (item.operator.name == ' '
-                    and item.leftExpr.name.split(' ')[0] in utils.lazy_eval or
-                    item.operator.name == '.')):
-                value = item.simplify() 
-            '''
             tup.append(str(value))
         string = ', '.join(tup)
         if len(tup) == 1:

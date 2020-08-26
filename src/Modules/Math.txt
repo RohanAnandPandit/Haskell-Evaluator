@@ -4,7 +4,7 @@ phi = 1.618
 
 class Complex (
 
-	def init(Num real, Num imag) (
+	def init(Num real, Num imag) = (
 		this.real = real
 		this.imag = imag
 	)

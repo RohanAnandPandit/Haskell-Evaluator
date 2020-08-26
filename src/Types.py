@@ -12,7 +12,7 @@ class Variable:
         self.name = name
     
     def simplify(self):
-        if self.name == '_':
+        if self.name == '_ ...':
             return self
         from utils import frameStack
         for curr in frameStack[::-1]:
@@ -94,7 +94,7 @@ class Collection:
         if self.operator.name == ',':
             return Tuple(list(filter(lambda item: item != None, self.items)))
         if len(self.items) == 2:
-            left = self.items[0]
+            left = self.items[0] 
             if left: left = left.simplify()
             right = self.items[1]
             if right: right = right.simplify()
@@ -280,11 +280,26 @@ class Module:
         
 
 class Type:
-    def __init__(self, expr):
+    def __init__(self, name, expr = None):
+        self.name = name
         self.expr = expr
     
     def simplify(self):
         return self
+    
+    def apply(self, var):
+        from Operator_Functions import (defaultInt, defaultFloat, defaultBool,
+                                        defaultChar)
+        if self.name == 'int':
+            return defaultInt(var)
+        elif self.name == 'float':
+            return defaultFloat(var)
+        elif self.name == 'bool':
+            return defaultBool(var)
+        elif self.name == 'char':
+            return defaultChar(var)
+        
+        return Int(None)
     
     def __str__(self):
         return str(self.expr)

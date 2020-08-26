@@ -1,10 +1,14 @@
 class Stack (
-	def Stack {} (this.list = [])
+	def init = (
+		this.list = []
+	)
 
 	def push item = (this.list = item : list)
 
 	def pop = (
-		if (list == []) (return ?)
+		if (list == []) (
+			return ?
+		)
 
 		item = head list
 		this.list = tail list

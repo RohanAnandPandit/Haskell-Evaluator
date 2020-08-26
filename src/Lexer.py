@@ -41,7 +41,8 @@ class Lexer:
             lastToken = self.tokens[-1]
             if (op == '\n' and isinstance(lastToken, HFunction) 
                 and lastToken.name == ' '):
-                del self.tokens[-1]
+                self.tokens.pop(-1)
+                lastToken = self.tokens[-1]
             if (not isinstance(lastToken, (HFunction, Function, Lambda)) 
                 or not lastToken.name in operators
                 or lastToken.name in ')]}'):

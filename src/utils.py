@@ -79,6 +79,9 @@ def getData(exp):
 def isPrimitive(expr):
     return type(expr) in [Int, Float, Bool, Char, EnumValue]
 
+def null(expr):
+    return isinstance(expr, Int) and expr.value == None
+
 def evaluate(exp):  
     from Lexer import Lexer
     from Parser import parse  
@@ -97,7 +100,7 @@ def evaluate(exp):
         #print(' '.join(error.args))
 
 def patternMatch(expr1, expr2):
-    from Operator_Functions import equals
+    from Operator_Functions import equals 
     from Expression import BinaryExpr
     if expr1 == None:
         return True
@@ -112,15 +115,17 @@ def patternMatch(expr1, expr2):
         return equals(expr1, expr2).value
     
     if isinstance(expr1, Nil) and isinstance(expr2, Nil):
-        return True
+        return True 
     
     if isinstance(expr1, (Cons, Range)):
-            return (patternMatch(head(expr1), head(expr2).simplify()) 
-                    and patternMatch(tail(expr1), tail(expr2)))
-            
+        return (patternMatch(head(expr1), head(expr2).simplify()) 
+                and patternMatch(tail(expr1), tail(expr2)))
+
     if isinstance(expr1, BinaryExpr) and expr1.operator.name == ':':
-            return (patternMatch(expr1.leftExpr, head(expr2).simplify()) 
-                    and patternMatch(expr1.rightExpr, tail(expr2)))    
+        if isinstance(expr2, Nil):
+            return False
+        return (patternMatch(expr1.leftExpr, head(expr2).simplify()) 
+                and patternMatch(expr1.rightExpr, tail(expr2)))    
     
     if type(expr1) == type(expr2) and type(expr1) in (Tuple, Array):
         if len(expr1.items) == 0:
@@ -146,24 +151,37 @@ def patternMatch(expr1, expr2):
                 return patternMatch(expr1.rightExpr, Tuple(expr2.values))
             else:
                 return patternMatch(expr1.rightExpr, expr2)
-    return False
+    return False 
 
 def typeMatch(type_, expr):
     from Types import Type, Union
-    if isinstance(type_,  Variable):
-        if isinstance(type_.simplify(), Type):
+    if null(type_):
+        return True
+    if isinstance(type_, Variable):
+        if type_.name == 'type':
+            return isinstance(expr, Type) or null(expr)
+        
+        elif (isinstance(type_.simplify(), Int) 
+            and type_.simplify().value == None):
+            return True
+        
+        elif isinstance(type_.simplify(), Type):
+            if isPrimitive(expr):
+                return type_.simplify().name == expr.type
             return typeMatch(type_.simplify().expr, expr)
+        
         elif isinstance(type_.simplify(), Union):
             type_ = type_.simplify()
             for t in type_.types:
                 if typeMatch(t, expr):
                     return True
+                
         elif isinstance(expr, Structure):
             return type_.name == expr.type.name
+        
         elif isinstance(expr, Object):
             return type_.name == expr.class_.name
-        elif isPrimitive(expr):
-            return type_.name == expr.type
+        
         elif issubclass(type(expr), Func):
             return type_.name == 'Func'
 
@@ -181,9 +199,11 @@ def typeMatch(type_, expr):
     elif type(type_) == type(expr) and type(type_) in (Tuple, Array):
         if len(type_.items) == 0:
             return True
+        
         elif (isinstance(type_.items[0], Variable) and 
               type_.items[0].name == '...'):
             return True
+        
         elif len(type_.items) != len(expr.items):
             if (isinstance(type_.items[-1], Variable) and 
                 type_.items[-1].name == '...'):
@@ -193,6 +213,7 @@ def typeMatch(type_, expr):
                 return False
         return (typeMatch(type_.items[0], expr.items[0]) and
                 typeMatch(Tuple(type_.items[1:]), Tuple(expr.items[1:])))
+        
     return False
     
 def optimise(expr):
