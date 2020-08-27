@@ -195,8 +195,6 @@ def initialiseFunctions(state):
     state['replicate'] = HFunction(8, Associativity.LEFT, Prelude.replicate,
          2, 'replicate')
     state['span'] = HFunction(8, Associativity.LEFT, Prelude.span, 2, 'span')
-    state['head'] = HFunction(8, Associativity.LEFT, Prelude.head, 1, 'head')
-    state['tail'] = HFunction(8, Associativity.LEFT, Prelude.tail, 1, 'tail')
     state['concat'] = HFunction(8, Associativity.LEFT, Prelude.concat, 1,
          'concat')
     state['printLn'] = HFunction(8, Associativity.LEFT,

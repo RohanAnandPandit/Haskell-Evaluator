@@ -1,3 +1,12 @@
+interface List (
+    def head = _
+    def tail = _
+)
+
+def head [] = ?
+def head (x:_) = x
+def head (_:xs) = xs
+
 def len [] = 0
 def len (_:xs) = 1 + len xs 
 

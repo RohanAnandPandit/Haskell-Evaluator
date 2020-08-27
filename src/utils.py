@@ -4,11 +4,11 @@ Created on Mon Jun 22 11:24:28 2020
 
 @author: rohan
 """
-import List, IO
+import IO
 import Prelude
 from Types import (Variable, Int, Float, Bool, EnumValue, Object, Structure,
-                   Char)
-from List import Nil, Cons, head, tail, Range, Array
+                   Char, Type, Class, Struct)
+from List import Nil, Cons, head, tail, Range, Array, List
 from Tuple import functionNamesTuple, Tuple
 from HFunction import Func
 '''
@@ -22,7 +22,7 @@ functional_mode = False
 frameStack = [builtInState]
 enumNames = []
 typeNames = ['int', 'float', 'char', 'bool', 'var', 'Num', 'global', 'local',
-             'hidden', 'Func']
+             'hidden', 'Func', 'Object', 'Type']
 structNames = []
 operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
              '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
@@ -36,16 +36,20 @@ keywords = ('class', 'def', 'struct', 'interface', 'inherits', 'where',
             'then', 'enum', 'oper', 'break', 'continue', 'in', 'True', 
             'False', 'let', 'import', 'return', 'int', 'float', 'bool',
             'char', 'var', 'do', '?', 'Num', 'from', 'type', 'union', 
-            'stop', 'skip', 'global', 'local', 'hidden', 'Func')  
+            'stop', 'skip', 'global', 'local', 'hidden', 'Func') 
 
 continueLoop = 0
 breakLoop = 0
 return_value = None
-functionNames = Prelude.functionNamesPrelude
+functionNames = []
+'''
+functionNames += Prelude.functionNamesPrelude
 functionNames += List.functionNamesList 
 #functionNames += Char.functionNamesChar
 functionNames += functionNamesTuple
+'''
 functionNames += IO.functionNamesIO
+
 functionNames += ['eval', 'read', 'range', 'toInt', 'toBool', 'toChar',
                   'toFloat', 'match']
 
@@ -104,8 +108,11 @@ def patternMatch(expr1, expr2):
     from Expression import BinaryExpr
     if expr1 == None:
         return True
-    
+    expr2 = expr2.simplify()
     if isinstance(expr1, Variable):
+        if isinstance(expr1.simplify(), Type):
+            return (isinstance(expr2, (Type, Class, Struct)) and 
+                    expr1.simplify().name == expr2.name)
         return True
     
     if isinstance(expr1, BinaryExpr) and expr1.operator.name == '@':
@@ -118,19 +125,25 @@ def patternMatch(expr1, expr2):
         return True 
     
     if isinstance(expr1, (Cons, Range)):
+        if isinstance(expr2, Nil): 
+            return False
         return (patternMatch(head(expr1), head(expr2).simplify()) 
                 and patternMatch(tail(expr1), tail(expr2)))
 
-    if isinstance(expr1, BinaryExpr) and expr1.operator.name == ':':
+    if (isinstance(expr1, BinaryExpr) and expr1.operator.name == ':' and 
+        issubclass(type(expr2), List)):
         if isinstance(expr2, Nil):
             return False
         return (patternMatch(expr1.leftExpr, head(expr2).simplify()) 
                 and patternMatch(expr1.rightExpr, tail(expr2)))    
     
     if type(expr1) == type(expr2) and type(expr1) in (Tuple, Array):
-        if len(expr1.items) == 0:
+        if len(expr1.items) == len(expr2.items) == 0:
             return True
+        
         if len(expr1.items) != len(expr2.items):
+            if len(expr1.items) == 0:
+                return False
             if (isinstance(expr1.items[-1], Variable) and 
                 expr1.items[-1].name == '...'):
                 if len(expr1.items) - 1 > len(expr2.items):
@@ -155,11 +168,15 @@ def patternMatch(expr1, expr2):
 
 def typeMatch(type_, expr):
     from Types import Type, Union
-    if null(type_):
+    if null(type_) or null(expr):
         return True
+    
     if isinstance(type_, Variable):
-        if type_.name == 'type':
-            return isinstance(expr, Type) or null(expr)
+        if type_.name == 'Type':
+            return isinstance(expr, (Type, Class, Struct))
+        
+        elif type_.name == 'Object':
+            return isinstance(expr, Object)
         
         elif (isinstance(type_.simplify(), Int) 
             and type_.simplify().value == None):
@@ -185,7 +202,7 @@ def typeMatch(type_, expr):
         elif issubclass(type(expr), Func):
             return type_.name == 'Func'
 
-    elif isinstance(type_, Nil) and isinstance(expr, (Nil, Cons)):
+    elif isinstance(type_, Nil) and issubclass(type(expr), List):
         return True
     
     elif isinstance(type_, Cons) and isinstance(expr, Cons):

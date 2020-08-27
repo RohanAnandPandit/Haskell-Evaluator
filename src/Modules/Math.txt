@@ -25,18 +25,18 @@ class Complex (
 		
 	)
 
-	def add (Complex num) = Complex (real + num.real, imag + num.imag)
-	def add num = Complex (real + num, imag)
+	def add (Complex num) = Complex(real + num.real, imag + num.imag)
+	def add num = Complex(real + num, imag)
 
-	def sub (Complex num) = Complex (real - num.real, imag - num.imag)
-	def sub num = Complex (real - num, imag)
+	def sub (Complex num) = Complex(real - num.real, imag - num.imag)
+	def sub num = Complex(real - num, imag)
 
 	def mul (Complex num) = (
-		Complex (real * num.real - imag * num.imag,
-			 real * num.imag + imag * num.real)
+		Complex(real * num.real - imag * num.imag,
+			    real * num.imag + imag * num.real)
 	)
 
-	def mul (Num n) = Complex (real * n, imag * n)
+	def mul (Num n) = Complex(real * n, imag * n)
 	
 	def pow (int n) = (
 		if (n == 0) (
@@ -49,10 +49,12 @@ class Complex (
 		return prod
 	)
 
-	def conjugate = Complex (real, -imag)
+	def conjugate = Complex (real, 0-imag)
+	
+	def self = Complex (real, imag)
 )
 
-i = Complex (0, 1)
+i = Complex(0, 1)
 
 
 

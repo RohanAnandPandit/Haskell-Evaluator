@@ -29,3 +29,8 @@ def min x y = (
         default => y    
     )
 )
+
+def head (Object obj) = obj.head
+def tail (Object obj) = obj.tail
+
+

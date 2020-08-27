@@ -1,32 +1,45 @@
 class LinkedListNode (
-	def LinkedListNode {data, next} (
+
+	def init(? data, ? next) = (
 		this.data = data
 		this.next = next
 	)
-
+	
 	def toString = show data ++ " -> (" ++ show next ++ ")"
 )
 
-class LinkedList (
-	def LinkedList {} (
+class LinkedList implements List (
+
+	def init() = (
 		this.front = ?
 		this.back = ?
 	)
 
-	def add data (
-		node = LinkedListNode {data, ?}
+    def init(LinkedListNode front, LinkedListNode back) = (
+        this.front = front 
+        this.back = back
+    )
+    
+	def add data = (
+		var node = LinkedListNode(data, ?)
 		if (front == ?) (
 			this.front = node
 			return ?
 		)
+		
 		if (back == ?) (
 			this.back = node
 			this.front.next = node
 			return ?
 		)
+		
 		this.back.next = node
 		this.back = node
 	)
+	
+	def head = front.data
+	
+	def tail = front.next
 
 	def toString = show front
 )

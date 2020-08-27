@@ -81,10 +81,13 @@ def assign(a, b, state = None):
             arguments = []
             args = var 
             while True:
+                if isinstance(args, Int):
+                    print('0')
                 arg = args.rightExpr 
                 arguments.insert(0, arg)
                 args = args.leftExpr
-                if isinstance(args, (Variable, Nil, Cons, Tuple, Array)):
+                if (isinstance(args, (Variable, Nil, Cons, Tuple, Array)) or 
+                    utils.null(args)):
                     arguments.insert(0, args)
                     break
                 
@@ -96,15 +99,16 @@ def assign(a, b, state = None):
                     assign(arguments[1], value, state)
                 return value
             
-            if (isinstance(arguments[0], (Nil, Cons, Tuple, Array)) 
-                or arguments[0].name in typeNames):
+            if (utils.null(arguments[0]) or 
+                isinstance(arguments[0], (Nil, Cons, Tuple, Array)) or 
+                arguments[0].name in typeNames):
                 assign(arguments[1], value, state)
                 return value
             
             elif arguments[0].name in 'def':
                 name = arguments[1].name
-                if name == "rev'":
-                    pass
+                if name == 'add':
+                    print('0')
                 arguments = arguments[2:]
                 case = Lambda(name, arguments = arguments, expr = value)
                 if name != None:

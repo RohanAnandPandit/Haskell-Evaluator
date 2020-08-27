@@ -4,6 +4,7 @@ interface Generator (
 )
 
 class Iterate implements Generator (
+
 	def init(func, seed) = (
 		this.func = func
 		this.seed = seed
@@ -16,11 +17,14 @@ class Iterate implements Generator (
 		return seed
 	)
 
+	def head = next
+	def tail = Iterate(func, func seed)
 	def toString = "[" ++ show this.seed ++ ".." ++ show func ++ " n" ++ "]"
 )
 
 class Cycle implements Generator (
-	def Cycle(xs) = (
+
+	def init(xs) = (
 		this.list = xs
 		this.curr = xs
 	)
@@ -34,5 +38,5 @@ class Cycle implements Generator (
 		return item
 	)
 	
-	def toString = "[" ++ head this.list ++ ".." ++ head this.list ++ "]" 
+	def toString = "[" ++ show(head this.list) ++ ".." ++ show(head this.list) ++ "]"
 )

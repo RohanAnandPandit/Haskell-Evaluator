@@ -192,9 +192,9 @@ class Class(Func):
                 if isinstance(self.state[name], (Function, Lambda)):
                     obj.state[name] = Method(obj, self.state[name])
                 else:
-                    obj.state[name] = self.state[name] 
+                    obj.state[name] = self.state[name]  
                     
-            obj.state['this'] = obj
+            obj.state['this'] = obj 
 
             if 'init' in self.state.keys():
                 obj.state['init'].apply(values)
@@ -209,6 +209,7 @@ class Class(Func):
         
 class Method(Func):
     def __init__(self, obj, func):
+        self.name = func.name
         self.obj = obj
         self.func = func
     
@@ -228,6 +229,8 @@ class Method(Func):
         frameStack.append(state)
         value = self.func.simplify()
         frameStack.pop(-1) 
+        if issubclass(type(value), Func):
+            return Method(self.obj, value) 
         return value
     
     def __str__(self):
