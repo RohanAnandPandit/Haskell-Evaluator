@@ -613,7 +613,7 @@ def switch(value, expr):
     followThrough = False
     for case in cases:
         if (isinstance(case.leftExpr, Variable) 
-            and case.leftExpr.name == 'default' 
+            and case.leftExpr.name == 'otherwise' 
             or patternMatch(case.leftExpr.simplify(), value.simplify())
             or followThrough):
             

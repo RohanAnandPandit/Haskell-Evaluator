@@ -273,6 +273,7 @@ def initialiseFunctions(state):
     state['float'] = Type('float') 
     state['bool'] = Type('bool') 
     state['char'] = Type('char') 
+    state['string'] = Type('string') 
     state['type'] = HFunction(8, Associativity.LEFT,
                              op_func.type_synonym, 2, 'type') 
     state['union'] = HFunction(8, Associativity.LEFT,

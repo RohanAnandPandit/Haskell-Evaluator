@@ -47,7 +47,7 @@ in_class = False
 functionNames += Prelude.functionNamesPrelude
 functionNames += List.functionNamesList 
 #functionNames += Char.functionNamesChar
-functionNames += functionNamesTuple
+functionNames += functionNamesTuple 
 '''
 functionNames += IO.functionNamesIO
 
@@ -65,7 +65,9 @@ def getData(exp):
         return exp
 
     if '.' in str(exp):
-        return Float(float(exp))
+        if int(float(exp)) == float(exp):
+            return Int(int(float(exp)))
+        return Float(round(float(exp), 10))
     try: 
         return Int(int(exp))
     except:
@@ -188,13 +190,12 @@ def typeMatch(type_, expr):
         elif type_.name == 'Object':
             return isinstance(expr, Object)
         
-        elif (isinstance(type_.simplify(), Int) 
-            and type_.simplify().value == None):
-            return True
-        
         elif isinstance(type_.simplify(), Type):
             if isPrimitive(expr):
                 return type_.simplify().name == expr.type
+            if type_.simplify().name in ('int', 'float', 'char',
+                                         'string', 'bool'):
+                return False
             return typeMatch(type_.simplify().expr, expr)
         
         elif isinstance(type_.simplify(), Union):

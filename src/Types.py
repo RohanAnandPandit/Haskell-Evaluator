@@ -299,7 +299,7 @@ class Module:
         return self.name
         
 
-class Type:
+class Type(Func):
     def __init__(self, name, expr = None):
         self.name = name
         self.expr = expr
