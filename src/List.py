@@ -33,12 +33,6 @@ class Cons(List):
         self.tail = listExpr 
         
     def __str__(self):
-        if isinstance(self.item, Char):
-            tail = str(self.tail)
-            if tail == '[]':
-                tail = ''
-            return str(self.item)[1:-1] + tail
-    
         tail = str(self.tail)
         sep = ', '
         if (tail == '[]'):
@@ -48,10 +42,6 @@ class Cons(List):
             value = str(self.item.simplify())
         except:
             value = str(self.item)
-        if (isinstance(self.item, Iterator)):
-            value = value[1 : -1]
-            if (tail != '[]'):
-                value += ','
         return '[' + value + sep + tail[1 : -1] + ']' 
     
     def simplify(self):
@@ -121,7 +111,8 @@ def length(a):
 
 def head(a):    
     if isinstance(a.simplify(), Object):
-         return a.simplify().state['head'].simplify()
+         value = a.simplify().state['head'].simplify()
+         return value
     if isinstance(a, Nil):
         return None
     if isinstance(a, Cons):

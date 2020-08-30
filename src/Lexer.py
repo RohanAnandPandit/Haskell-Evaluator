@@ -6,7 +6,7 @@ Created on Mon Jun 22 10:20:56 2020
 """
 import utils
 from utils import getData, operators
-from Types import Variable, Char
+from Types import Variable, Char, String
 from Operators import operatorFromString
 from HFunction import HFunction, Function, Lambda
 
@@ -49,28 +49,12 @@ class Lexer:
                 self.tokens.append(operatorFromString(op)) 
                         
     def addString(self):
-        from utils import convertToList
-        characters = []
-        while (True):
-            char = self.string[self.curr]
-            if (char == '"'):
-                if (len(characters) == 0):
-                    break
-                elif (characters[-1] != '\\'):
-                    break
-            if (len(characters) > 1):
-                if (characters[-1] == '\\'):
-                    del characters[-1]
-                    if (char == 'n'):
-                        char = '\n'
-                    elif (char == '"'):
-                        char = '"'
-                    elif (char == '\\'):
-                        char = '\\'
-            characters.append(Char(char))
-            self.curr += 1            
-        charList = convertToList(characters).simplify()
-        self.tokens.append(charList)
+        start = self.curr
+        while self.string[self.curr] != '"':
+            self.curr += 1
+        string = self.string[start : self.curr].replace('\\n', '\n')
+        string = string.replace('\\t', '\t')
+        self.tokens.append(String(string))
         self.curr += 1
     
     def addOperator(self, op):
@@ -100,7 +84,7 @@ class Lexer:
                     self.tokens.append(operatorFromString('*'))
         if op == '[':
             if len(self.tokens) > 0:
-                if (isinstance(self.tokens[-1], Variable) or 
+                if (isinstance(self.tokens[-1], (Variable, String)) or 
                     self.tokens[-1].name in ']})'):
                     self.tokens.append(operatorFromString('!!'))
                     
@@ -162,7 +146,8 @@ class Lexer:
       
         self.addData()
         self.addSpace(' ')
-        del self.tokens[-1]
+        if len(self.tokens) > 0:
+            del self.tokens[-1]
             
     def searchOperator(self, operators):
         max_length = max(map(len, operators))

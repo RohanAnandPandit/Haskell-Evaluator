@@ -10,9 +10,10 @@ from utils import typeNames, structNames, patternMatch
 from HFunction import HFunction, Composition, Function, Lambda, Func
 from List import List, Nil, Cons, Iterator, head, tail, Array
 from Tuple import Tuple
-from Types import Int, Float, Bool, Variable, Alias, Enum, EnumValue, Struct
-from Types import Class, Interface, Char, Module, Object
+from Types import (Int, Float, Bool, Variable, Alias, Enum, EnumValue, Struct,
+                   Class, Interface, Char, Module, Object, String)
 from Expression import BinaryExpr
+from math import *
 
 def assign(a, b, state = None):
     var, value = a, b
@@ -66,12 +67,15 @@ def assign(a, b, state = None):
             assign(var.rightExpr, value, state)
             
         if var.operator.name == '!!':
-            var.leftExpr.simplify().items[head(var.rightExpr).value] = value 
+            array = var.leftExpr.simplify()
+            value = value.simplify()
+            array.items[head(var.rightExpr).simplify().value] = value 
 
         if var.operator.name == ':':
-            assign(var.leftExpr, head(value), state)
+            value = value.simplify()
+            assign(var.leftExpr, head(value), state) 
             assign(var.rightExpr, tail(value), state)
-            return value
+            return Int(0)
         
         elif var.operator.name == '.':
             obj = var.leftExpr.simplify()
@@ -81,12 +85,10 @@ def assign(a, b, state = None):
             arguments = []
             args = var 
             while True:
-                if isinstance(args, Int):
-                    print('0')
                 arg = args.rightExpr 
                 arguments.insert(0, arg)
                 args = args.leftExpr
-                if (isinstance(args, (Variable, Nil, Cons, Tuple, Array)) or 
+                if (isinstance(args, (Variable, Nil, Cons, Tuple, Array, Class)) or 
                     utils.null(args)):
                     arguments.insert(0, args)
                     break
@@ -99,7 +101,7 @@ def assign(a, b, state = None):
                     assign(arguments[1], value, state)
                 return value
             
-            if (utils.null(arguments[0]) or 
+            if (utils.null(arguments[0].simplify()) or 
                 isinstance(arguments[0], (Nil, Cons, Tuple, Array)) or 
                 arguments[0].name in typeNames):
                 assign(arguments[1], value, state)
@@ -107,15 +109,31 @@ def assign(a, b, state = None):
             
             elif arguments[0].name in 'def':
                 name = arguments[1].name
-                if name == 'add':
-                    print('0')
+                
                 arguments = arguments[2:]
+                
+                for i in range(len(arguments)):
+                    if not (isinstance(arguments[i], BinaryExpr) and 
+                            arguments[i].operator.name in ' :'):
+                        arguments[i] = arguments[i].simplify()
+                
                 case = Lambda(name, arguments = arguments, expr = value)
                 if name != None:
-                    if name in state.keys():
-                        func = state[name]
-                        func.cases.append(case)
+                    if utils.in_class:
+                        if name in state.keys():
+                            func = state[name]
+                            func.cases.append(case)
+                            return case 
+                        else:
+                            func = Function(name, [case])
+                            state[name] = func
+                            functionNames.append(name) 
                     else:
+                        for state in frameStack[::-1]:
+                            if name in state.keys():
+                                func = state[name]
+                                func.cases.append(case)
+                                return case 
                         func = Function(name, [case])
                         state[name] = func
                         functionNames.append(name) 
@@ -140,22 +158,25 @@ def index(a, b):
         n = b.value
         if n < 0 or isinstance(a, Nil):
             return None
-        if isinstance(a, Cons):
+        if utils.isList(a):
             x, xs = head(a), tail(a) 
             if n == 0:
                 return x
             return index(xs, Int(n - 1))
         elif isinstance(a, Enum):
             return a.values[n]
-        elif isinstance(a, Tuple):
-            return a.tup[n]
+        elif isinstance(a, (Tuple, Array)):
+            return a.items[n]
         
     elif isinstance(b, Cons):
-        start, b = head(b), tail(b)
+        start, b = head(b).simplify(), tail(b)
         if isinstance(b, Nil):
-            return a.items[start.value]
+            return index(a, start)
         else:
-            end = head(b)
+            end = head(b).simplify()
+            if isinstance(a, String):
+                return String(a.value[start.value : end.value])
+
             return Array(a.items[start.value : end.value])
 
 def power(a, b):
@@ -273,7 +294,7 @@ def OR(a, b):
 
 def comma(a, b):
     if isinstance(a, Tuple):
-        return Tuple(a.tup + [b])
+        return Tuple(a.tup.append(b))
     return Tuple([a, b])
     
 def cons(a, b):
@@ -284,6 +305,8 @@ def cons(a, b):
 def concatenate(a, b): 
     from List import head, tail
     left, right = a, b
+    if isinstance(left, String):
+        return String(left.value + right.value)
     if isinstance(left, Nil):
         return right
     elif isinstance(right, Nil):
@@ -426,8 +449,11 @@ def bitwise_and(x, y):
     return Int(x.value & y.value)
 
 def access(a, b):
-    obj, field = a.simplify(), b       
-    return obj.state[field.name].simplify()
+    obj, field = a.simplify(), b
+    try:
+        return obj.state[field.name].simplify()
+    except:
+        print(0)
 
 def forLoop(n, expr):
     import utils
@@ -552,16 +578,15 @@ def ifStatement(cond, expr):
         return expr.simplify()
     return Int(None)
 
-def extends(subclass, constr):
-     superclass = constr.class_  
+def extends(subclass, superclass):
      subclass.state['super'] = superclass
      for name in superclass.state.keys():
          subclass.state[name] = superclass.state[name]
      return subclass
 
-def implements(subclass, interface):
-    subclass.interface = interface
-    return subclass
+def implements(class_, interface):
+    class_.interfaces.append(interface)
+    return class_
 
 def definition(name_var, args_tup, expr):
     name = name_var.name
@@ -766,12 +791,10 @@ def then_clause(cond, expr):
         return expr.simplify()
     return Int(None)
 
-def else_clause(cond, expr):
-    value = cond.simplify()
-    from Operator_Functions import equals
-    if equals(value, Int(None)).value:
-        return expr.simplify()
-    return value
+def else_clause(if_stat, expr):
+    if if_stat.leftExpr.rightExpr.simplify().value:
+        return if_stat.simplify()
+    return expr.simplify()
 
 def read_as(var, struct):
     return Alias(var, struct)
@@ -806,6 +829,12 @@ def match(a, b):
     return Bool(patternMatch(a, b))   
 
 def append(a, b):
+    if isinstance(a.simplify(), Object):
+        a.simplify().state['append'].apply(b)
+        return a.simplify()
     if isinstance(a, (Tuple, Array)):
         a.items.append(b)
     return a
+
+def python_eval(code):
+    return getData(str(eval(code.value)))

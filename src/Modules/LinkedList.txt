@@ -5,7 +5,7 @@ class LinkedListNode (
 		this.next = next
 	)
 	
-	def toString = show data ++ " -> (" ++ show next ++ ")"
+	def toString = show data ++ " -> " ++ show next
 )
 
 class LinkedList implements List (
@@ -20,7 +20,7 @@ class LinkedList implements List (
         this.back = back
     )
     
-	def add data = (
+	def append data = (
 		var node = LinkedListNode(data, ?)
 		if (front == ?) (
 			this.front = node
@@ -41,6 +41,11 @@ class LinkedList implements List (
 	
 	def tail = front.next
 
+    def cons data = (
+        node = LinkedListNode(data, front)
+        front = node
+    )
+     
 	def toString = show front
 )
 

@@ -5,21 +5,85 @@ interface List (
 
 def head [] = ?
 def head (x:_) = x
-def head (_:xs) = xs
+def tail (_:xs) = xs
 
 def len [] = 0
-def len (_:xs) = 1 + len xs 
+def len (x:xs) = 1 + len xs 
 
-def take (int _) [] = []
-def take 0 xs = []
-def take (int n) (x:xs) = x : take (n - 1) xs
+class Take implements List (
+
+    def init(int n, [] list) = (
+        this.n = n; this.list = list
+    )    
+    
+    def head = (
+        if (n > 0) (
+            x:_ = list
+            return x
+        )
+        return ?
+    ) 
+    
+    def tail = (
+        if (n == 0) (return [])
+        _:xs = list
+        return (Take(n - 1, xs))
+    )
+
+    def toString = (
+        if (list == []) (return "[]")
+        string str = "["
+        xs = list
+        for (int i; i < n; i += 1) (
+            x:xs = xs
+            str = str ++ show x 
+            if (i < n - 1) (str = str ++ ", ")
+        )
+        return (str ++ "]")
+    )
+    
+    def equals xs = list == xs 
+)
+
+def take (int n) ([] xs) = Take(n, xs) 
 
 def drop (int _) [] = []
 def drop 0 xs = xs
 def drop (int n) (x:xs) = drop (n - 1) xs
 
-def map (Func _) [] = []
-def map (Func func) (x:xs) = func x : map func xs 
+class Map implements List (
+
+    def init(Func func, [] list) = (
+        this.func = func; this.list = list
+    )    
+    
+    def head = (
+        x:_ = list
+        return (func x)
+    ) 
+    
+    def tail = (
+        _:xs = list
+        return (Map(func, xs))
+    )
+
+    def toString = (
+        string str = "["
+        xs = list
+        while (xs != []) (
+            x:xs = xs
+            str = str ++ show (func x)
+            if (xs != []) (
+                str = str ++ ", "
+            )
+        )
+        return (str ++ "]")
+    )
+    
+    def equals xs = list == xs 
+)
+
+def map (Func func) ([] xs) = Map(func, xs)
 
 def max ([] xs) = foldl max 0 xs 
 
@@ -45,10 +109,6 @@ def foldl (Func func) u (x:xs) = foldl func (func u x) xs
 
 def foldl1 (Func func) (x:y:xs) = foldl func (func x y) xs 
 
-def zip [] ([] ys) = []
-def zip ([] xs) [] = []
-def zip (x:xs) (y:ys) = (x, y) : zip xs ys 
-
 def elem x [] = False
 def elem x (y:ys) = x == y || elem x ys
 
@@ -68,14 +128,132 @@ def dropwhile (Func func) (x:xs) = (
 	return (x:xs)
 )
 
-def filter (Func func) [] = []
-def filter (Func func) (x:xs) = (
-	if (func x) (
-		return (x : filter func xs)
-	)
-	return (filter func xs)
+class Filter implements List (
+
+    def init(Func func, [] list) = (
+        this.func = func; this.list = list
+    )    
+    
+    def head = (
+        x:_ = list
+        if (func x) (return x)
+        (x:xs) = this.list
+        while (not (this.func x)) (
+            if (xs == []) (return ?)
+            x:xs = xs
+        )
+        this.list = x:xs
+        return x
+    ) 
+    
+    def tail = (
+        (x:xs) = this.list
+        x:xs = xs
+        while (not (this.func x)) (
+            if (xs == []) (return [])
+            x:xs = xs
+        )
+        return (Filter(this.func, x:xs))
+    )
+
+    def equals xs = list == xs 
 )
 
-def zipwith (Func _) [] ([] ys) = []
-def zipwith (Func _) ([] xs) [] = []
-def zipwith (Func func) (x:xs) (y:ys) = func x y : zipwith func xs ys
+def filter (Func func) ([] xs) = Filter(func, xs)
+
+class ZipWith implements List (
+
+    def init(Func func, [] xs, [] ys) = (
+        this.func = func; this.xs = xs; this.ys = ys
+    )    
+    
+    def head = (
+        if (xs == [] || ys == []) (
+            return ?
+        )
+        x:_ = xs; y:_ = ys
+        return (func x y)
+    ) 
+    
+    def tail = (
+        if (xs == [] || ys == []) (
+            return []
+        )
+        _:xs' = xs; _:ys' = ys
+        return (ZipWith(func, xs', ys'))
+    )
+
+    def toString = (
+        string str = "["
+        var xs' = xs; var ys' = ys 
+        while (xs' != [] && ys' != []) (
+            x:xs' = xs'; y:ys' = ys'
+            str = str ++ show (func x y)
+            if (xs' != [] && ys' != []) (str = str ++ ", ")
+        )
+        return (str ++ "]")
+    )
+    
+    def equals xs = list == xs 
+)
+
+def zipwith (Func func) ([] xs) ([] ys) = ZipWith(func, xs, ys)
+
+def zip ([] xs) ([] ys) = ZipWith((\x y -> (x, y)), xs, ys)
+
+class Iterate implements List (
+
+	def init(Func func, ? seed) = (
+		this.func = func
+		this.seed = seed
+		this.first = True
+	)
+
+	def init(Func func, ? seed, bool first) = (
+		this.func = func
+		this.seed = seed
+		this.first = first
+	)
+
+	def head = (
+		if first (return seed)
+		this.seed = func seed
+		return seed
+	)
+	
+	def tail = Iterate(func, (func seed), False)
+
+	def toString = "[" ++ show this.seed ++ ".." ++ show func ++ " n" ++ "]"
+)
+
+def iterate (Func func) (? value) = Iterate(func, value) 
+
+class Cycle implements List (
+
+	def init([] list, [] curr) = (
+		this.list = list
+		this.curr = curr
+	)
+
+	def init([] list) = (
+		this.list = list
+		this.curr = list
+	)
+	
+	def head = (
+		x:_ = curr
+		return x
+	)
+	
+	def tail = (
+    	_:xs = curr
+    	if (xs == []) (
+        	return (Cycle(list, list))
+    	)
+    	return (Cycle(list, xs))
+	)
+	
+	def toString = "cycle " ++ show this.list
+)
+
+def cycle ([] xs) = Cycle(xs)

@@ -7,7 +7,7 @@ Created on Mon Jun 22 11:24:28 2020
 import IO
 import Prelude
 from Types import (Variable, Int, Float, Bool, EnumValue, Object, Structure,
-                   Char, Type, Class, Struct)
+                   Char, Type, Class, Struct, String)
 from List import Nil, Cons, head, tail, Range, Array, List
 from Tuple import functionNamesTuple, Tuple
 from HFunction import Func
@@ -22,7 +22,7 @@ functional_mode = False
 frameStack = [builtInState]
 enumNames = []
 typeNames = ['int', 'float', 'char', 'bool', 'var', 'Num', 'global', 'local',
-             'hidden', 'Func', 'Object', 'Type']
+             'hidden', 'Func', 'Object', 'Type', 'string']
 structNames = []
 operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
              '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
@@ -42,6 +42,7 @@ continueLoop = 0
 breakLoop = 0
 return_value = None
 functionNames = []
+in_class = False
 '''
 functionNames += Prelude.functionNamesPrelude
 functionNames += List.functionNamesList 
@@ -58,7 +59,7 @@ lazy_eval = ('=', '->', 'where', '|', '.', '\n', ';', '+=', '-=', '*=', '/=',
              'class', 'interface', 'def', 'switch', 'if', 'let', 'import',
              'do', 'int', 'float', 'char', 'bool', 'from', 'type', 'union',
              'where', 'in', 'global', 'local', 'hidden', 'match', '||', '&&')
-
+ 
 def getData(exp):
     if isPrimitive(exp): 
         return exp
@@ -71,20 +72,29 @@ def getData(exp):
         pass
 
     if exp == 'True':
-        return Bool(True)
+        return Bool(True) 
     elif exp == 'False':
-        return Bool(False)
+        return Bool(False) 
     if exp in '?':
-        return Int(None)
+        return Int(None) 
     
     from Types import Variable
     return Variable(exp)
 
 def isPrimitive(expr):
-    return type(expr) in [Int, Float, Bool, Char, EnumValue]
+    return type(expr) in [Int, Float, Bool, Char, String, EnumValue]
 
 def null(expr):
     return isinstance(expr, Int) and expr.value == None
+
+def isList(expr):
+    if issubclass(type(expr), List):
+        return True
+    if isinstance(expr, Object):
+        for interface in expr.class_.interfaces:
+            if interface.name == 'List':
+                return True
+    return False
 
 def evaluate(exp):  
     from Lexer import Lexer
@@ -168,7 +178,7 @@ def patternMatch(expr1, expr2):
 
 def typeMatch(type_, expr):
     from Types import Type, Union
-    if null(type_) or null(expr):
+    if null(type_.simplify()) or null(expr.simplify()):
         return True
     
     if isinstance(type_, Variable):
@@ -202,7 +212,7 @@ def typeMatch(type_, expr):
         elif issubclass(type(expr), Func):
             return type_.name == 'Func'
 
-    elif isinstance(type_, Nil) and issubclass(type(expr), List):
+    elif isinstance(type_, Nil) and isList(expr):
         return True
     
     elif isinstance(type_, Cons) and isinstance(expr, Cons):

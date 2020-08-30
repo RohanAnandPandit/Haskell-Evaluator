@@ -30,7 +30,10 @@ class BinaryExpr:
         if self.leftExpr == None:
             buf += '?'
         else:
-            buf += str(self.leftExpr)
+            try:
+                buf += str(self.leftExpr)
+            except:
+                print(self.leftExpr)
         string = self.operator.name
         buf += ' ' + string
         if string != ' ':

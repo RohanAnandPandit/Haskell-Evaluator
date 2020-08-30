@@ -74,6 +74,17 @@ class Char:
     def __str__(self):
         return "'" + str(self.value) + "'"
 
+class String:
+    def __init__(self, value):
+        self.type = 'string'
+        self.value = value
+    
+    def simplify(self):
+        return self
+    
+    def __str__(self):
+        return self.value
+
 class Alias:
     def __init__(self, var, expr):
         self.var = var
@@ -168,8 +179,9 @@ class Structure:
 class Class(Func):
     def __init__(self, name):
         self.name = 'class ' + name
-        self.state = {'this' : self} 
-        self.interface = None
+        self.state = {'this' : self}
+        self.parent_classes = []
+        self.interfaces = []
         self.private = self.public = self.hidden = []
         self.isConstructor = False
 
@@ -180,7 +192,9 @@ class Class(Func):
             self.isConstructor = True
             self.name = self.name.split(' ')[1]
             utils.frameStack.append(self.state)
+            utils.in_class = True
             methods.simplify()
+            utils.in_class = False
             utils.frameStack.pop(-1)
             utils.typeNames.append(self.name)
             utils.functionNames.append(self.name)
@@ -215,8 +229,7 @@ class Method(Func):
     
     def apply(self, arg1 = None, arg2 = None):
         from utils import frameStack
-        state = self.obj.state
-        frameStack.append(state)
+        frameStack.append(self.obj.state)
         value = self.func.apply(arg1, arg2)
         frameStack.pop(-1)
         if issubclass(type(value), Func):
@@ -255,8 +268,11 @@ class Interface:
         self.name = name
         state = {}
         from utils import frameStack
+        import utils
         frameStack.append(state)
+        utils.in_class = True
         declarationExpr.simplify()
+        utils.in_class = False
         frameStack.pop(-1) 
         self.methods = state.keys()
     
@@ -273,7 +289,8 @@ class Module:
         import utils
         utils.frameStack.append(self.state)
         utils.evaluate(code) 
-        #utils.frameStack.pop(-1)
+        utils.frameStack.pop(-1)
+        utils.frameStack[-1].update(self.state)
     
     def simplify(self):
         return self

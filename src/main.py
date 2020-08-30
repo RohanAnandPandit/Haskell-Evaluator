@@ -10,6 +10,8 @@ from Operators import initialiseFunctions
 import tkinter as tk
 import ctypes
 import os
+from math import *
+
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(1)
 except:
@@ -30,7 +32,7 @@ def commandLine():
             continue
         elif (string == '$ide'):
             ide()
-        value = utils.evaluate(string)
+        value = utils.evaluate(string) 
         if (value != None):
             print(value)
     

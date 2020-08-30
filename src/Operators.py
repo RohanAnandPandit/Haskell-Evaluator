@@ -289,6 +289,8 @@ def initialiseFunctions(state):
                                  op_func.make_hidden, 1, 'hidden') 
     state['match'] = HFunction(8, Associativity.LEFT,
                                  op_func.match, 2, 'match') 
+    state['py'] = HFunction(8, Associativity.LEFT,
+                                 op_func.python_eval, 1, 'py') 
     utils.evaluate('import Prelude')
     
 class Op:

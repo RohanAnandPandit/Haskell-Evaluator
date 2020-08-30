@@ -1,3 +1,9 @@
 def fst(x, _) = x
 def snd(_, y) = y
 def swap(x, y) = (y, x)
+
+def len (() tup) = (
+    int length
+    for _ in tup (length += 1)
+    return length
+)

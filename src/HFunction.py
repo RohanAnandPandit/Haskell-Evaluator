@@ -27,7 +27,7 @@ class HFunction(Func):
         noOfArgs = self.noOfArgs 
         name = self.name 
         if arg1 != None:
-            name += ' ' + str(arg1)
+            #name += ' ' + str(arg1)
             if self.noOfArgs == 1:
                 return func(arg1)
             
@@ -36,7 +36,7 @@ class HFunction(Func):
             self.inputs.append(arg1)
             
         if arg2 != None or self.name == '..':
-            name += ' ' + str(arg2)
+            #name += ' ' + str(arg2)
             if (noOfArgs == 1):
                 return func(arg2)
 
@@ -128,7 +128,7 @@ class Function(Func):
             if len(arguments) == len(inputs):
                 if self.matchCase(arguments, inputs):
                     for i in range(len(arguments)):
-                        case = case.apply(inputs[i]) 
+                        case = case.apply(inputs[i].simplify()) 
                     if case == None:
                         continue
                     return case.simplify()
