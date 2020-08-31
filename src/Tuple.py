@@ -17,11 +17,16 @@ class Tuple:
         return Tuple(list(map(lambda expr: replaceVariables(expr), self.tup)))
     
     def __str__(self):
-        import utils 
         from Expression import BinaryExpr
         tup = []
         for item in self.tup:
             value = item
+            if not (isinstance(value, BinaryExpr) and 
+                    value.operator.name == ' '):
+                try:
+                    value = value.simplify()
+                except:
+                    pass
             tup.append(str(value))
         string = ', '.join(tup)
         if len(tup) == 1:

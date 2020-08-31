@@ -50,22 +50,23 @@ def createCollection(operators, operands):
             expr = Collection([right], operator)
         else:
             expr = Collection([left, right], operator)
+            
     pushOperand(expr, operands, operators)
 
 def addOperator(current, operands, operators):
     topOperator = operators.peek()
     # Checks if a BinaryExpr should be created using the operator on the 
     # top of the stack
-    while topOperator != None:
-        if (topOperator.precedence > current.precedence
+    while topOperator != None:            
+        if (topOperator.precedence == current.precedence
+              and current.associativity == topOperator.associativity == 
+              Associativity.NONE or current.name == ','):
+            createCollection(operators, operands)
+        elif (topOperator.precedence > current.precedence
             or topOperator.precedence == current.precedence 
                 and topOperator.associativity == Associativity.LEFT):
             createExpression(operators, operands)
-            
-        elif (topOperator.precedence == current.precedence
-              and current.associativity == topOperator.associativity == 
-              Associativity.NONE):
-            createCollection(operators, operands)
+
         else:
             break
         topOperator = operators.peek()
@@ -113,7 +114,8 @@ def parse(lexer, infix = False):
             elif token.name == ')':
                 remaining(operands, operators)
                 result = operands.pop()
-                if isinstance(result, Collection) and result.operator.name == ',':
+                if (isinstance(result, Collection) and 
+                    result.operator.name == ','):
                     result = Tuple(result.items)
                 return result
             
@@ -129,7 +131,8 @@ def parse(lexer, infix = False):
             elif token.name == ']':
                 remaining(operands, operators)
                 result = operands.pop()
-                if isinstance(result, Collection) and result.operator.name == ',':
+                if (isinstance(result, Collection) and 
+                    result.operator.name == ','):
                     result = convertToList(result.items)
                 else:
                     result = convertToList([result])
@@ -147,7 +150,8 @@ def parse(lexer, infix = False):
             elif token.name == '}':
                 remaining(operands, operators)
                 result = operands.pop()
-                if isinstance(result, Collection) and result.operator.name == ',':
+                if (isinstance(result, Collection) and 
+                    result.operator.name == ','):
                     result = Array(result.items)
                 else:
                     result = Array([result])

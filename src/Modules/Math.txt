@@ -107,10 +107,13 @@ i = Complex(0, 1)
 
 
 fact = product~(1..)
-def fib n = y where (int x = 0; int y = 1; for n ((x, y) = (y, x + y))) 
 
-def collatz n = takewhile (!= 1) (
-                    iterate (\x -> switch (x%2) (0 => (x/2); 1 => (3x+1))) n)
+def fib 0 = 0
+def fib n = y where (int x; int y = 1; for n ((x, y) = (y, x + y))) 
+
+fibs = iterate2 (+) 0 1 
+
+collatz = (takewhile (!= 1))~(iterate (\x -> switch (x%2) (0 => (x/2); 1 => (3x+1))))
 
 def ln e = 1
 def ln x = py ("log(" ++ show x ++ ")")

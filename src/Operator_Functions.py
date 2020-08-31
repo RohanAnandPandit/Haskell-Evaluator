@@ -400,7 +400,7 @@ def createOperator(symbol, precedence, associativity, func):
                         'none' : Associativity.NONE}
     precedence = precedence.value
     associativity = associativityMap[associativity.name]
-    symbol = str(symbol)[1:-1]
+    symbol = str(symbol)
     operators.append(symbol) 
     func = func.simplify().apply(None, None)
     func.name = symbol

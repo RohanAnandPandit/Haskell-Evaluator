@@ -250,7 +250,7 @@ def iterate (Func func) (? value) = Iterate(func, value)
 
 class Iterate2 implements List (
 
-	def init(? first, ? second, ? func) = (
+	def init(? func, first, ? second) = (
 		this.first = first
 		this.second = second
 		this.func = func
@@ -258,7 +258,7 @@ class Iterate2 implements List (
 	)
 	
 	def init(? func, ? first, ? second, int n) = (
-		init(first, second, func)
+		init(func, first, second)
 		this.n = n
 	)
 	
@@ -349,3 +349,4 @@ class Cycle implements List (
 )
 
 def cycle ([] xs) = Cycle(xs)
+

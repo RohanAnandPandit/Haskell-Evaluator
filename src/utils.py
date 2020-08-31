@@ -108,7 +108,7 @@ def evaluate(exp):
     #lexer.printTokens() 
     expr = parse(lexer)
     #expr = optimise(expr)
-    #print("expression : ", str(expr)) 
+    print("expression : ", str(expr)) 
     #print("result : ", end = '')
     #try:
     return expr.simplify()

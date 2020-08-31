@@ -34,4 +34,6 @@ def min x y = (
 def head (Object obj) = obj.head
 def tail (Object obj) = obj.tail
 
+oper "^^" 5 left (\x y -> z where (var z = x; for y (z = x ^ z)))
+#EVAL#
 
