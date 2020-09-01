@@ -17,14 +17,51 @@ class Variable:
         from utils import frameStack
         for curr in frameStack[::-1]:
             if self.name in curr.keys():
-                return curr[self.name].simplify()
+                try:
+                    return curr[self.name].simplify()
+                except:
+                    print('variable')
         #raise Exception('Variable', self.name, 'is not defined') 
         return self
     
     def __str__(self):
         return self.name
 
+class Type(Func):
+    def __init__(self, name, expr = None):
+        self.name = name
+        self.expr = expr
     
+    def simplify(self):
+        return self
+    
+    def apply(self, var):
+        from Operator_Functions import (defaultInt, defaultFloat, defaultBool,
+                                        defaultChar)
+        if self.name == 'int':
+            return defaultInt(var)
+        elif self.name == 'float':
+            return defaultFloat(var)
+        elif self.name == 'bool':
+            return defaultBool(var)
+        elif self.name == 'char':
+            return defaultChar(var)
+        
+        return Int(None)
+    
+    def __str__(self):
+        return str(self.expr)
+    
+class Null:
+    def __init__(self):
+        self.value = None
+        
+    def __str__(self):
+        return '?'
+    
+    def simplify(self):
+        return self
+
 class Int:
     def __init__(self, value):
         self.type = 'int'
@@ -298,31 +335,6 @@ class Module:
     def __str__(self):
         return self.name
         
-
-class Type(Func):
-    def __init__(self, name, expr = None):
-        self.name = name
-        self.expr = expr
-    
-    def simplify(self):
-        return self
-    
-    def apply(self, var):
-        from Operator_Functions import (defaultInt, defaultFloat, defaultBool,
-                                        defaultChar)
-        if self.name == 'int':
-            return defaultInt(var)
-        elif self.name == 'float':
-            return defaultFloat(var)
-        elif self.name == 'bool':
-            return defaultBool(var)
-        elif self.name == 'char':
-            return defaultChar(var)
-        
-        return Int(None)
-    
-    def __str__(self):
-        return str(self.expr)
     
 class Union:
     def __init__(self, types):

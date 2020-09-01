@@ -7,7 +7,7 @@ Created on Mon Jun 22 11:24:28 2020
 import IO
 import Prelude
 from Types import (Variable, Int, Float, Bool, EnumValue, Object, Structure,
-                   Char, Type, Class, Struct, String)
+                   Char, Type, Class, Struct, String, Null)
 from List import Nil, Cons, head, tail, Range, Array, List
 from Tuple import functionNamesTuple, Tuple
 from HFunction import Func
@@ -78,16 +78,16 @@ def getData(exp):
     elif exp == 'False':
         return Bool(False) 
     if exp in '?':
-        return Int(None) 
+        return Null() 
     
     from Types import Variable
     return Variable(exp)
 
 def isPrimitive(expr):
-    return type(expr) in [Int, Float, Bool, Char, String, EnumValue]
+    return type(expr) in [Int, Float, Bool, Char, String, EnumValue, Null]
 
 def null(expr):
-    return isinstance(expr, Int) and expr.value == None
+    return isinstance(expr, Null)
 
 def isList(expr):
     if issubclass(type(expr), List):
@@ -108,7 +108,7 @@ def evaluate(exp):
     #lexer.printTokens() 
     expr = parse(lexer)
     #expr = optimise(expr)
-    print("expression : ", str(expr)) 
+    #print("expression : ", str(expr)) 
     #print("result : ", end = '')
     #try:
     return expr.simplify()

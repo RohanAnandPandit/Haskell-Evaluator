@@ -17,6 +17,7 @@ class Take implements List (
     )    
     
     def head = (
+        if (list == []) (return ?)
         if (n > 0) (
             x:_ = list
             return x
@@ -27,25 +28,26 @@ class Take implements List (
     def tail = (
         if (n == 0) (return [])
         _:xs = list
+        print(xs)
         return (Take(n - 1, xs))
     )
 
     def toString = (
         if (list == []) (return "[]")
         string str = "["
-        xs = list
-        for (int i; i < n; i += 1) (
+        var xs = list
+        for (int i; i < n && xs != []; i += 1) (
             x:xs = xs
             str = str ++ show x 
             if (i < n - 1) (str = str ++ ", ")
         )
         return (str ++ "]")
     )
-    
-    def equals xs = list == xs 
 )
 
-def take (int n) ([] xs) = Take(n, xs) 
+def take 0 ([] _) = []
+def take (int _) [] = []
+def take (int n) ([] xs) = Take(n, xs)
 
 def drop (int _) [] = []
 def drop 0 xs = xs
@@ -83,6 +85,7 @@ class Map implements List (
     def equals xs = list == xs 
 )
 
+def map (Func _) [] = []
 def map (Func func) ([] xs) = Map(func, xs)
 
 def max ([] xs) = foldl max 0 xs 
@@ -127,11 +130,11 @@ class TakeWhile implements List (
     ) 
     
     def tail = (
-        _:xs = list
-        if (not (null head)) (
-             return (TakeWhile(cond, xs))
+        x:xs = list
+        if (not (cond x)) (
+             return []
         )
-        return []
+        return (TakeWhile(cond, xs))
     )
 
     def toString = (
@@ -146,7 +149,6 @@ class TakeWhile implements List (
         return (str ++ "]")
     )
     
-    def equals xs = list == xs 
 )
 
 def takewhile (Func func) ([] xs) = TakeWhile(func, xs)
@@ -168,7 +170,7 @@ class Filter implements List (
     def head = (
         x:_ = list
         if (func x) (return x)
-        (x:xs) = list
+        x:xs = list
         while (not (func x)) (
             if (xs == []) (return ?)
             x:xs = xs
@@ -184,7 +186,7 @@ class Filter implements List (
             if (xs == []) (return [])
             x:xs = xs
         )
-        return (Filter(this.func, x:xs))
+        return (filter this.func (x:xs))
     )
 
     def equals xs = list == xs 
@@ -211,7 +213,7 @@ class ZipWith implements List (
             return []
         )
         _:xs' = xs; _:ys' = ys
-        return (ZipWith(func, xs', ys'))
+        return (zipwith func xs' ys')
     )
 
     def toString = (
@@ -240,7 +242,7 @@ class Iterate implements List (
 
 	def head = seed
 
-	def tail = Iterate(func, (func seed))
+	def tail = iterate func (func seed)
 
 	def toString = "[" ++ show this.seed ++ ".." ++ show func ++ " n" ++ "]"
 )
@@ -250,7 +252,7 @@ def iterate (Func func) (? value) = Iterate(func, value)
 
 class Iterate2 implements List (
 
-	def init(? func, first, ? second) = (
+	def init(? func, ? first, ? second) = (
 		this.first = first
 		this.second = second
 		this.func = func
@@ -273,7 +275,7 @@ class Iterate2 implements List (
 	def tail = (
         switch n (
         	0 -> _
-        	1 => Iterate2(func, first, second, n + 1)
+        	1 => Iterate2(func, first, second, (n + 1))
         	otherwise => Iterate2(func, second, head, 2)
     	)
 	)
@@ -311,7 +313,7 @@ class Iterate3 implements List (
         switch n (
         	0 -> _
         	1 -> _
-        	2 -> Iterate3(func, first, second, third, n + 1)
+        	2 -> iterate3 func first second third (n + 1)
         	otherwise => Iterate3(func, second, third, head, 3)
     	)
 	)
@@ -341,7 +343,7 @@ class Cycle implements List (
 	
 	def tail = (
     	_:xs = curr
-    	if (xs == []) (return (Cycle(list, list)))
+    	if (xs == []) (return (cycle list))
     	return (Cycle(list, xs))
 	)
 	
@@ -350,3 +352,4 @@ class Cycle implements List (
 
 def cycle ([] xs) = Cycle(xs)
 
+def range (Num start) (Num end) = takewhile (<= end) (iterate (+1) start)

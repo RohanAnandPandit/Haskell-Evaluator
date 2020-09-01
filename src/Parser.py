@@ -60,8 +60,9 @@ def addOperator(current, operands, operators):
     while topOperator != None:            
         if (topOperator.precedence == current.precedence
               and current.associativity == topOperator.associativity == 
-              Associativity.NONE or current.name == ','):
+              Associativity.NONE):
             createCollection(operators, operands)
+            
         elif (topOperator.precedence > current.precedence
             or topOperator.precedence == current.precedence 
                 and topOperator.associativity == Associativity.LEFT):

@@ -4,8 +4,6 @@ Created on Tue Jun 23 08:58:06 2020
 
 @author: rohan
 """
-from functools import partial
-
 class Func:
     pass
 
@@ -17,41 +15,55 @@ class HFunction(Func):
         self.associativity = associativity 
         self.func = func
         self.noOfArgs = noOfArgs
-        self.inputs =  inputs
-        
+        self.inputs = inputs
+    
+    def execute(self, inputs):
+        if (self.noOfArgs - len(inputs)) == 0:
+            for arg in inputs:
+                if not arg:
+                    return False
+            return True
+        return False
+    
     def apply(self, arg1 = None, arg2 = None):
-        if self.noOfArgs == 0:
-            return self.func()
+        inputs = self.inputs.copy()
+        if arg1:
+            if len(inputs) > 1: 
+                if not inputs[-2]:
+                    inputs[-2] = arg1
+                else:
+                    inputs.append(arg1)
+            else:
+                inputs.append(arg1)
+            if arg2:
+                inputs.append(arg2)
+        elif arg2:
+            inputs.append(None)
+            inputs.append(arg2)
             
-        func = self.func
-        noOfArgs = self.noOfArgs 
-        name = self.name 
-        if arg1 != None:
-            #name += ' ' + str(arg1)
-            if self.noOfArgs == 1:
-                return func(arg1)
-            
-            func = partial(func, arg1)
-            noOfArgs -= 1
-            self.inputs.append(arg1)
-            
-        if arg2 != None or self.name == '..':
-            #name += ' ' + str(arg2)
-            if (noOfArgs == 1):
-                return func(arg2)
-
-            func = partial(func, b = arg2)
-            noOfArgs -= 1
-            self.inputs.append(arg2)
-            
-        return HFunction(self.precedence, self.associativity, func, noOfArgs,
-                         name, self.inputs) 
+        if self.execute(inputs):
+            return self.call(inputs)
+        
+        return HFunction(self.precedence, self.associativity, self.func, 
+                         self.noOfArgs, self.name, inputs) 
     
     def simplify(self):
-        if (self.noOfArgs == 0):
+        if self.execute(self.inputs):
             return self.func()
         return self
     
+    def call(self, inputs):
+        if self.noOfArgs == 1:
+            return self.func(inputs[0])
+        if self.noOfArgs == 2:
+            return self.func(inputs[0], inputs[1])
+        if self.noOfArgs == 3:
+            return self.func(inputs[0], inputs[1], inputs[2])
+        if self.noOfArgs == 4:
+            return self.func(inputs[0], inputs[1],
+                             inputs[2], inputs[3])
+
+        
     def __str__(self):
         # + ' ' + ' '.join(list(map(str, self.inputs)))
         return self.name

@@ -251,8 +251,6 @@ def initialiseFunctions(state):
                              op_func.breakCurrentLoop, 0, 'break')
     state['let'] = HFunction(8, Associativity.LEFT, 
                              op_func.let, 2, 'let')
-    state['range'] = HFunction(8, Associativity.LEFT, 
-                     op_func.range_specifier, 1, 'range')
     state['import'] = HFunction(8, Associativity.LEFT,
                          op_func.import_module, 1, 'import')
     state['from'] = HFunction(8, Associativity.LEFT, 

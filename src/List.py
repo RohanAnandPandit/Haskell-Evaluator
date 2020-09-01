@@ -5,7 +5,7 @@ Created on Tue Jun 23 20:381 2020
 @author: rohan
 """
 from Tuple import Tuple
-from Types import Int, Char, Bool, Object
+from Types import Int, Bool, Object, Null
 
 functionNamesList = ['length', 'head', 'tail', 'last', 'concat', 'init',
                      'maximum', 'minimum', 'elem', 'notElem', 'reverse',
@@ -114,7 +114,7 @@ def head(a):
          value = a.simplify().state['head'].simplify()
          return value
     if isinstance(a, Nil):
-        return None
+        return Null()
     if isinstance(a, Cons):
         return a.item
     elif isinstance(a, Range):
@@ -124,7 +124,7 @@ def tail(a):
     if isinstance(a.simplify(), Object):
          return a.simplify().state['tail'].simplify()
     if isinstance(a, Nil):
-        return None
+        return Null()
     if isinstance(a, Cons):
         return a.tail
     elif isinstance(a, Range):

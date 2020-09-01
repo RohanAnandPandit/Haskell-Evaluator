@@ -10,7 +10,7 @@ def cos angle = py ("cos(" ++ show angle ++ ")")
 
 sqrt = (^ 0.5)
 
-class Complex (
+class complex (
 
 	def init(Num real, Num imag) = (
 		this.real = real
@@ -21,7 +21,9 @@ class Complex (
     	init(mod * py ("cos(" ++ show arg ++ ")"),
         	 mod * py ("sin(" ++ show arg ++ ")"))
 	)
-		
+
+    def init(Num real) = init(real, 0)
+    
 	def toString = (
     	if (real == imag == 0) (return "0")
     	string str = ""
@@ -51,18 +53,18 @@ class Complex (
 		
 	)
 
-	def add (Complex num) = Complex(real + num.real, imag + num.imag)
-	def add num = Complex(real + num, imag)
+	def add (complex num) = complex(real + num.real, imag + num.imag)
+	def add num = complex(real + num, imag)
 
-	def sub (Complex num) = Complex(real - num.real, imag - num.imag)
-	def sub (Num n) = Complex(real - n, imag)
+	def sub (complex num) = complex(real - num.real, imag - num.imag)
+	def sub (Num n) = complex(real - n, imag)
 
-	def mul (Complex c) = (
-		Complex(real * c.real - imag * c.imag,
+	def mul (complex c) = (
+		complex(real * c.real - imag * c.imag,
 			    real * c.imag + imag * c.real)
 	)
 
-	def mul (Num n) = Complex(real * n, imag * n)
+	def mul (Num n) = complex(real * n, imag * n)
 	
 	def pow(int n) = (
     	var c = 1
@@ -75,21 +77,21 @@ class Complex (
 	def pow(Num n) = (
 		var mod = modulus
 		var arg = argument
-		return (Complex("mod-arg", mod ^ n, arg * n))
+		return (complex("mod-arg", mod ^ n, arg * n))
 	)
 
-	def pow(Complex num) = (
+	def pow(complex num) = (
     	var a = real; var b = imag
     	var c = num.real; var d = num.imag
 		var arg = argument
 		var r = e ^ (0.5c * ln(a ^ 2 + b ^ 2) - d * arg)
-		var arg = c * arg + 0.5d * ln(a ^ 2 + b ^ 2)
-		return (Complex(r * cos(arg), r * sin(arg)))
+		arg = c * arg + 0.5d * ln(a ^ 2 + b ^ 2)
+		return (complex(r * cos(arg), r * sin(arg)))
 	)
 
-	def conjugate = Complex (real, 0-imag)
+	def conjugate = complex (real, 0-imag)
 	
-	def equals(Complex c) = c.real == real && c.imag == imag
+	def equals(complex c) = c.real == real && c.imag == imag
 	def equals(Num n) = real == n && imag == 0
 	
 	def modulus = sqrt(real ^ 2 + imag ^ 2)
@@ -103,15 +105,15 @@ class Complex (
 	
 )
 
-i = Complex(0, 1)
+i = complex(0, 1)
 
 
 fact = product~(1..)
 
-def fib 0 = 0
-def fib n = y where (int x; int y = 1; for n ((x, y) = (y, x + y))) 
-
 fibs = iterate2 (+) 0 1 
+
+def fib 0 = 0
+def fib n = y where (int x; int y = 1; for n ((x, y) = (y, x + y)))
 
 collatz = (takewhile (!= 1))~(iterate (\x -> switch (x%2) (0 => (x/2); 1 => (3x+1))))
 

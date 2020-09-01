@@ -11,7 +11,7 @@ from HFunction import HFunction, Composition, Function, Lambda, Func
 from List import List, Nil, Cons, Iterator, head, tail, Array
 from Tuple import Tuple
 from Types import (Int, Float, Bool, Variable, Alias, Enum, EnumValue, Struct,
-                   Class, Interface, Char, Module, Object, String)
+                   Class, Interface, Char, Module, Object, String, Null)
 from Expression import BinaryExpr
 from math import *
 
@@ -22,14 +22,16 @@ def assign(a, b, state = None):
  
     if isinstance(var, Variable):
         if var.name == '_ ...': return
-        
-        value = b.simplify()
+        try:
+            value = b.simplify()
+        except:
+            print(0)
         if utils.functional_mode:
-            if var.name in state.keys():
+            if var.name in list(state.keys()):
                 raise Exception('Cannot assign variable',
                                 var.name, 'in FUNCTIONAL-MODE.')
         if utils.static_mode:
-            if var.name in state.keys():
+            if var.name in list(state.keys()):
                 varType = type(state[var.name])
                 valType = type(value)
                 if varType != valType:
@@ -40,7 +42,7 @@ def assign(a, b, state = None):
                                     'in STATIC-MODE.') 
         if state == None:
             for curr in frameStack[::-1]: 
-                if var.name in curr.keys():
+                if var.name in list(curr.keys()):
                     curr[var.name] = value 
                     return
             state = frameStack[-1]
@@ -120,7 +122,7 @@ def assign(a, b, state = None):
                 case = Lambda(name, arguments = arguments, expr = value)
                 if name != None:
                     if utils.in_class:
-                        if name in state.keys():
+                        if name in list(state.keys()):
                             func = state[name]
                             func.cases.append(case)
                             return case 
@@ -130,7 +132,7 @@ def assign(a, b, state = None):
                             functionNames.append(name) 
                     else:
                         for state in frameStack[::-1]:
-                            if name in state.keys():
+                            if name in list(state.keys()):
                                 func = state[name]
                                 func.cases.append(case)
                                 return case 
@@ -181,7 +183,7 @@ def index(a, b):
 
 def power(a, b):
     if isinstance(a, Object):
-        if 'pow' in a.state.keys():
+        if 'pow' in list(a.state.keys()):
             return a.state['pow'].apply(b) 
         
     (a, b) = (a.value, b.value)
@@ -189,7 +191,7 @@ def power(a, b):
 
 def divide(a, b):
     if isinstance(a, Object):
-        if 'div' in a.state.keys():
+        if 'div' in list(a.state.keys()):
             return a.state['div'].apply(b)
         
     (a, b) = (a.value, b.value)
@@ -197,10 +199,10 @@ def divide(a, b):
 
 def multiply(a, b):
     if isinstance(a, Object):
-        if 'mul' in a.state.keys():
+        if 'mul' in list(a.state.keys()):
             return a.state['mul'].apply(b) 
     elif isinstance(b, Object):
-        if 'mul' in b.state.keys():
+        if 'mul' in list(b.state.keys()):
             return b.state['mul'].apply(a)
         
     (a, b) = (a.value, b.value)
@@ -208,10 +210,10 @@ def multiply(a, b):
 
 def add(a, b):
     if isinstance(a, Object):
-        if 'add' in a.state.keys():
+        if 'add' in list(a.state.keys()):
             return a.state['add'].apply(b) 
     elif isinstance(b, Object):
-        if 'add' in b.state.keys():
+        if 'add' in list(b.state.keys()):
             return b.state['add'].apply(a)
         
     (a, b) = (a.value, b.value)
@@ -219,7 +221,7 @@ def add(a, b):
 
 def subtract(a, b):
     if isinstance(a, Object):
-        if 'sub' in a.state.keys():
+        if 'sub' in list(a.state.keys()):
             return a.state['sub'].apply(b)
         
     (a, b) = (a.value, b.value)
@@ -227,7 +229,7 @@ def subtract(a, b):
 
 def lessThan(a, b):
     if isinstance(a, Object):
-        if 'lessThan' in a.state.keys():
+        if 'lessThan' in list(a.state.keys()):
             return a.state['lessThan'].apply(b)
         return Bool(False)
     
@@ -273,7 +275,7 @@ def equals(a, b):
         return Bool(a.value == b.value)
     
     if isinstance(a, Object) and isinstance(b, Object):
-        if 'equals' in a.state.keys():
+        if 'equals' in list(a.state.keys()):
             return a.state['equals'].apply(b)
         return Bool(a == b)
     
@@ -349,7 +351,7 @@ def sequence(a, b):
             return utils.return_value
         if not (utils.breakLoop > 0 or utils.continueLoop > 0):
             return b.simplify()
-    return Int(None)
+    return Null()
     
 def chain(a, b):
     return b.apply(a.simplify())
