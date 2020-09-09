@@ -25,30 +25,24 @@ typeNames = ['int', 'float', 'char', 'bool', 'var', 'Num', 'global', 'local',
              'hidden', 'Func', 'Object', 'Type', 'string']
 structNames = []
 operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
-             '||', '(', ')', ',', '[', ']', ':', '++', '..', '/=', '!!', '`',
+             '||', '(', ')', ',', '[', ']', ':', '++', 'None', '/=', '!!', '`',
              '$', ';', '>>', '>>=', '=', '->', '--', '\\',  ' where ', '|',
              '@', '<-', '<<', '&', '}', '¦', ' then ', ' else ', '\t', '{',
              '=>', '~', ',,', '\n', '.', ' inherits ', ' implements ', '!=',
              ' in ', '+=', '-=', '*=', '/=', '^=', '//', '%', '::', '...'] 
 
-keywords = ('class', 'def', 'struct', 'interface', 'inherits', 'where',
+keywords = ['class', 'def', 'struct', 'interface', 'inherits', 'where',
             'implements', 'while', 'for', 'switch', 'default', 'if', 'else',
             'then', 'enum', 'oper', 'break', 'continue', 'in', 'True', 
             'False', 'let', 'import', 'return', 'int', 'float', 'bool',
             'char', 'var', 'do', '?', 'Num', 'from', 'type', 'union', 
-            'stop', 'skip', 'global', 'local', 'hidden', 'Func') 
+            'stop', 'skip', 'global', 'local', 'hidden', 'Func'] 
 
 continueLoop = 0
 breakLoop = 0
 return_value = None
 functionNames = []
 in_class = False
-'''
-functionNames += Prelude.functionNamesPrelude
-functionNames += List.functionNamesList 
-#functionNames += Char.functionNamesChar
-functionNames += functionNamesTuple 
-'''
 functionNames += IO.functionNamesIO
 
 functionNames += ['eval', 'read', 'range', 'toInt', 'toBool', 'toChar',
@@ -98,56 +92,56 @@ def isList(expr):
                 return True
     return False
 
-def evaluate(exp):  
+def evaluate(exp, program_state):  
     from Lexer import Lexer
-    from Parser import parse  
+    from Parser import Parser  
     if isinstance(exp, Cons):
         exp = str(exp)[1:-1]
     lexer = Lexer(exp)
     #print("tokens : ", end = '')
     #lexer.printTokens() 
-    expr = parse(lexer)
+    expr = Parser(lexer).expr
     #expr = optimise(expr)
     #print("expression : ", str(expr)) 
     #print("result : ", end = '')
     #try:
-    return expr.simplify()
+    return expr.simplify(program_state)
     #except Exception as error:
         #print(' '.join(error.args))
 
-def patternMatch(expr1, expr2):
+def patternMatch(expr1, expr2, program_state):
     from Operator_Functions import equals 
     from Expression import BinaryExpr
     if expr1 == None:
         return True
-    expr2 = expr2.simplify()
+    expr2 = expr2.simplify(program_state)
     if isinstance(expr1, Variable):
-        if isinstance(expr1.simplify(), Type):
+        if isinstance(expr1.simplify(program_state), Type):
             return (isinstance(expr2, (Type, Class, Struct)) and 
-                    expr1.simplify().name == expr2.name)
+                    expr1.simplify(program_state).name == expr2.name)
         return True
     
     if isinstance(expr1, BinaryExpr) and expr1.operator.name == '@':
         return patternMatch(expr1.expr, expr2)
     
     if isPrimitive(expr1) and isPrimitive(expr2):
-        return equals(expr1, expr2).value
+        return equals(expr1, expr2, program_state).value
     
     if isinstance(expr1, Nil) and isinstance(expr2, Nil):
         return True 
     
-    if isinstance(expr1, (Cons, Range)):
+    if isinstance(expr1, Cons):
         if isinstance(expr2, Nil): 
             return False
-        return (patternMatch(head(expr1), head(expr2).simplify()) 
-                and patternMatch(tail(expr1), tail(expr2)))
+        return (patternMatch(head(expr1), head(expr2).simplify(program_state), program_state) 
+                and patternMatch(tail(expr1), tail(expr2), program_state)) 
 
     if (isinstance(expr1, BinaryExpr) and expr1.operator.name == ':' and 
-        issubclass(type(expr2), List)):
+        isList(expr2)):
         if isinstance(expr2, Nil):
             return False
-        return (patternMatch(expr1.leftExpr, head(expr2).simplify()) 
-                and patternMatch(expr1.rightExpr, tail(expr2)))    
+        return (patternMatch(expr1.leftExpr, head(expr2, program_state).simplify(program_state), program_state) 
+                and patternMatch(expr1.rightExpr, tail(expr2, program_state), program_state))    
     
     if type(expr1) == type(expr2) and type(expr1) in (Tuple, Array):
         if len(expr1.items) == len(expr2.items) == 0:
@@ -167,58 +161,62 @@ def patternMatch(expr1, expr2):
               expr1.items[0].name == '...'):
             return True
         
-        return (patternMatch(expr1.items[0], expr2.items[0].simplify()) and
-                patternMatch(Tuple(expr1.items[1:]), Tuple(expr2.items[1:]))) 
+        return (patternMatch(expr1.items[0], expr2.items[0].simplify(program_state), program_state) and
+                patternMatch(Tuple(expr1.items[1:], program_state), Tuple(expr2.items[1:], program_state), program_state), program_state) 
 
     if isinstance(expr1, BinaryExpr): 
-        if typeMatch(expr1.leftExpr, expr2):
+        if typeMatch(expr1.leftExpr, expr2, program_state):
             if isinstance(expr2, Structure):
-                return patternMatch(expr1.rightExpr, Tuple(expr2.values))
+                return patternMatch(expr1.rightExpr, Tuple(expr2.values), program_state)
             else:
-                return patternMatch(expr1.rightExpr, expr2)
+                return patternMatch(expr1.rightExpr, expr2, program_state)
     return False 
 
-def typeMatch(type_, expr):
+def typeMatch(type_, expr, program_state):
     from Types import Type, Union
-    if null(type_.simplify()) or null(expr.simplify()):
+    if null(type_.simplify(program_state)) or null(expr.simplify(program_state)):
         return True
     
     if isinstance(type_, Variable):
+        if type_.name == 'var':
+            return True
         if type_.name == 'Type':
-            return isinstance(expr, (Type, Class, Struct))
-        
+            return program_state.isType(expr)
+
         elif type_.name == 'Object':
             return isinstance(expr, Object)
         
-        elif isinstance(type_.simplify(), Type):
-            if isPrimitive(expr):
-                return type_.simplify().name == expr.type
-            if type_.simplify().name in ('int', 'float', 'char',
-                                         'string', 'bool'):
-                return False
-            return typeMatch(type_.simplify().expr, expr)
+        elif isinstance(expr, Object):
+            return type_.simplify(program_state).name == expr.class_.name
         
-        elif isinstance(type_.simplify(), Union):
-            type_ = type_.simplify()
+        elif issubclass(type(expr), Func):
+            return type_.name == 'Func'
+        
+        elif isinstance(type_.simplify(program_state), Type):
+            if isPrimitive(expr):
+                return type_.simplify(program_state).name == expr.type 
+            if type_.simplify(program_state).name in ('int', 'float', 'char',
+                             'string', 'bool'):
+                return False
+            return typeMatch(type_.simplify(program_state).expr, expr, 
+                             program_state)
+
+        elif isinstance(type_.simplify(program_state), Union):
+            type_ = type_.simplify(program_state)
             for t in type_.types:
-                if typeMatch(t, expr):
+                if typeMatch(t, expr, program_state):
                     return True
                 
         elif isinstance(expr, Structure):
             return type_.name == expr.type.name
-        
-        elif isinstance(expr, Object):
-            return type_.name == expr.class_.name
-        
-        elif issubclass(type(expr), Func):
-            return type_.name == 'Func'
+
 
     elif isinstance(type_, Nil) and isList(expr):
         return True
     
-    elif isinstance(type_, Cons) and isinstance(expr, Cons):
-        return (typeMatch(head(type_), head(expr)) 
-                and typeMatch(tail(type_), tail(expr)))
+    elif isinstance(type_, Cons) and isList(expr):
+        return (typeMatch(head(type_, program_state), head(expr, program_state), program_state) 
+                and typeMatch(tail(type_, program_state), tail(expr, program_state), program_state))
 
     if (type(expr) in (Tuple, Array) and isinstance(type_, Variable) and
         type_.name == '...'): 
@@ -240,7 +238,7 @@ def typeMatch(type_, expr):
             else:
                 return False
         return (typeMatch(type_.items[0], expr.items[0]) and
-                typeMatch(Tuple(type_.items[1:]), Tuple(expr.items[1:])))
+                typeMatch(Tuple(type_.items[1:], program_state), Tuple(expr.items[1:], program_state)))
         
     return False
     
@@ -311,36 +309,37 @@ def optimise(expr):
 
     return expr
 
-def replaceVariables(expr):
+def replaceVariables(expr, program_state):
     from Expression import BinaryExpr
     from Types import Collection
     if isinstance(expr, Variable):
-        if expr.name not in typeNames:
-            expr = expr.simplify()
+        expr = expr.simplify(program_state)
     elif isinstance(expr, BinaryExpr):
         if expr.operator.name == '.':
             try:
-                return expr.simplify()
+                return expr.simplify(program_state)
             except:
                 pass
         left = expr.leftExpr
         if expr.operator.name not in ('=', 'where'):
-            left = replaceVariables(expr.leftExpr)
-        right = replaceVariables(expr.rightExpr)
+            left = replaceVariables(expr.leftExpr, program_state)
+        right = replaceVariables(expr.rightExpr, program_state)
         expr = BinaryExpr(expr.operator, left, right)
     elif isinstance(expr, Cons):
-        expr = Cons(replaceVariables(expr.item), replaceVariables(expr.tail))
+        expr = Cons(replaceVariables(expr.item, program_state),
+                    replaceVariables(expr.tail, program_state), program_state)
     elif isinstance(expr, Tuple):
-        expr = Tuple(list(map(lambda exp: replaceVariables(exp), expr.tup)))
+        expr = Tuple(list(map(lambda exp: replaceVariables(exp, program_state),
+                              expr.tup)), program_state)
     elif isinstance(expr, Collection):
-        expr = Collection(list(map(lambda exp: replaceVariables(exp),
+        expr = Collection(list(map(lambda exp: replaceVariables(exp, program_state),
                                    expr.items)), expr.operator)        
     return expr
 
-def convertToList(expr):
+def convertToList(expr, program_state):
     # If None is returned means there was no operand or 
     # operator which means it is an empty list
     xs = Nil()
     for i in range(len(expr) - 1, -1, -1):
-        xs = Cons(expr[i], xs)
+        xs = Cons(expr[i], xs, program_state)
     return xs

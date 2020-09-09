@@ -10,6 +10,3 @@ from Tuple import *
 from Char import *
 from IO import *
 
-functionNamesPrelude = ['id', 'const', 'succ', 'pred', 'null', 'flip', 'not',
-                        'uncurry', 'curry']
-

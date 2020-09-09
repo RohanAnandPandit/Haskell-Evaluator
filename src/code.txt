@@ -1,11 +1,24 @@
-def collatz n = (
-	print n; 
-	if (n == 1) (return _)
-	print "->"
-	switch (n%2) (
-		0 => collatz (n/2)
-		1 => collatz (3n+1)
-	)
-)
-printLn ""
-collatz 5
+def prim(int start, {} W)
+tree[start] = true
+for x in adj[start]:
+ add x to fringe
+fringe[x] = True
+parent[x] = start
+weight[x] = W[start, x]
+while fringe nonempty:
+Select fringe node f s.t. weight[f] is minimum
+fringe[f] = false
+tree[f] = true
+[continued
+104
+continued
+for y in adj[f]:
+if not tree[y]:
+if fringe[y]:
+if W[f, y] < weight[y]:
+weight[y] = W[f, y]
+parent[y] = f
+else:
+fringe[y] = true
+weight[y] = W[f, y]
+parent[y] = f

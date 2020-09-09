@@ -11,43 +11,45 @@ class Variable:
     def __init__(self, name):
         self.name = name
     
-    def simplify(self):
+    def simplify(self, program_state):
         if self.name == '_ ...':
             return self
-        from utils import frameStack
+        
+        frameStack = program_state.frameStack
         for curr in frameStack[::-1]:
             if self.name in curr.keys():
-                try:
-                    return curr[self.name].simplify()
-                except:
-                    print('variable')
+                return curr[self.name].simplify(program_state)
+
         #raise Exception('Variable', self.name, 'is not defined') 
+        #print(self.name)
         return self
     
     def __str__(self):
         return self.name
 
 class Type(Func):
-    def __init__(self, name, expr = None):
+    def __init__(self, name, expr = None, program_state = None):
         self.name = name
         self.expr = expr
+        self.lazy = True
+        self.program_state = program_state
     
-    def simplify(self):
+    def simplify(self, program_state): 
         return self
     
-    def apply(self, var):
+    def apply(self, var, program_state = None):
         from Operator_Functions import (defaultInt, defaultFloat, defaultBool,
                                         defaultChar)
         if self.name == 'int':
-            return defaultInt(var)
+            return defaultInt(var, self.program_state)
         elif self.name == 'float':
-            return defaultFloat(var)
+            return defaultFloat(var, self.program_state)
         elif self.name == 'bool':
-            return defaultBool(var)
+            return defaultBool(var, self.program_state)
         elif self.name == 'char':
-            return defaultChar(var)
+            return defaultChar(var, self.program_state)
         
-        return Int(None)
+        return Null()
     
     def __str__(self):
         return str(self.expr)
@@ -59,7 +61,7 @@ class Null:
     def __str__(self):
         return '?'
     
-    def simplify(self):
+    def simplify(self, program_state):
         return self
 
 class Int:
@@ -67,12 +69,10 @@ class Int:
         self.type = 'int'
         self.value = value
     
-    def simplify(self):
+    def simplify(self, program_state):
         return self
     
     def __str__(self):
-        if (self.value == None):
-            return '?'
         return str(self.value)
 
 class Float:
@@ -80,7 +80,7 @@ class Float:
         self.type = 'float'
         self.value = value
     
-    def simplify(self):
+    def simplify(self, program_state):
         return self
     
     def __str__(self):
@@ -92,7 +92,7 @@ class Bool:
         self.type = 'bool'
         self.value = value
     
-    def simplify(self):
+    def simplify(self, program_state):
         return self
     
     def __str__(self):
@@ -105,18 +105,18 @@ class Char:
         self.type = 'char'
         self.value = value
     
-    def simplify(self):
+    def simplify(self, program_state):
         return self
     
     def __str__(self):
-        return "'" + str(self.value) + "'"
+        return str(self.value)
 
 class String:
     def __init__(self, value):
         self.type = 'string'
         self.value = value
     
-    def simplify(self):
+    def simplify(self, program_state):
         return self
     
     def __str__(self):
@@ -138,18 +138,19 @@ class Collection:
         self.items = items
         self.operator = operator
     
-    def simplify(self):
+    def simplify(self, program_state):
         if self.operator.name == ',':
             return Tuple(list(filter(lambda item: item != None, self.items)))
+        
         if len(self.items) == 2:
             left = self.items[0] 
-            if left: left = left.simplify()
+            if left: left = left.simplify(program_state)
             right = self.items[1]
-            if right: right = right.simplify()
+            if right: right = right.simplify(program_state)
             return self.operator.apply(left, right)
         for i in range(len(self.items) - 1): 
-            if (not self.operator.apply(self.items[i].simplify(),
-                                        self.items[i + 1].simplify()).value):
+            if (not self.operator.apply(self.items[i].simplify(program_state),
+                                        self.items[i + 1].simplify(program_state)).value, program_state):
                 return Bool(False)
         return Bool(True)
     
@@ -165,7 +166,7 @@ class EnumValue:
         self.name = name
         self.value = value
     
-    def simplify(self):
+    def simplify(self, program_state):
         return self 
     
     def __str__(self):
@@ -176,7 +177,7 @@ class Enum:
         self.name = name
         self.values = values
     
-    def simplify(self):
+    def simplify(self, program_state):
         return self
     
     def __str__(self):
@@ -187,7 +188,7 @@ class Struct(Func):
         self.name = name
         self.fields = fields
     
-    def simplify(self):
+    def simplify(self, program_state):
         return self
     
     def apply(self, values):
@@ -206,7 +207,7 @@ class Structure:
         self.values = values 
         self.state = dict(zip(self.type.fields, values))
             
-    def simplify(self):
+    def simplify(self, program_state):
         return self
     
     def __str__(self):
@@ -221,115 +222,112 @@ class Class(Func):
         self.interfaces = []
         self.private = self.public = self.hidden = []
         self.isConstructor = False
+        self.lazy = True
 
-    def apply(self, expr):
-        import utils
+    def apply(self, expr, program_state = None):
         if not self.isConstructor:
-            methods = expr
             self.isConstructor = True
             self.name = self.name.split(' ')[1]
-            utils.frameStack.append(self.state)
-            utils.in_class = True
-            methods.simplify()
-            utils.in_class = False
-            utils.frameStack.pop(-1)
-            utils.typeNames.append(self.name)
-            utils.functionNames.append(self.name)
+            program_state.frameStack.append(self.state)
+            program_state.in_class = True
+            expr.simplify(program_state)
+            program_state.in_class = False
+            program_state.frameStack.pop(-1)
+            program_state.functionNames.append(self.name)
             return self
         else:
             values = expr
-            obj = Object(self)
-            for name in self.state.keys():
+            obj = Object(self, program_state)
+            for name in list(self.state.keys()):
                 if isinstance(self.state[name], (Function, Lambda)):
-                    obj.state[name] = Method(obj, self.state[name])
+                    obj.state[name] = Method(obj, self.state[name],
+                             program_state)
                 else:
                     obj.state[name] = self.state[name]  
                     
             obj.state['this'] = obj 
 
-            if 'init' in self.state.keys():
-                obj.state['init'].apply(values)
+            if 'init' in list(self.state.keys()):
+                obj.state['init'].apply(values, program_state = program_state)
             
             return obj
         
     def __str__(self):
         return self.name
     
-    def simplify(self):
+    def simplify(self, program_state):
         return self
         
 class Method(Func):
-    def __init__(self, obj, func):
+    def __init__(self, obj, func, program_state):
         self.name = func.name
         self.obj = obj
         self.func = func
+        self.lazy = False
+        self.program_state = program_state
     
-    def apply(self, arg1 = None, arg2 = None):
-        from utils import frameStack
-        frameStack.append(self.obj.state)
-        value = self.func.apply(arg1, arg2)
-        frameStack.pop(-1)
+    def apply(self, arg1 = None, arg2 = None, program_state = None):
+        program_state.frameStack.append(self.obj.state)
+        value = self.func.apply(arg1, arg2, program_state = program_state)
+        program_state.frameStack.pop(-1)
         if issubclass(type(value), Func):
-            return Method(self.obj, value) 
+            return Method(self.obj, value, program_state) 
         return value
 
-    def simplify(self):
-        from utils import frameStack
-        state = self.obj.state
-        frameStack.append(state)
-        value = self.func.simplify()
-        frameStack.pop(-1) 
+    def simplify(self, program_state):
+        self.program_state.frameStack.append(self.obj.state)
+        value = self.func.simplify(program_state)
+        self.program_state.frameStack.pop(-1) 
         if issubclass(type(value), Func):
-            return Method(self.obj, value) 
+            return Method(self.obj, value, program_state) 
         return value
     
     def __str__(self):
         return str(self.obj) + ' ' + str(self.func)
 
 class Object:
-    def __init__(self, class_):
+    def __init__(self, class_, program_state):
         self.class_ = class_
         self.state = {'this' : self}
+        self.program_state = program_state
         
-    def simplify(self):
+    def simplify(self, program_state):
         return self
     
     def __str__(self):
-        if 'toString' in self.state.keys():
-            return str(self.state['toString'].simplify())
+        if 'toString' in list(self.state.keys()):
+            return str(self.state['toString'].simplify(self.program_state))
         return self.class_.name + ' object' 
     
     
 class Interface:
-    def __init__(self, name, declarationExpr):
+    def __init__(self, name, declarationExpr, program_state):
         self.name = name
         state = {}
-        from utils import frameStack
-        import utils
-        frameStack.append(state)
-        utils.in_class = True
-        declarationExpr.simplify()
-        utils.in_class = False
-        frameStack.pop(-1) 
+        program_state.frameStack = program_state.frameStack
+        program_state.frameStack.append(state)
+        program_state.in_class = True
+        declarationExpr.simplify(program_state)
+        program_state.in_class = False
+        program_state.frameStack.pop(-1) 
         self.methods = state.keys()
     
-    def simplify(self):
+    def simplify(self, program_state):
         return self
 
     def __str__(self):
         return self.name + ' ' + ' '.join(self.methods)
 
 class Module:
-    def __init__(self, name, code):
+    def __init__(self, name, code, program_state):
         self.name = name
         self.state = {}
-        import utils
-        utils.frameStack.append(self.state)
-        utils.evaluate(code) 
-        utils.frameStack.pop(-1)
-        utils.frameStack[-1].update(self.state)
+        program_state.frameStack.append(self.state)
+        program_state.evaluate(code) 
+        program_state.frameStack.pop(-1)
+        program_state.frameStack[-1].update(self.state) 
     
-    def simplify(self):
+    def simplify(self, program_state):
         return self
     
     def __str__(self):
@@ -337,11 +335,12 @@ class Module:
         
     
 class Union:
-    def __init__(self, types):
-        self.types = types.tup
+    def __init__(self, name, types):
+        self.name = name
+        self.types = types.items
         
     def __str__(self):
         return str(Tuple(self.types))
     
-    def simplify(self):
+    def simplify(self, program_state):
         return self

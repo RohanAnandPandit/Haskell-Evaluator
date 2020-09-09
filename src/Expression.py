@@ -4,9 +4,6 @@ Created on Tue Jun 23 13:38:23 2020
 
 @author: rohan
 """
-import utils
-from utils import functionNames
-
 class BinaryExpr:
     def __init__(self, operator, left, right): 
         self.operator = operator
@@ -14,20 +11,8 @@ class BinaryExpr:
         self.rightExpr = right
         
     def __str__(self):        
-        if self.operator.name in functionNames or self.operator.name == '\\':
-            buf = '(' + self.operator.name
-            for i in range(self.operator.noOfArgs):
-                buf += ' '
-                if (i == 0 and self.leftExpr != None):
-                    buf += str(self.leftExpr)
-                elif (i == 1 and self.rightExpr != None):
-                    buf += str(self.rightExpr)
-                else:
-                    buf += '?'
-            return buf + ')'
-                
         buf = '('
-        if self.leftExpr == None:
+        if not self.leftExpr:
             buf += '?'
         else:
             try:
@@ -38,37 +23,36 @@ class BinaryExpr:
         buf += ' ' + string
         if string != ' ':
             buf += ' '
-        if self.rightExpr == None:
+        if not self.rightExpr:
             buf += '?'
         else:
             buf += str(self.rightExpr)
         buf += ')'
         return buf
 
-    def simplifyRightExpr(self, leftExpr):
-        return not (self.operator.name.split(' ')[0] in utils.lazy_eval 
-                    or self.operator.name == ' ')
-
-    def simplify(self):
+    def simplify(self, program_state):
         operator = self.operator
-        if operator.noOfArgs == 0:
-            operator.apply()
-        if self.leftExpr != None:
+        if self.leftExpr:
             leftExpr = self.leftExpr
-            if self.operator.name.split(' ')[0] not in utils.lazy_eval:  
-                leftExpr = leftExpr.simplify()
-            operator = operator.apply(leftExpr)
-            if (self.rightExpr != None):
+            if not self.operator.lazy:  
+                leftExpr = leftExpr.simplify(program_state)
+            operator = operator.apply(leftExpr, program_state = program_state)
+            if self.rightExpr:
                 rightExpr = self.rightExpr
-                if self.simplifyRightExpr(leftExpr):
-                    rightExpr = self.rightExpr.simplify()
-                operator = operator.apply(rightExpr)       
+                if not (self.operator.lazy or
+                        self.operator.name == ' ' and leftExpr.lazy):
+                        rightExpr = self.rightExpr.simplify(program_state)
+                operator = operator.apply(rightExpr,
+                                          program_state = program_state)       
                 return operator
-        if self.rightExpr != None:
+            
+        if self.rightExpr:
             rightExpr = self.rightExpr
-            if self.simplifyRightExpr(self.leftExpr):
-                rightExpr = rightExpr.simplify()
-            operator = operator.apply(arg1 = None, arg2 = rightExpr)  
+            if not self.operator.lazy:
+                rightExpr = rightExpr.simplify(program_state)
+            operator = operator.apply(arg1 = None, arg2 = rightExpr,
+                                      program_state = program_state) 
+            
         return operator
     
     

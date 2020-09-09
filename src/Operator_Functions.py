@@ -4,33 +4,34 @@ Created on Sat Jun 27 16:19:04 2020
 
 @author: rohan
 """
-import utils
 from utils import frameStack, functionNames, getData, enumNames, isPrimitive
-from utils import typeNames, structNames, patternMatch
-from HFunction import HFunction, Composition, Function, Lambda, Func
+from utils import patternMatch
+from HFunction import HFunction, Composition, Function, Lambda
 from List import List, Nil, Cons, Iterator, head, tail, Array
 from Tuple import Tuple
 from Types import (Int, Float, Bool, Variable, Alias, Enum, EnumValue, Struct,
-                   Class, Interface, Char, Module, Object, String, Null)
+                   Class, Interface, Char, Module, Object, String, Null, 
+                   Collection, Type)
 from Expression import BinaryExpr
 from math import *
 
-def assign(a, b, state = None):
+def assign(a, b, program_state, state = None):
     var, value = a, b
     if isPrimitive(var) or isinstance(var, Nil):
         return 
  
     if isinstance(var, Variable):
-        if var.name == '_ ...': return
-        try:
-            value = b.simplify()
-        except:
+        if var.name == '_ ...': return var
+
+        if b == None:
             print(0)
-        if utils.functional_mode:
+        value = b.simplify(program_state)
+
+        if program_state.functional_mode:
             if var.name in list(state.keys()):
                 raise Exception('Cannot assign variable',
                                 var.name, 'in FUNCTIONAL-MODE.')
-        if utils.static_mode:
+        if program_state.static_mode:
             if var.name in list(state.keys()):
                 varType = type(state[var.name])
                 valType = type(value)
@@ -40,48 +41,58 @@ def assign(a, b, state = None):
                                     str(varType), 'with value of type',
                                     str(valType),
                                     'in STATIC-MODE.') 
+
         if state == None:
-            for curr in frameStack[::-1]: 
+            for curr in program_state.frameStack[::-1]:
                 if var.name in list(curr.keys()):
                     curr[var.name] = value 
-                    return
-            state = frameStack[-1]
+                    return value
+            state = program_state.frameStack[-1] 
         state[var.name] = value
         return value
     
     if state == None:
-        state = frameStack[-1]
+        state = program_state.frameStack[-1]
         
-    if isinstance(var, (Tuple, Array)):
-        value = value.simplify()
+    if (isinstance(var, (Tuple, Array)) or 
+        isinstance(var, Collection) and var.operator.name == ','):
+        value = value.simplify(program_state)
+        
         for i in range(len(var.items)): 
-            assign(var.items[i], value.items[i], state) 
+            assign(var.items[i], value.items[i], program_state, state) 
+            
         return value
 
     elif isinstance(var, Cons):
-        assign(head(var), head(value), state)
-        assign(tail(var), tail(value), state)
+        assign(head(var), head(value), program_state, state)
+        assign(tail(var), tail(value), program_state, state)
         return value
         
     elif isinstance(var, BinaryExpr):
         if var.operator.name == '@':
-            assign(var.leftExpr, value, state)
-            assign(var.rightExpr, value, state)
+            assign(var.leftExpr, value, program_state, state)
+            assign(var.rightExpr, value, program_state, state)
             
         if var.operator.name == '!!':
-            array = var.leftExpr.simplify()
-            value = value.simplify()
-            array.items[head(var.rightExpr).simplify().value] = value 
+            array = var.leftExpr.simplify(program_state)
+            value = value.simplify(program_state)
+            index = head(var.rightExpr).simplify(program_state).value
+            if len(array.items) == index:
+                array.items.append(value)
+            else:
+                array.items[index] = value 
 
         if var.operator.name == ':':
-            value = value.simplify()
-            assign(var.leftExpr, head(value), state) 
-            assign(var.rightExpr, tail(value), state)
-            return Int(0)
+            value = value.simplify(program_state)
+            assign(var.leftExpr, head(value, program_state),
+                   program_state, state) 
+            assign(var.rightExpr, tail(value, program_state),
+                   program_state, state)
+            return value
         
         elif var.operator.name == '.':
-            obj = var.leftExpr.simplify()
-            obj.state[var.rightExpr.name] = value.simplify()
+            obj = var.leftExpr.simplify(program_state)
+            obj.state[var.rightExpr.name] = value.simplify(program_state)
             
         elif var.operator.name == ' ':
             arguments = []
@@ -90,38 +101,35 @@ def assign(a, b, state = None):
                 arg = args.rightExpr 
                 arguments.insert(0, arg)
                 args = args.leftExpr
-                if (isinstance(args, (Variable, Nil, Cons, Tuple, Array, Class)) or 
-                    utils.null(args)):
+                if (isinstance(args, (Variable,Nil,Cons,Tuple,Array,Class,Type)) or 
+                    program_state.null(args)):
                     arguments.insert(0, args)
-                    break
+                    break 
                 
-            if (isinstance(arguments[0], Variable) 
-                and arguments[0].name in structNames):
-                if isinstance(arguments[1], Tuple):
-                    assign(arguments[1], Tuple(value.values), state) 
-                else:
-                    assign(arguments[1], value, state)
-                return value
+            if (isinstance(arguments[0], Variable) and
+                isinstance(arguments[0].simplify(program_state), Struct) and
+                isinstance(arguments[1], Tuple)):
+                    assign(arguments[1], Tuple(value.values, program_state), 
+                           program_state, state) 
+                    return value
+
             
-            if (utils.null(arguments[0].simplify()) or 
-                isinstance(arguments[0], (Nil, Cons, Tuple, Array)) or 
-                arguments[0].name in typeNames):
-                assign(arguments[1], value, state)
-                return value
+            if program_state.isType(arguments[0].simplify(program_state)):
+                assign(arguments[1], value, program_state, state)
+                return value 
             
-            elif arguments[0].name in 'def':
+            elif arguments[0].name == 'def':
                 name = arguments[1].name
-                
-                arguments = arguments[2:]
+                arguments = arguments[2:] 
                 
                 for i in range(len(arguments)):
                     if not (isinstance(arguments[i], BinaryExpr) and 
                             arguments[i].operator.name in ' :'):
-                        arguments[i] = arguments[i].simplify()
+                        arguments[i] = arguments[i].simplify(program_state)
                 
                 case = Lambda(name, arguments = arguments, expr = value)
-                if name != None:
-                    if utils.in_class:
+                if name:
+                    if program_state.in_class:
                         if name in list(state.keys()):
                             func = state[name]
                             func.cases.append(case)
@@ -129,38 +137,40 @@ def assign(a, b, state = None):
                         else:
                             func = Function(name, [case])
                             state[name] = func
-                            functionNames.append(name) 
+                            program_state.functionNames.append(name) 
                     else:
-                        for state in frameStack[::-1]:
+                        for state in program_state.frameStack[::-1]:
                             if name in list(state.keys()):
                                 func = state[name]
                                 func.cases.append(case)
                                 return case 
                         func = Function(name, [case])
                         state[name] = func
-                        functionNames.append(name) 
+                        program_state.functionNames.append(name) 
                 return case
 
     return value
     
-def application(a, b):
-    func, arg = (a, b)
-    if not (issubclass(type(func), Func) 
-        and func.name.split(' ')[0] in utils.lazy_eval):
-        arg = arg.simplify()
-    return func.apply(arg)
+def application(func, arg, program_state):
+    #try:
+    if isinstance(func, Class) and isinstance(arg, Tuple):
+        #print(0)
+        pass
+    value = func.apply(arg, program_state = program_state) 
+    return value
+    #except:
+        #print(0)
 
-def compose(a, b):
-    (second, first) = (a, b)
+def compose(second, first, program_state):
     return Composition(second, first)
 
-def index(a, b):
+def index(a, b, program_state):
     from List import head, tail
     if isinstance(b, Int):
         n = b.value
         if n < 0 or isinstance(a, Nil):
             return None
-        if utils.isList(a):
+        if program_state.isList(a):
             x, xs = head(a), tail(a) 
             if n == 0:
                 return x
@@ -181,76 +191,93 @@ def index(a, b):
 
             return Array(a.items[start.value : end.value])
 
-def power(a, b):
+def power(a, b, program_state):
     if isinstance(a, Object):
         if 'pow' in list(a.state.keys()):
-            return a.state['pow'].apply(b) 
+            return a.state['pow'].apply(b, program_state = program_state) 
         
-    (a, b) = (a.value, b.value)
+    a, b = a.value, b.value
     return getData(a ** b)
 
-def divide(a, b):
+def divide(a, b, program_state):
     if isinstance(a, Object):
         if 'div' in list(a.state.keys()):
-            return a.state['div'].apply(b)
+            return a.state['div'].apply(b, program_state = program_state)
         
     (a, b) = (a.value, b.value)
     return getData(a / b)
 
-def multiply(a, b):
+def multiply(a, b, program_state):
     if isinstance(a, Object):
         if 'mul' in list(a.state.keys()):
-            return a.state['mul'].apply(b) 
+            return a.state['mul'].apply(b, program_state = program_state) 
     elif isinstance(b, Object):
         if 'mul' in list(b.state.keys()):
-            return b.state['mul'].apply(a)
+            return b.state['mul'].apply(a, program_state = program_state)
         
-    (a, b) = (a.value, b.value)
+    a, b = a.value, b.value
     return getData(a * b)
 
-def add(a, b):
+def add(a, b, program_state):
     if isinstance(a, Object):
         if 'add' in list(a.state.keys()):
-            return a.state['add'].apply(b) 
+            return a.state['add'].apply(b, program_state = program_state) 
     elif isinstance(b, Object):
         if 'add' in list(b.state.keys()):
-            return b.state['add'].apply(a)
+            return b.state['add'].apply(a, program_state = program_state)
         
-    (a, b) = (a.value, b.value)
+    a, b = a.value, b.value
     return getData(a + b)
 
-def subtract(a, b):
+def subtract(a, b, program_state):
     if isinstance(a, Object):
         if 'sub' in list(a.state.keys()):
-            return a.state['sub'].apply(b)
+            return a.state['sub'].apply(b, program_state = program_state)
+    if isinstance(b, Object):
+        if 'subfrom' in list(b.state.keys()):
+            return b.state['subfrom'].apply(a, program_state = program_state)
         
-    (a, b) = (a.value, b.value)
+    a, b = a.value, b.value
     return getData(a - b)
 
-def lessThan(a, b):
+def lessThan(a, b, program_state):
     if isinstance(a, Object):
         if 'lessThan' in list(a.state.keys()):
-            return a.state['lessThan'].apply(b)
+            return a.state['lessThan'].apply(b, 
+                          program_state = program_state)
+        return Bool(False)
+    elif isinstance(b, Object):
+        if 'greaterThan' in list(b.state.keys()):
+            return b.state['greaterThan'].apply(a, 
+                          program_state = program_state)
         return Bool(False)
     
     return Bool(a.value < b.value)
 
-def lessThanOrEqual(a, b):
-    return Bool(lessThan(a, b).value or equals(a, b).value)
+def lessThanOrEqual(a, b, program_state):
+    return Bool(lessThan(a, b, program_state).value or 
+                equals(a, b, program_state).value)
 
-def greaterThan(a, b):
-    return Bool(not lessThanOrEqual(a, b).value)
+def greaterThan(a, b, program_state):
+    if isinstance(a, Object):
+        if 'greaterThan' in list(a.state.keys()):
+            return a.state['greaterThan'].apply(b, 
+                          program_state = program_state)
+        return Bool(False)
+    
+    return Bool(not lessThanOrEqual(a, b, program_state).value)
 
-def greaterThanOrEqual(a, b):
-    return Bool(greaterThan(a, b).value or equals(a, b).value)
+def greaterThanOrEqual(a, b, program_state):
+    return Bool(greaterThan(a, b, program_state).value or 
+                equals(a, b, program_state).value)
 
-def rem(a, b):
+def rem(a, b, program_state):
     return Int(a.value % b.value)
 
 def quot(a, b):
     return Int(a.value // b.value)
 
-def equals(a, b):
+def equals(a, b, program_state):
     if a == None or b == None:
         return Bool(False)
     if (isinstance(a, (Variable, BinaryExpr)) 
@@ -264,47 +291,48 @@ def equals(a, b):
             y, ys = head(b), tail(b)
             return equals(x, y) and equals(xs, ys)
         return Bool(False)
-    if isinstance(a, Tuple) and isinstance(b, Tuple):
-        if (len(a.tup) != len(b.tup)):
+    if isinstance(a, (Array, Tuple)) and isinstance(b, (Array, Tuple)):
+        if len(a.items) != len(b.items):
             return Bool(False)
-        for i in range(len(a.tup)):
-            if not equals(a.tup[0], b.tup[0]):
+        for i in range(len(a.items)):
+            if not equals(a.items[i], b.items[i], program_state).value:
                 return Bool(False)
         return Bool(True)
     if isPrimitive(a) and isPrimitive(b):
         return Bool(a.value == b.value)
     
-    if isinstance(a, Object) and isinstance(b, Object):
+    if isinstance(a, Object):
         if 'equals' in list(a.state.keys()):
-            return a.state['equals'].apply(b)
+            return a.state['equals'].apply(b, program_state = program_state)
         return Bool(a == b)
     
     return Bool(False)
 
-def notEqual(a, b):
-    return Bool(not equals(a, b).value)
+def notEqual(a, b, program_state):
+    return Bool(not equals(a, b, program_state).value)
 
-def AND(a, b):
-    if not a.simplify().value: 
+def AND(a, b, program_state):
+    if not a.simplify(program_state).value: 
         return Bool(False)
-    return b.simplify()
+    return b.simplify(program_state)
 
-def OR(a, b):
-    if a.simplify().value: 
+def OR(a, b, program_state):
+    if a.simplify(program_state).value: 
         return Bool(True)
-    return b.simplify()
+    return b.simplify(program_state)
 
 def comma(a, b):
     if isinstance(a, Tuple):
-        return Tuple(a.tup.append(b))
+        return Tuple(a.items.append(b))
     return Tuple([a, b])
-    
-def cons(a, b):
+
+def cons(a, b, program_state):
     from utils import replaceVariables
     x, xs = a, b
-    return Cons(replaceVariables(x), xs.simplify())    
+    return Cons(replaceVariables(x, program_state),
+                xs.simplify(program_state), program_state)
 
-def concatenate(a, b): 
+def concatenate(a, b, program_state): 
     from List import head, tail
     left, right = a, b
     if isinstance(left, String):
@@ -313,8 +341,8 @@ def concatenate(a, b):
         return right
     elif isinstance(right, Nil):
         return left
-    x, xs = head(left), tail(left)
-    return Cons(x, concatenate(xs, right))
+    x, xs = head(left, program_state), tail(left, program_state)
+    return Cons(x, concatenate(xs, right, program_state))
  
 def iterator(a, b):
     var, collection = a, b
@@ -343,21 +371,22 @@ def comprehension(a, b):
     start, end = a, b
     return Range(start, end, Int(1))
 
-def sequence(a, b):
-    import utils
-    if not (utils.breakLoop > 0 or utils.continueLoop > 0):
-        a.simplify()
-        if utils.return_value != None:
-            return utils.return_value
-        if not (utils.breakLoop > 0 or utils.continueLoop > 0):
-            return b.simplify()
+def sequence(a, b, program_state):
+    if not (program_state.breakLoop > 0 or program_state.continueLoop > 0):
+        a.simplify(program_state)
+        
+        if program_state.return_value:
+            return program_state.return_value
+        
+        if not (program_state.breakLoop > 0 or program_state.continueLoop >0):
+            return b.simplify(program_state)
+        
     return Null()
     
 def chain(a, b):
     return b.apply(a.simplify())
 
-def createLambda(args, expr):
-    from utils import replaceVariables
+def createLambda(args, expr, program_state):
     arguments = []
     while True:
         if isinstance(args, (Variable, HFunction)):
@@ -365,15 +394,14 @@ def createLambda(args, expr):
             break
         arguments.insert(0, args.rightExpr)
         args = args.leftExpr
-    case = Lambda(name, arguments = arguments, expr = replaceVariables(expr))
+    case = Lambda(name, expr, arguments = arguments)
     return case
 
-def createEnum(name, values):
-    state = frameStack[-1]
+def createEnum(name, values, program_state):
+    state = program_state.frameStack[-1]
     values = values.tup
     names = list(map(str, values))
     name = name.name
-    typeNames.append(name)
     enum = Enum(name, names)
     state[name] = enum
     i = 0
@@ -383,56 +411,55 @@ def createEnum(name, values):
         i += 1
     return enum
  
-def createStruct(name, fields):
-    state = frameStack[-1]
+def createStruct(name, fields, program_state):
+    state = program_state.frameStack[-1]
     fields = list(map(lambda var: var.name, fields.tup))
     name = name.name
-    typeNames.append(name)
-    structNames.append(name)
     struct = Struct(name, fields)
     state[name] = struct
-    functionNames.append(name)
+    program_state.functionNames.append(name)
     return struct
 
-def createOperator(symbol, precedence, associativity, func):
+def createOperator(symbol, precedence, associativity, func, program_state):
     from utils import operators
     from Operators import operatorsDict, Op, Associativity
     associativityMap = {'left' : Associativity.LEFT,
                         'right' : Associativity.LEFT,
                         'none' : Associativity.NONE}
+    
     precedence = precedence.value
     associativity = associativityMap[associativity.name]
     symbol = str(symbol)
-    operators.append(symbol) 
-    func = func.simplify().apply(None, None)
+    program_state.operators.append(symbol) 
+    
+    func = func.simplify(program_state).apply(program_state = program_state)
     func.name = symbol
     func.precedence = precedence
     func.associativity = associativity
-    if func.noOfArgs == 1:
-        func.precedence = 10
+    
     operatorsDict[symbol] = Op(func)
+    
     return func
 
-def createClass(nameVar):
+def createClass(nameVar, program_state):
     name = nameVar.name
-    cls = Class(name)
-    assign(nameVar, cls)
-    return cls
+    class_ = Class(name)
+    assign(nameVar, class_, program_state)
+    return class_
 
-def createInterface(name, declarationsExpr):
-    state = frameStack[-1]
+def createInterface(name, declarationsExpr, program_state):
+    state = program_state.frameStack[-1]
     name = name.name
-    typeNames.append(name)
-    interface = Interface(name, declarationsExpr)
+    interface = Interface(name, declarationsExpr, program_state)
     state[name] = interface
-    functionNames.append(name)
+    program_state.functionNames.append(name)
     return interface
         
-def where(expr1, expr2):
-    frameStack.append({})
+def where(expr1, expr2, program_state):
+    program_state.frameStack.append({})
     expr2.simplify()
     value = expr1.simplify()
-    frameStack.pop(-1)
+    program_state.frameStack.pop(-1)
     return value
 
 def alias(var, expr):
@@ -450,150 +477,142 @@ def bitwise_or(x, y):
 def bitwise_and(x, y):
     return Int(x.value & y.value)
 
-def access(a, b):
-    obj, field = a.simplify(), b
-    try:
-        return obj.state[field.name].simplify()
-    except:
-        print(0)
+def access(obj, field, program_state):
+    obj = obj.simplify(program_state)
+    return obj.state[field.name].simplify(program_state)
 
-def forLoop(n, expr):
-    import utils
-    from List import List
+
+def forLoop(n, expr, program_state):
     if isinstance(n, Tuple):
-        generators = n.tup       
-        frameStack.append({})
-        curr = generators[0].simplify() 
-        var, collection = curr.var, curr.collection.simplify()
-        while not isinstance(collection, Nil):
-            assign(var, head(collection))
+        generators = n.items
+        program_state.frameStack.append({})
+        curr = generators[0].simplify(program_state) 
+        var, collection = curr.var, curr.collection.simplify(program_state)
+        while not isinstance(collection, Nil): 
+            assign(var, head(collection), program_state)
             if len(generators) == 1:
-                expr.simplify()
+                expr.simplify(program_state)
             else:
-                forLoop(Tuple(generators[1:]), expr)
-            if utils.breakLoop > 0 or utils.return_value != None:
-                utils.breakLoop -= 1
+                forLoop(Tuple(generators[1:]), expr, program_state)
+            if program_state.breakLoop > 0 or program_state.return_value:
+                program_state.breakLoop -= 1
                 break
-            if utils.continueLoop > 0:
-                utils.continueLoop -= 1
-            collection = tail(collection)
-        frameStack.pop(-1)
+            if program_state.continueLoop > 0:
+                program_state.continueLoop -= 1
+            collection = tail(collection, program_state)
+        program_state.frameStack.pop(-1)
         
     elif isinstance(n, BinaryExpr):
         if n.operator.name == ';':
             init, n = n.leftExpr, n.rightExpr
             cond, after = n.leftExpr, n.rightExpr
             state = {}
-            frameStack.append(state)
-            init.simplify()
-            while cond.simplify().value:
-                expr.simplify()
-                import utils
-                if utils.continueLoop > 0:
-                    utils.continueLoop -= 1
-                if utils.breakLoop > 0 or utils.return_value != None:
-                    utils.breakLoop -= 1
+            program_state.frameStack.append(state)
+            init.simplify(program_state)
+            while cond.simplify(program_state).value:
+                expr.simplify(program_state)
+                if program_state.continueLoop > 0:
+                    program_state.continueLoop -= 1
+                if program_state.breakLoop > 0 or program_state.return_value:
+                    program_state.breakLoop -= 1
                     break
-                after.simplify()
-            frameStack.pop(-1)
+                after.simplify(program_state)
+            program_state.frameStack.pop(-1)
             
         elif n.operator.name == 'in':
-            n = n.simplify()
-            frameStack.append({})
-            var, collection = n.var, n.collection.simplify()
-            if issubclass(type(collection), List):
+            n = n.simplify(program_state)
+            program_state.frameStack.append({})
+            var, collection = n.var, n.collection.simplify(program_state)
+            if program_state.isList(collection):
                 while not isinstance(collection, Nil):
                     assign(var, head(collection)) 
-                    expr.simplify()
-                    if utils.breakLoop > 0 or utils.return_value != None:
-                        utils.breakLoop -= 1
+                    expr.simplify(program_state)
+                    if (program_state.breakLoop > 0 or 
+                        program_state.return_value):
+                        program_state.breakLoop -= 1
                         break
-                    if utils.continueLoop > 0:
-                        utils.continueLoop -= 1
-                    collection = tail(collection)
+                    if program_state.continueLoop > 0:
+                        program_state.continueLoop -= 1
+                    collection = tail(collection, program_state)
                     
             elif isinstance(collection, (Tuple, Array)):
                 for item in collection.items:
-                    assign(var, item) 
-                    expr.simplify()
-                    if utils.breakLoop > 0 or utils.return_value != None:
-                        utils.breakLoop -= 1
+                    assign(var, item, program_state, ) 
+                    expr.simplify(program_state)
+                    if (program_state.breakLoop > 0 or 
+                        program_state.return_value):
+                        program_state.breakLoop -= 1
                         break
-                    if utils.continueLoop > 0:
-                        utils.continueLoop -= 1
+                    if program_state.continueLoop > 0:
+                        program_state.continueLoop -= 1
             frameStack.pop(-1)
             
         else:
-            n = n.simplify()
+            n = n.simplify(program_state)
             for i in range(n.value):
-                expr.simplify()
-                if utils.continueLoop > 0:
-                    utils.continueLoop -= 1
-                if utils.breakLoop > 0:
-                    utils.breakLoop -= 1
+                expr.simplify(program_state)
+                if program_state.continueLoop > 0:
+                    program_state.continueLoop -= 1
+                if program_state.breakLoop > 0:
+                    program_state.breakLoop -= 1
                     break
                 
     else:
-        n = n.simplify()
+        n = n.simplify(program_state)
         for i in range(n.value):
-            expr.simplify()
-            if utils.continueLoop > 0:
-                utils.continueLoop -= 1
-            if utils.breakLoop > 0:
-                utils.breakLoop -= 1
+            expr.simplify(program_state)
+            if program_state.continueLoop > 0:
+                program_state.continueLoop -= 1
+            if program_state.breakLoop > 0:
+                program_state.breakLoop -= 1
 
     return Int(0)
 
-def whileLoop(cond, expr):
-    while cond.simplify().value:
-        expr.simplify()
-        import utils
-        if utils.continueLoop > 0:
-            utils.continueLoop -= 1
-        if utils.breakLoop > 0 or utils.return_value != None:
-            utils.breakLoop -= 1
+def whileLoop(cond, expr, program_state):
+    while cond.simplify(program_state).value:
+        value = expr.simplify(program_state)
+        if program_state.continueLoop > 0:
+            program_state.continueLoop -= 1
+        if program_state.breakLoop > 0 or program_state.return_value:
+            program_state.breakLoop -= 1
             break
+    return value
+
+def breakCurrentLoop(program_state):
+    program_state.breakLoop = 1
     return Int(0)
 
-def breakCurrentLoop():
-    import utils
-    utils.breakLoop = 1
+def continue_loop(program_state):
+    program_state.continueLoop = 1
     return Int(0)
 
-def continue_loop():
-    import utils
-    utils.continueLoop = 1
+def breakout(n, program_state):
+    program_state.breakLoop += n.value
     return Int(0)
 
-def breakout(n):
-    import utils
-    utils.breakLoop += n.value
-    return Int(0)
-
-def skipout(n):
-    import utils
-    utils.continueLoop += n.value
+def skipout(n, program_state):
+    program_state.continueLoop += n.value
     return Int(0)
     
-def ifStatement(cond, expr):
-    if cond.simplify().value:
-        return expr.simplify()
-    return Int(None)
+def ifStatement(cond, expr, program_state):
+    if cond.simplify(program_state).value:
+        return expr.simplify(program_state)
+    return Null()
 
-def extends(subclass, superclass):
+def extends(subclass, superclass, program_state):
      subclass.state['super'] = superclass
      for name in superclass.state.keys():
          subclass.state[name] = superclass.state[name]
      return subclass
 
-def implements(class_, interface):
+def implements(class_, interface, program_state):
     class_.interfaces.append(interface)
     return class_
 
-def definition(name_var, args_tup, expr):
+def definition(name_var, args_tup, expr, program_state):
     name = name_var.name
-    state = frameStack[-1]
-    case = Lambda(name, arguments = [args_tup], expr = expr)
+    state = program_state.frameStack[-1]
+    case = Lambda(program_state, name, arguments = [args_tup], expr = expr)
     if name != None:
         if name in state.keys():
             func = state[name]
@@ -604,7 +623,7 @@ def definition(name_var, args_tup, expr):
             functionNames.append(name) 
     return case
         
-def switch(value, expr):
+def switch(value, expr, program_state):
     cases = []
     while True:
         if not (isinstance(expr, BinaryExpr) and expr.operator.name == ';'):
@@ -614,33 +633,34 @@ def switch(value, expr):
         expr = expr.rightExpr
     followThrough = False
     for case in cases:
-        if (isinstance(case.leftExpr, Variable) 
-            and case.leftExpr.name == 'otherwise' 
-            or patternMatch(case.leftExpr.simplify(), value.simplify())
-            or followThrough):
-            
-            value = case.rightExpr.simplify()
+        if (followThrough or 
+            isinstance(case.leftExpr, Variable) and 
+            case.leftExpr.name == 'otherwise' or 
+            patternMatch(case.leftExpr.simplify(program_state),
+                         value.simplify(program_state), program_state)):
+            val = case.rightExpr.simplify(program_state)
             followThrough = True
             if case.operator.name == '=>':
-                return value
-    return Int(None)
+                return val 
+    return Null()
 
-def let(assign, expr):
+def let(assign, expr, program_state):
     state = {}
     frameStack.append(state)
-    assign.simplify()
+    assign.simplify(program_state)
     variables = list(state.keys())
-    expr.simplify()
+    expr.simplify(program_state)
     for var in variables:
         state.pop(var)
     frameStack[-2].update(state)
     frameStack.pop(-1)
 
-def import_module(nameVar):
+def import_module(nameVar, program_state):
     name = nameVar.name
     file = open('Modules/' + name + '.txt', 'r')
     code = file.read()
-    assign(nameVar, Module(name, code))
+    Module(name, code, program_state)
+    #assign(nameVar, Module(name, code, program_state), program_state)
     return Int(0)
 
 def from_import(moduleVar, stat, names):
@@ -661,12 +681,11 @@ def from_import(moduleVar, stat, names):
     assign(moduleVar, module)
     return Int(0)
     
-def return_statement(value):
-    import utils
-    utils.return_value = value
+def return_statement(value, program_state):
+    program_state.return_value = value
     return value
 
-def toInt(expr):
+def toInt(expr, program_state):
     if isinstance(expr, (Int, Float)):
         return Int(int(expr.value))
     if isinstance(expr, Cons):
@@ -679,7 +698,7 @@ def toInt(expr):
         return Int(ord(expr.value))
     return Int(0)
 
-def toFloat(expr):
+def toFloat(expr, program_state):
     if isinstance(expr, (Int, Float)):
         return Float(float(expr.value))
     if isinstance(expr, Cons):
@@ -690,7 +709,7 @@ def toFloat(expr):
         return Float(0.0)
     return Float(0)
 
-def toBool(expr):
+def toBool(expr, program_state):
     if isinstance(expr, (Int, Float)):
         if expr.value > 0:
             return Bool(True)
@@ -701,91 +720,94 @@ def toBool(expr):
         return Bool(True)
     return Bool(False)
 
-def toChar(expr):
+def toChar(expr, program_state):
     if isinstance(expr, Int):
         return Char(chr(expr.value))
     return Char(chr(0))
 
-def doLoop(expr, loop, cond):
-    expr.simplify()
+def doLoop(expr, loop, cond, program_state):
+    expr.simplify(program_state)
     if loop.name == 'while':
         return whileLoop(cond, expr)
     if loop.name == 'for':
         return forLoop(cond, expr)
         
-def incrementBy(var, val): 
-    value = var.simplify()
-    assign(var, add(value, val.simplify()))
+def incrementBy(var, val, program_state): 
+    value = var.simplify(program_state)
+    assign(var, add(val.simplify(program_state), value, program_state),
+           program_state)
     return value
 
-def decrementBy(var, val):
-    value = var.simplify()
-    assign(var, subtract(var.simplify(), val.simplify()))
+def decrementBy(var, val, program_state):
+    value = var.simplify(program_state)
+    assign(var, subtract(val.simplify(program_state), value, program_state),
+           program_state)
     return value
 
-def multiplyBy(var, val):
-    value = var.simplify()
-    assign(var, multiply(var.simplify(), val.simplify()))
+def multiplyBy(var, val, program_state):
+    value = var.simplify(program_state)
+    assign(var, multiply(val.simplify(program_state), value, program_state),
+           program_state)
     return value
 
-def divideBy(var, val):
-    value = var.simplify()
-    assign(var, divide(var.simplify(), val.simplify()))
+def divideBy(var, val, program_state):
+    value = var.simplify(program_state)
+    assign(var, divide(val.simplify(program_state), value, program_state),
+           program_state)
     return value
 
-def raiseTo(var, val):
-    value = var.simplify()
-    assign(var, power(var.simplify(), val.simplify()))
+def raiseTo(var, val, program_state):
+    value = var.simplify(program_state)
+    assign(var, power(val.simplify(program_state), value, program_state), 
+           program_state)
     return value
 
-def defaultInt(var):
-    if isinstance(var.simplify(), Tuple):
-        for name in var.simplify().tup:
-            defaultInt(name)
+def defaultInt(var, program_state):
+    if isinstance(var.simplify(program_state), Tuple):
+        for name in var.simplify(program_state).items:
+            defaultInt(name, program_state)
     else:
-        frameStack[-1][var.name] = Int(0)
+        program_state.frameStack[-1][var.name] = Int(0)
     return var
 
-def defaultFloat(var):
+def defaultFloat(var, program_state):
     if isinstance(var, Tuple):
         for name in var.simplify().tup:
             defaultFloat(name)
     else:
-        frameStack[-1][var.name] = Float(0)
+        program_state.frameStack[-1][var.name] = Float(0)
     return var
 
-def defaultBool(var):
+def defaultBool(var, program_state):
     if isinstance(var, Tuple):
         for name in var.simplify().tup:
             defaultBool(name)
     else:
-        frameStack[-1][var.name] = Bool(False)
+        program_state.frameStack[-1][var.name] = Bool(False)
     return var
 
-def defaultChar(var):
+def defaultChar(var, program_state):
     if isinstance(var, Tuple):
         for name in var.simplify().tup:
             defaultChar(name)
     else:
-        frameStack[-1][var.name] = toChar(Int(97))
+        program_state.frameStack[-1][var.name] = toChar(Int(97))
     return var
     
 def defaultList(var):
     frameStack[-1][var.name] = Nil()
     return Nil()
 
-def type_synonym(typeVar, typeExpr):
+def type_synonym(typeVar, typeExpr, program_state):
     from Types import Type
     type_ = Type(typeVar.name, typeExpr)
-    assign(typeVar, type_) 
-    typeNames.append(typeVar.name)
+    assign(typeVar, type_, program_state) 
     return type_
 
-def types_union(typeVar, types):
+def types_union(var, types, program_state):
     from Types import Union
-    union = Union(types)
-    assign(typeVar, union)
-    typeNames.append(typeVar.name)
+    union = Union(var.name, types)
+    assign(var, union, program_state)
     return union
 
 def then_clause(cond, expr): 
@@ -793,10 +815,10 @@ def then_clause(cond, expr):
         return expr.simplify()
     return Int(None)
 
-def else_clause(if_stat, expr):
-    if if_stat.leftExpr.rightExpr.simplify().value:
-        return if_stat.simplify()
-    return expr.simplify()
+def else_clause(if_stat, expr, program_state):
+    if if_stat.leftExpr.rightExpr.simplify(program_state).value:
+        return if_stat.simplify(program_state)
+    return expr.simplify(program_state)
 
 def read_as(var, struct):
     return Alias(var, struct)
@@ -826,9 +848,9 @@ def pass_arg(arg, funcs):
         arg = arg.simplify()
     return application(funcs.simplify(), arg)
 
-def match(a, b):
+def match(a, b, program_state):
     from utils import patternMatch
-    return Bool(patternMatch(a, b))   
+    return Bool(patternMatch(a, b, program_state))   
 
 def append(a, b):
     if isinstance(a.simplify(), Object):
@@ -838,5 +860,5 @@ def append(a, b):
         a.items.append(b)
     return a
 
-def python_eval(code):
+def python_eval(code, program_state):
     return getData(str(eval(code.value)))

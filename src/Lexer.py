@@ -4,19 +4,20 @@ Created on Mon Jun 22 10:20:56 2020
 
 @author: rohan
 """
-import utils
-from utils import getData, operators
+from utils import operators, isPrimitive
 from Types import Variable, Char, String
 from Operators import operatorFromString
 from HFunction import HFunction, Function, Lambda
+from Types import Int, Float, Bool, Null
 
 class Lexer:
-    def __init__(self, string):
+    def __init__(self, string, program_state):
         self.tokens = []
         self.string = string
         self.index = 0
         self.curr = 0
         self.acc = ''
+        self.program_state = program_state
         self.tokenize()
         
     def nextToken(self):
@@ -98,11 +99,11 @@ class Lexer:
                 i += 1
             
             if i == 0 or i == len(self.acc):                
-                self.tokens.append(getData(self.acc)) 
+                self.tokens.append(self.getData(self.acc)) 
             else:
-                self.tokens.append(getData(self.acc[:i])) 
+                self.tokens.append(self.getData(self.acc[:i])) 
                 self.tokens.append(operatorFromString('*'))
-                self.tokens.append(getData(self.acc[i:])) 
+                self.tokens.append(self.getData(self.acc[i:])) 
                 
             self.acc = ''
         
@@ -120,10 +121,9 @@ class Lexer:
                 self.curr += 1
                 continue
             
-            op = self.searchOperator(utils.operators)
-            if (op != None 
-                and not (op == '.' and 
-                         '0' <= self.string[self.curr + 1] <= '9')):
+            op = self.searchOperator()
+            if (op and not (op == '.' and 
+                '0' <= self.string[self.curr + 1] <= '9')):
                 self.addData()
                 self.addOperator(op)
                 continue
@@ -149,11 +149,34 @@ class Lexer:
         if len(self.tokens) > 0:
             del self.tokens[-1]
             
-    def searchOperator(self, operators):
-        max_length = max(map(len, operators))
+    def searchOperator(self):
+        max_length = max(map(len, self.program_state.operators))
         for length in range(max_length, 0, -1):
             if self.curr + length - 1 < len(self.string):
                 substring = self.string[self.curr : self.curr + length]
-                if substring in operators: 
+                if substring in self.program_state.operators: 
                     return substring
         return None
+
+    def getData(self, exp):
+        if isPrimitive(exp): 
+            return exp
+    
+        if '.' in str(exp):
+            if int(float(exp)) == float(exp):
+                return Int(int(float(exp)))
+            return Float(round(float(exp), 10))
+        try: 
+            return Int(int(exp))
+        except:
+            pass
+    
+        if exp == 'True':
+            return Bool(True) 
+        elif exp == 'False':
+            return Bool(False) 
+        if exp == '?':
+            return Null() 
+        
+        from Types import Variable
+        return Variable(exp)

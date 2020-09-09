@@ -16,8 +16,7 @@ class Associativity(Enum):
     NONE = 2
 
 
-greater_than = HFunction(4, Associativity.NONE,
-                         op_func.greaterThan, 2, '>')
+greater_than = HFunction(4, Associativity.NONE, op_func.greaterThan, 2, '>')
 
 less_than_or_equal = HFunction(4, Associativity.NONE,
                                op_func.lessThanOrEqual, 2, '<=')
@@ -30,19 +29,15 @@ int_div = HFunction(4, Associativity.NONE, op_func.quot, 2, '//')
 
 remainder = HFunction(4, Associativity.NONE, op_func.rem, 2, '%')
 
-colon = HFunction(5, Associativity.RIGHT, op_func.cons, 2, ':')
+colon = HFunction(5, Associativity.RIGHT, op_func.cons, 2, ':', lazy = True)
 
-logical_and = HFunction(3, Associativity.RIGHT,
-                        op_func.AND, 2, '&&')
+logical_and = HFunction(3, Associativity.RIGHT, op_func.AND, 2, '&&')
 
-concatenate = HFunction(5, Associativity.LEFT,
-                        op_func.concatenate, 2, '++')
+concatenate = HFunction(5, Associativity.LEFT, op_func.concatenate, 2, '++')
 
-iterator = HFunction(10, Associativity.LEFT,
-                     op_func.create_iterator, 2, 'in')
+iterator = HFunction(10, Associativity.LEFT, op_func.create_iterator, 2, 'in')
 
-notequal = HFunction(4, Associativity.NONE, 
-                     op_func.notEqual, 2, '!=')
+notequal = HFunction(4, Associativity.NONE, op_func.notEqual, 2, '!=')
 
 logical_or = HFunction(3, Associativity.RIGHT, op_func.OR, 2, '||')
 
@@ -50,86 +45,76 @@ left_parentheses = HFunction(8, Associativity.RIGHT, None, 1, '(')
 
 right_parentheses = HFunction(8, Associativity.LEFT, None, 1, ')')
 
-comma = HFunction(2, Associativity.NONE, op_func.comma, 2, ',')
+comma = HFunction(3, Associativity.NONE, op_func.comma, 2, ',')
 
-tuple_cons = HFunction(2.6, Associativity.LEFT,
-                       op_func.comma, 2, ',,')
+tuple_cons = HFunction(2.6, Associativity.LEFT, op_func.comma, 2, ',,')
 
 left_bracket = HFunction(8, Associativity.RIGHT, None, 1, '[')
 
 right_bracket = HFunction(8, Associativity.LEFT, None, 1, ']')
 
-dollar = HFunction(0, Associativity.RIGHT, op_func.application, 2, '$')
+dollar = HFunction(2.6, Associativity.RIGHT, op_func.application, 2, '$')
 
-composition = HFunction(9, Associativity.RIGHT,
-                        op_func.compose, 2, '~')
+composition = HFunction(9, Associativity.RIGHT, op_func.compose, 2, '~')
 
 index = HFunction(9, Associativity.LEFT, op_func.index, 2, '!!')
 
-newline = HFunction(-1, Associativity.RIGHT,
-                    op_func.sequence, 2, ';')
+newline = HFunction(-1, Associativity.RIGHT, op_func.sequence, 2, ';', lazy = True)
 chain = HFunction(2, Associativity.LEFT, op_func.chain, 2, '>>=')
 
 infix = HFunction(5, Associativity.LEFT, None, 1, '`')
 
-equals = HFunction(2.5, Associativity.RIGHT,
-                   op_func.assign, 2, '=')
+equals = HFunction(2.5, Associativity.RIGHT, op_func.assign, 2, '=', lazy = True)
 
-returns = HFunction(2, Associativity.RIGHT,
-                    op_func.createLambda, 2, '->')
+returns = HFunction(2, Associativity.RIGHT, op_func.createLambda, 2, '->', lazy = True)
 
-whereclause = HFunction(2.6, Associativity.LEFT,
-                        op_func.where, 2, 'where')
+whereclause = HFunction(2.6, Associativity.LEFT, op_func.where, 2, 'where', lazy = True)
 
-inheritance = HFunction(9, Associativity.LEFT,
-                        op_func.extends, 2, 'extends')
+inheritance = HFunction(9, Associativity.LEFT, op_func.extends, 2, 'extends')
 
 implements = HFunction(9, Associativity.LEFT,
                        op_func.implements, 2, 'implements')
 
-bitwise_or = HFunction(5, Associativity.LEFT,
-                       op_func.bitwise_or, 2, '¦')
+bitwise_or = HFunction(5, Associativity.LEFT, op_func.bitwise_or, 2, '¦')
 
-bitwise_and = HFunction(1, Associativity.LEFT,
-                        op_func.bitwise_and, 2, '&')
+bitwise_and = HFunction(1, Associativity.LEFT, op_func.bitwise_and, 2, '&')
 
 alias = HFunction(9.1, Associativity.LEFT, op_func.alias, 2, '@')
 
-shiftleft = HFunction(5, Associativity.LEFT,
-                      op_func.shiftLeft, 2, '<<')
+shiftleft = HFunction(5, Associativity.LEFT, op_func.shiftLeft, 2, '<<')
 
-shiftright = HFunction(5, Associativity.LEFT,
-                       op_func.shiftRight, 2, '>>')
+shiftright = HFunction(5, Associativity.LEFT, op_func.shiftRight, 2, '>>')
 
-then = HFunction(2.6, Associativity.RIGHT, 
-                 op_func.then_clause, 2, '=>')
+then = HFunction(2.6, Associativity.RIGHT, op_func.then_clause, 2, '=>',
+                 lazy = True)
 
 left_curly = HFunction(8, Associativity.RIGHT, None, 1, '{')
 
 right_curly = HFunction(8, Associativity.LEFT, None, 1, '}')
 
-else_clause = HFunction(2.5, Associativity.RIGHT,
-                        op_func.else_clause, 2, '|')
+else_clause = HFunction(2.5, Associativity.RIGHT, op_func.else_clause, 2, '|',
+                        lazy = True)
 
-access = HFunction(9.1, Associativity.LEFT, op_func.access, 2, '.')
+access = HFunction(9.1, Associativity.LEFT, op_func.access, 2, '.',
+                   lazy = True)
 
-comprehension = HFunction(11, Associativity.LEFT,
-                          op_func.comprehension, 2, '..')
+comprehension = HFunction(11, Associativity.LEFT, op_func.comprehension, 2,
+                          '..')
 
-increment_by = HFunction(2.5, Associativity.RIGHT, 
-                         op_func.incrementBy, 2, '+=')
+increment_by = HFunction(2.5, Associativity.RIGHT, op_func.incrementBy, 2,
+                         '+=', lazy = True)
 
-decrement_by = HFunction(2.5, Associativity.RIGHT,
-                         op_func.decrementBy, 2, '-=')
+decrement_by = HFunction(2.5, Associativity.RIGHT, op_func.decrementBy, 2,
+                         '-=', lazy = True)
 
-multiply_by = HFunction(2.5, Associativity.RIGHT,
-                        op_func.multiplyBy, 2, '*=')
+multiply_by = HFunction(2.5, Associativity.RIGHT, op_func.multiplyBy, 2, '*=',
+                        lazy = True)
 
-divide_by = HFunction(2.5, Associativity.RIGHT,
-                      op_func.divideBy, 2, '/=')
+divide_by = HFunction(2.5, Associativity.RIGHT, op_func.divideBy, 2, '/=', 
+                      lazy = True)
 
-raise_to = HFunction(2.5, Associativity.RIGHT,
-                     op_func.raiseTo, 2, '^=')
+raise_to = HFunction(2.5, Associativity.RIGHT, op_func.raiseTo, 2, '^=', 
+                     lazy = True)
 
 class Operator(Enum):
     EQUAL = equals
@@ -190,37 +175,16 @@ class Operator(Enum):
     
 def initialiseFunctions(state):
     from Types import Type
-    state['splitAt'] = HFunction(8, Associativity.LEFT, Prelude.splitAt, 2,
-         'splitAt')
-    state['replicate'] = HFunction(8, Associativity.LEFT, Prelude.replicate,
-         2, 'replicate')
-    state['span'] = HFunction(8, Associativity.LEFT, Prelude.span, 2, 'span')
-    state['concat'] = HFunction(8, Associativity.LEFT, Prelude.concat, 1,
-         'concat')
     state['printLn'] = HFunction(8, Associativity.LEFT,
                                  Prelude.printLn, 1, 'printLn')
+    state['println'] = HFunction(8, Associativity.LEFT,
+                                     Prelude.printLn, 1, 'println')
     state['print'] = HFunction(8, Associativity.LEFT, 
                                  Prelude.printHaskell, 1, 'print')
     state['show'] = HFunction(8, Associativity.LEFT, Prelude.show, 1, 'show')
     state['input'] = HFunction(8, Associativity.LEFT,
                                  Prelude.inputHaskell, 1, 'input')
-    state['unzip'] = HFunction(8, Associativity.LEFT,
-                             Prelude.unzip, 1, 'unzip')
-    state['words'] = HFunction(8, Associativity.LEFT,
-                                 Prelude.words, 1, 'words')
-    state['unwords'] = HFunction(8, Associativity.LEFT,
-                                 Prelude.unwords, 1, 'unwords')
-    state['and'] = HFunction(8, Associativity.LEFT,
-                             Prelude.andHaskell, 1, 'and')
-    state['or'] = HFunction(8, Associativity.LEFT,
-                             Prelude.orHaskell, 1, 'or')
-    state['any'] = HFunction(8, Associativity.LEFT,
-                             Prelude.anyHaskell, 2, 'any')
-    state['all'] = HFunction(8, Associativity.LEFT,
-                             Prelude.allHaskell, 2, 'all')
-    state['zip3'] = HFunction(8, Associativity.LEFT, Prelude.zip3, 3, 'zip3')
-    state['zipWith3'] = HFunction(8, Associativity.LEFT,
-                                     Prelude.zipWith3, 4, 'zipWith3')
+
     state['eval'] = HFunction(8, Associativity.LEFT, 
                              lambda exp: utils.evaluate(str(exp)), 1, 'eval')
     state['read'] = HFunction(8, Associativity.LEFT,
@@ -228,17 +192,17 @@ def initialiseFunctions(state):
     state['for'] = HFunction(8, Associativity.LEFT,
                              op_func.forLoop, 2, 'for')
     state['while'] = HFunction(8, Associativity.LEFT,
-                                 op_func.whileLoop, 2, 'while')
+                                 op_func.whileLoop, 2, 'while', lazy = True)
     state['if'] = HFunction(8, Associativity.LEFT, 
-                             op_func.ifStatement, 2, 'if')
+                             op_func.ifStatement, 2, 'if', lazy = True)
     state['struct'] = HFunction(8, Associativity.LEFT, 
-                                 op_func.createStruct, 2, 'struct')
+                                 op_func.createStruct, 2, 'struct', lazy = True)
     state['enum'] = HFunction(8, Associativity.LEFT,
-                             op_func.createEnum, 2, 'enum')
+                             op_func.createEnum, 2, 'enum', lazy = True)
     state['oper'] = HFunction(8, Associativity.LEFT, 
-                             op_func.createOperator, 4, 'oper')
+                             op_func.createOperator, 4, 'oper', lazy = True)
     state['class'] = HFunction(8, Associativity.LEFT, 
-                             op_func.createClass, 1, 'class')
+                             op_func.createClass, 1, 'class', lazy = True)
     state['interface'] = HFunction(8, Associativity.LEFT,
                              op_func.createInterface, 2, 'interface')
     state['def'] = HFunction(8, Associativity.LEFT, 
@@ -266,12 +230,13 @@ def initialiseFunctions(state):
     state['toChar'] = HFunction(8, Associativity.LEFT, 
                                  op_func.toChar, 1, 'toChar')
     state['do'] = HFunction(8, Associativity.LEFT, 
-                             op_func.doLoop, 3, 'do')
+                             op_func.doLoop, 3, 'do') 
     state['int'] = Type('int') 
     state['float'] = Type('float') 
     state['bool'] = Type('bool') 
     state['char'] = Type('char') 
-    state['string'] = Type('string') 
+    state['string'] = Type('string')
+    
     state['type'] = HFunction(8, Associativity.LEFT,
                              op_func.type_synonym, 2, 'type') 
     state['union'] = HFunction(8, Associativity.LEFT,

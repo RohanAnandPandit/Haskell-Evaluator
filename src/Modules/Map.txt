@@ -1,6 +1,10 @@
 class Pair (
-	def Pair {first, second} (this.first = first; this.second = second)
-	def toString = "{" ++ show first ++ ", " ++ show second ++ "}"
+	def init(first, second) (
+    	this.first = first
+    	this.second = second
+    )
+    
+	def toString = "(" ++ show first ++ ", " ++ show second ++ ")"
 )
 
 class Map (
@@ -21,7 +25,7 @@ class Map (
 				return prev
 			)
 		)
-		this.pairs = Pair {key, value} : pairs
+		this.pairs = Pair(key, value) : pairs
 		return ?
 	)
 
