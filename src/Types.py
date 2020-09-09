@@ -147,7 +147,7 @@ class Collection:
             if left: left = left.simplify(program_state)
             right = self.items[1]
             if right: right = right.simplify(program_state)
-            return self.operator.apply(left, right)
+            return self.operator.apply(left, right, program_state)
         for i in range(len(self.items) - 1): 
             if (not self.operator.apply(self.items[i].simplify(program_state),
                                         self.items[i + 1].simplify(program_state)).value, program_state):

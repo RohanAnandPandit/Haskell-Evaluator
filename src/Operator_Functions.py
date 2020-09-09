@@ -101,7 +101,8 @@ def assign(a, b, program_state, state = None):
                 arg = args.rightExpr 
                 arguments.insert(0, arg)
                 args = args.leftExpr
-                if (isinstance(args, (Variable,Nil,Cons,Tuple,Array,Class,Type)) or 
+                if (isinstance(args, Variable) or 
+                    program_state.isType(args) or 
                     program_state.null(args)):
                     arguments.insert(0, args)
                     break 
@@ -243,13 +244,11 @@ def subtract(a, b, program_state):
 def lessThan(a, b, program_state):
     if isinstance(a, Object):
         if 'lessThan' in list(a.state.keys()):
-            return a.state['lessThan'].apply(b, 
-                          program_state = program_state)
+            return a.state['lessThan'].apply(b, program_state = program_state)
         return Bool(False)
     elif isinstance(b, Object):
         if 'greaterThan' in list(b.state.keys()):
-            return b.state['greaterThan'].apply(a, 
-                          program_state = program_state)
+            return b.state['greaterThan'].apply(a, program_state = program_state)
         return Bool(False)
     
     return Bool(a.value < b.value)
