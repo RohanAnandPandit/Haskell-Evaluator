@@ -5,7 +5,6 @@ Created on Sun Sep  6 22:02:35 2020
 @author: rohan
 """
 import tkinter as tk
-import utils
 
 class Editor:
     def __init__(self, program_state):
@@ -88,7 +87,7 @@ class Editor:
                 self.text.insert(tk.INSERT, '"')
                 self.text.mark_set("insert", "insert-1c")
     
-
+        '''
         for name in ('infinity',):
             start = 1.0
             while 1:
@@ -96,31 +95,31 @@ class Editor:
                 if not pos:
                     break
                 end = pos + '+' + str(len(name)) + 'c'
-                if (self.text.get(end) in utils.operators and 
+                if (self.text.get(end) in self.program_state.operators and 
                     (pos == '1.0' or
-                     self.text.get(pos + '-1c') in utils.operators)):
+                     self.text.get(pos + '-1c') in self.program_state.operators)):
                     self.text.delete(pos, end)
                     self.text.insert(pos, '∞')
                 start = end 
-        
+        '''
         self.text.tag_remove('function', '1.0', tk.END)    
-        for name in utils.functionNames:
+        for name in self.program_state.functionNames:
             start = 1.0
             while 1:
                 pos = self.text.search(name, start, stopindex = tk.END)
                 if not pos:
                     break
                 end = pos + '+' + str(len(name)) + 'c'
-                if (self.text.get(end) in utils.operators and 
+                if (self.text.get(end) in self.program_state.operators and 
                     (pos == '1.0' or
-                     self.text.get(pos + '-1c') in utils.operators)):
+                     self.text.get(pos + '-1c') in self.program_state.operators)):
                     self.text.tag_add("function", pos, end) 
                 start = end 
         self.text.tag_config("function", foreground = 'magenta')
                 
         
         self.text.tag_remove('operator', '1.0', tk.END)    
-        for operator in utils.operators:
+        for operator in self.program_state.operators:
             if operator not in '(){}[]':
                 start = 1.0
                 while 1:
@@ -133,16 +132,16 @@ class Editor:
         self.text.tag_config("operator", foreground = self.mode['operators'])
     
         self.text.tag_remove('keyword', '1.0', tk.END)    
-        for keyword in utils.keywords:
+        for keyword in self.program_state.keywords:
             start = 1.0
             while 1:
                 pos = self.text.search(keyword, start, stopindex = tk.END)
                 if not pos:
                     break
                 end = pos + '+' + str(len(keyword)) + 'c'
-                if (self.text.get(end) in utils.operators and 
+                if (self.text.get(end) in self.program_state.operators and 
                     (pos == '1.0' or 
-                     self.text.get(pos + '-1c') in utils.operators)):
+                     self.text.get(pos + '-1c') in self.program_state.operators)):
                     self.text.tag_add("keyword", pos, end) 
                 start = end 
         self.text.tag_config("keyword", foreground = self.mode['keywords'])
@@ -196,6 +195,6 @@ class Editor:
     
     def execute(self):
         code = self.text.get(1.0, tk.END)
-        code = code.replace('∞', 'infinity')
-        self.program_state.evaluate(code)
+        #code = code.replace('∞', 'infinity')
+        self.program_state.evaluate(code, reset_state = True)
 

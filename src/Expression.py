@@ -50,8 +50,7 @@ class BinaryExpr:
             rightExpr = self.rightExpr
             if not self.operator.lazy:
                 rightExpr = rightExpr.simplify(program_state)
-            operator = operator.apply(arg1 = None, arg2 = rightExpr,
-                                      program_state = program_state) 
+            operator = operator.apply(None, rightExpr, program_state) 
             
         return operator
     

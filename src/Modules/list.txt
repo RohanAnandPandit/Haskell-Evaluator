@@ -13,33 +13,34 @@ def len (x:xs) = 1 + len xs
 class Take implements List (
 
     def init(int n, [] list) = (
-        this.n = n; this.list = list
+        this.n = n
+        this.list = list
     )    
     
     def head = (
-        if (n > 0) (
-            x:_ = list
+        if (this.n > 0) (
+            x:_ = this.list
             return x
         )
         return ?
     )
     
     def tail = (
-        if (n == 1) (return [])
-        _:xs = list
-        return (Take(n - 1, xs))
+        if (this.n == 1) (return [])
+        _:xs = this.list
+        return (Take(this.n - 1, xs))
     )
 
     def toString = (
-        if (list == []) (return "[]")
+        if (this.list == []) (return "[]")
         string str = "["
-        var xs = list
-        for (int i; i < n && xs != []; i += 1) (
+        var xs = this.list
+        for (int i; i < this.n && xs != []; i += 1) (
             x:xs = xs
-            str = str ++ show x 
-            if (i < n - 1) (str = str ++ ", ")
+            str += tostr x
+            if (i < this.n - 1) (str += ", ")
         )
-        return (str ++ "]")
+        return (str + "]")
     )
 )
 
@@ -54,30 +55,31 @@ def drop (int n) (x:xs) = drop (n - 1) xs
 class Map implements List (
 
     def init(Func func, [] list) = (
-        this.func = func; this.list = list
+        this.func = func
+        this.list = list
     )    
     
     def head = (
-        x:_ = list
-        return (func x)
+        x:_ = this.list
+        return (this.func x)
     ) 
     
     def tail = (
-        _:xs = list
-        return (Map(func, xs))
+        _:xs = this.list
+        return (Map(this.func, xs))
     )
 
     def toString = (
         string str = "["
-        var xs = list
+        var xs = this.list
         while (xs != []) (
             x:xs = xs
-            str = str ++ show (func x)
+            str += tostr (this.func x)
             if (xs != []) (
-                str = str ++ ", "
+                str += ", "
             )
         )
-        return (str ++ "]")
+        return (str + "]")
     )
     
 )
@@ -105,6 +107,7 @@ def foldr (Func func) u (x:xs) = func x (foldr func u xs)
 def foldr1 (Func func) (x:y:xs) = foldr func (func x y) xs
 
 def foldl _ u [] = u
+def foldl (*) _ (0:xs) = 0
 def foldl (Func func) u (x:xs) = foldl func (func u x) xs
 
 def foldl1 (Func func) (x:y:xs) = foldl func (func x y) xs 
@@ -115,33 +118,34 @@ def elem x (y:ys) = x == y || elem x ys
 class TakeWhile implements List (
 
     def init(Func cond, [] list) = (
-        this.cond = cond; this.list = list
+        this.cond = cond
+        this.list = list
     )    
     
     def head = (
-        x:_ = list
+        x:_ = this.list
         return x
     ) 
     
     def tail = (
-        _:xs = list
+        _:xs = this.list
         x:_ = xs
-        if (not (cond x)) (
+        if (not (this.cond x)) (
              return []
         )
-        return (TakeWhile(cond, xs))
+        return (TakeWhile(this.cond, xs))
     )
 
     def toString = (
-        if (list == []) (return "[]")
+        if (this.list == []) (return "[]")
         string str = "["
-        x:xs = list
-        while (xs != [] && cond x) (
-            str = str ++ show x 
+        x:xs = this.list
+        while (xs != [] && this.cond x) (
+            str += tostr x 
             x:xs = xs
-            if (xs != [] && cond x) (str = str ++ ", ")
+            if (xs != [] && this.cond x) (str += ", ")
         )
-        return (str ++ "]")
+        return (str + "]")
     )
     
 )
@@ -159,45 +163,43 @@ def dropwhile (Func func) (x:xs) = (
 class Filter implements List (
 
     def init(Func cond, [] list) = (
-        this.cond = cond; this.list = list
+        this.cond = cond
+        this.list = list
     )    
     
     def head = (
-        x:xs = list
-        while (not (cond x)) (
-            if (xs == []) (return ?)
-            x:xs = xs
-        )
+        x:_ = this.list
         return x
     )
     
     def tail = (
-        x:xs = list
-        while (not (cond x)) (
-            if (xs == []) (return [])
+        var xs = this.list
+        do (
             x:xs = xs
-        )
-        return (Filter(cond, xs))
+        ) while (not (this.cond x))
+
+        return (Filter(this.cond, x:xs))
     )
     
     def toString = (
-        if (list == []) (return "[]")
+        if (this.list == []) (return "[]")
         string str = "["
-        x:xs = list
+        var xs = this.list
         int n
-        while (xs != []) (
-            if (cond x) (
+        do (
+            x:xs = xs
+            if (this.cond x) (
                 if (n > 0) (
-                    str = str ++ ", "
+                    str += ", "
                 )
-                n = n + 1
-                str = str ++ show x 
+                n += 1
+                str += tostr x 
             )
-            x:xs = xs   
-        )
-        return (str ++ "]")
+              
+        ) while (xs != [])
+        
+        return (str + "]")
     )
-    def equals xs = list == xs 
 )
 
 def filter (Func func) ([] xs) = Filter(func, xs)
@@ -205,54 +207,57 @@ def filter (Func func) ([] xs) = Filter(func, xs)
 class ZipWith implements List (
 
     def init(Func func, [] xs, [] ys) = (
-        this.func = func; this.xs = xs; this.ys = ys
+        this.func = func
+        this.xs = xs
+        this.ys = ys
     )    
     
     def head = (
-        if (xs == [] || ys == []) (
-            return ?
-        )
-        x:_ = xs; y:_ = ys
-        return (func x y)
+        x:_ = this.xs
+        y:_ = this.ys
+        return (this.func x y)
     ) 
     
     def tail = (
-        if (xs == [] || ys == []) (
+        if (this.xs == [] || this.ys == []) (
             return []
         )
-        _:xs' = xs; _:ys' = ys
-        return (zipwith func xs' ys')
+        _:xs' = this.xs
+        _:ys' = this.ys
+        return (ZipWith(this.func, xs', ys'))
     )
 
     def toString = (
         string str = "["
-        var xs' = xs; var ys' = ys 
+        var xs' = this.xs
+        var ys' = this.ys 
         while (xs' != [] && ys' != []) (
-            x:xs' = xs'; y:ys' = ys'
-            str = str ++ show (func x y)
-            if (xs' != [] && ys' != []) (str = str ++ ", ")
+            x:xs' = xs'
+            y:ys' = ys'
+            str += tostr (this.func x y)
+            if (xs' != [] && ys' != []) (str += ", ")
         )
         return (str ++ "]")
     )
     
-    def equals xs = list == xs 
 )
 
 def zipwith (Func func) ([] xs) ([] ys) = ZipWith(func, xs, ys)
 
-def zip ([] xs) ([] ys) = ZipWith((\x y -> (x, y)), xs, ys)
+def zip ([] xs) ([] ys) = ZipWith((x y -> (x, y)), xs, ys)
 
 class Iterate implements List (
 
 	def init(Func func, ? seed) = (
-		this.func = func; this.seed = seed
+		this.func = func
+		this.seed = seed
 	)
 
-	def head = seed
+	def head = this.seed
 
-	def tail = iterate func (func seed)
+	def tail = iterate this.func (this.func this.seed)
 
-	def toString = "[" ++ show this.seed ++ ".." ++ show func ++ " n" ++ "]"
+	def toString = "[" + tostr this.seed + ".." + tostr this.func + " n" + "]"
 )
 
 def iterate (Func func) (? value) = Iterate(func, value) 
@@ -268,34 +273,34 @@ class Iterate2 implements List (
 	)
 	
 	def init(? func, ? first, ? second, int n) = (
-		init(func, first, second)
+		this.init(func, first, second)
 		this.n = n
 	)
 	
 	def head = (
-        switch n (
-        	0 => first
-        	1 => second
-        	otherwise => (func first second)
+        switch this.n (
+        	0 => this.first
+        	1 => this.second
+        	otherwise => (this.func this.first this.second)
     	)
 	)
 	
 	def tail = (
-        switch n (
+        switch this.n (
         	0 -> _
-        	1 => Iterate2(func, first, second, n + 1)
-        	otherwise => Iterate2(func, second, func first second, 2)
+        	1 => Iterate2(this.func, this.first, this.second, this.n + 1)
+        	otherwise => Iterate2(this.func, this.second, this.func this.first this.second, 2)
     	)
 	)
 	
-	def toString = "iterate2 " ++ show first ++ " " ++ show second
+	def toString = "iterate2 " + tostr this.first + " " + tostr this.second
 )
 
 def iterate2 func first second = Iterate2(func, first, second)
 
 class Iterate3 implements List (
 
-	def init(? func, ? first, ? second, ? third) = (
+	def init(Func func, ? first, ? second, ? third) = (
 		this.first = first
 		this.second = second
 		this.third = third
@@ -304,12 +309,12 @@ class Iterate3 implements List (
 	)
 	
 	def init(? func, ? first, ? second, ? third, int n) = (
-		init(first, second, third, func)
+		this.init(first, second, third, func)
 		this.n = n
 	)
 	
 	def head = (
-        switch n (
+        switch this.n (
         	0 => first
         	1 => second
         	2 => third
@@ -318,15 +323,15 @@ class Iterate3 implements List (
 	)
 	
 	def tail = (
-        switch n (
+        switch this.n (
         	0 -> _
         	1 -> _
-        	2 -> iterate3 func first second third (n + 1)
-        	otherwise => Iterate3(func, second, third, head, 3)
+        	2 -> iterate3 this.func this.first this.second this.third (this.n + 1)
+        	otherwise => Iterate3(this.func, this.second, this.third, this.head, 3)
     	)
 	)
 	
-	def toString = "iterate3 " ++ show first ++ " " ++ show second
+	def toString = "iterate3 " + tostr this.first + " " + tostr this.second
 )
 
 def iterate3 func first second third = Iterate3(func, first, second, third)
@@ -345,17 +350,17 @@ class Cycle implements List (
 	)
 	
 	def head = (
-		x:_ = curr
+		x:_ = this.curr
 		return x
 	)
 	
 	def tail = (
     	_:xs = curr
-    	if (xs == []) (return (cycle list))
+    	if (xs == []) (return (cycle this.list))
     	return (Cycle(list, xs))
 	)
 	
-	def toString = "cycle " ++ show this.list
+	def toString = "cycle " + tostr this.list
 )
 
 def cycle ([] xs) = Cycle(xs)
@@ -363,20 +368,47 @@ def cycle ([] xs) = Cycle(xs)
 
 def range(start, end,  step) = (
     if (start > end) (return (takewhile (>= end) (iterate (+(-step)) start)))
-    return (takewhile (<= end) (iterate (+step) start))
+    return (takewhile (< end) (iterate (+step) start))
 )
 
 def range (first, second) (end) = range(first, end, second - first)
  
 def range (start) (end) = (
-    if (start < end) (
-        return (takewhile (<= end) (iterate (+1) start))
-    )
+    if (start < end) (return (takewhile (< end) (iterate (+1) start)))
     return (takewhile (>= end) (iterate (+(-1)) start))
 )
 
-        
-        
+class Concatenation implements List (
+
+    def init([] left, [] right) = (
+        this.left = left
+        this.right = right
+    )
+    
+    def head = (
+        x:_ = this.left
+        return x
+    )
+    
+    def tail = (
+        _:xs = this.left
+        if (empty xs) (
+            return this.right
+        )
+        return (Concatenation(xs, this.right))
+    )
+    
+    def toString = (
+        string left = tostr this.left
+        left = left[0, (-1)]
+        string right = tostr this.right
+        right = right[1, ...]
+        return (left + ", " + right)
+    )
+)
+
+def concatenation ([] left) ([] right) = Concatenation(left, right)  
+def concatenation(string str1)(string str2) = str1 + str2
         
         
         

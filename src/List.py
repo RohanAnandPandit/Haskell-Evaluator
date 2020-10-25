@@ -4,16 +4,8 @@ Created on Tue Jun 23 20:381 2020
 
 @author: rohan
 """
-from Tuple import Tuple
-from Types import Int, Bool, Object, Null
+from Types import Object, Null
 
-functionNamesList = ['length', 'head', 'tail', 'last', 'concat', 'init',
-                     'maximum', 'minimum', 'elem', 'notElem', 'reverse',
-                     'take', 'drop', 'map', 'words', 'unwords', 'takeWhile',
-                     'dropWhile', 'zip', 'unzip', 'foldl', 'foldr', 'foldl1',
-                     'foldr1', 'and', 'or', 'any', 'all', 'filter', 'sum',
-                     'product', 'lookup', 'concatMap', 'splitAt', 'span',
-                     'replicate', 'zipWith', 'zip3', 'zipWith3', 'append']
 class List:
     pass
       
@@ -45,7 +37,7 @@ class Cons(List):
         return self
 
 class Iterator(List):
-    def __init__(self, var, collection):
+    def __init__(self, var, collection, program_state):
         self.var = var
         self.collection = collection.simplify(program_state)
             
@@ -55,26 +47,24 @@ class Iterator(List):
     def __str__(self):
         return '(' + str(self.var) + ' in ' + str(self.collection) + ')'
 
-class Range:
-    pass
-
 class Array:
     def __init__(self, items = []):
         self.items = items
         
-    def simplify(self):
+    def simplify(self, program_state):
         return self
     
     def __str__(self):
         items = []
         for item in self.items:
-            items.append(str(item.simplify))
+            items.append(str(item))
         return '{' + ', '.join(items) + '}'
  
 def head(a, program_state):    
     if isinstance(a.simplify(program_state), Object):
-         value = a.simplify(program_state).state['head'].simplify(program_state)
-         return value
+         a = a.simplify(program_state)
+         func = a.class_.state['head'].apply(a, program_state = program_state)
+         return func.simplify(program_state)
     if isinstance(a, Nil):
         return Null()
     if isinstance(a, Cons):
@@ -83,7 +73,9 @@ def head(a, program_state):
 
 def tail(a, program_state):
     if isinstance(a.simplify(program_state), Object):
-         return a.simplify(program_state).state['tail'].simplify(program_state)
+         a = a.simplify(program_state)
+         func = a.class_.state['tail'].apply(a, program_state = program_state)
+         return func.simplify(program_state)
     if isinstance(a, Nil):
         return Null()
     if isinstance(a, Cons):

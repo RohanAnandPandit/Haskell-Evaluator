@@ -4,7 +4,7 @@ Created on Mon Jun 22 10:20:56 2020
 
 @author: rohan
 """
-from utils import operators, isPrimitive
+from utils import isPrimitive
 from Types import Variable, Char, String
 from Operators import operatorFromString
 from HFunction import HFunction, Function, Lambda
@@ -45,15 +45,21 @@ class Lexer:
                 self.tokens.pop(-1)
                 lastToken = self.tokens[-1]
             if (not isinstance(lastToken, (HFunction, Function, Lambda)) 
-                or not lastToken.name in operators
+                or not lastToken.name in self.program_state.operators
                 or lastToken.name in ')]}'):
                 self.tokens.append(operatorFromString(op)) 
                         
     def addString(self):
         start = self.curr
-        while self.string[self.curr] != '"':
+        escape = False
+        while not (self.string[self.curr] == '"' and not escape):
+            escape = False
+            if self.string[self.curr] == '\\':
+                escape = True
+
             self.curr += 1
         string = self.string[start : self.curr].replace('\\n', '\n')
+        string = string.replace('\\"', '"') 
         string = string.replace('\\t', '\t')
         self.tokens.append(String(string))
         self.curr += 1
@@ -79,11 +85,11 @@ class Lexer:
         
         if op == '(':
             if len(self.tokens) > 0:
-                if isinstance(self.tokens[-1], Variable):
+                if (isinstance(self.tokens[-1], Variable) or 
+                    self.tokens[-1].name == ')'):
                     self.addSpace()
-                elif op == '(' and self.tokens[-1].name == ')': 
-                    self.tokens.append(operatorFromString('*'))
-        if op == '[':
+
+        if op in '[{':
             if len(self.tokens) > 0:
                 if (isinstance(self.tokens[-1], (Variable, String)) or 
                     self.tokens[-1].name in ']})'):
@@ -94,8 +100,9 @@ class Lexer:
     def addData(self):
         if self.acc != '':
             i = 0
-            while (i < len(self.acc) 
-                    and ('0' <= self.acc[i] <= '9' or self.acc[i] in '._')):
+            while (i < len(self.acc) and 
+                   ('0' <= self.acc[i] <= '9' or 
+                    self.acc[i] in '._')):
                 i += 1
             
             if i == 0 or i == len(self.acc):                

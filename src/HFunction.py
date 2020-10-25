@@ -19,7 +19,7 @@ class HFunction(Func):
         self.lazy = lazy
     
     def execute(self, inputs):
-        if (self.noOfArgs - len(inputs)) == 0:
+        if self.noOfArgs == len(inputs):
             for arg in inputs:
                 if not arg:
                     return False
@@ -89,7 +89,7 @@ class Composition(Func):
     
     def apply(self, arg1 = None, program_state = None):
         if arg1 != None or self.first.name == '..':
-            return self.second.apply(self.first.apply(arg1),
+            return self.second.apply(self.first.apply(arg1, program_state = program_state),
                                      program_state = program_state)
         return self
 
@@ -104,9 +104,7 @@ class Function(Func):
         self.lazy = False
     
     def clone(self):
-        return Function(self.name,
-                        cases = map(lambda case: case.clone(), self.cases),
-                        inputs = self.inputs.copy())
+        return Function(self.name, self.cases.copy(), self.inputs.copy())
         
     def simplify(self, program_state):
         value = self.checkCases(self.inputs, program_state)
@@ -161,35 +159,36 @@ class Function(Func):
         return True
 
 class Lambda(Func):
-    def __init__(self, name, expr, arguments = [], 
-                 state = {}):
+    def __init__(self, name, expr, arguments = [], inputs = []):
         self.name = name
         self.arguments = arguments
         self.expr = expr
-        self.state = state
+        self.inputs = inputs
         self.noOfArgs = len(arguments)
         self.lazy = False
         
     def apply(self, arg1 = None, arg2 = None, program_state = None):
-        from Operator_Functions import assign
-        state = self.state.copy()
-        arguments = self.arguments.copy()
+        inputs = self.inputs.copy()
         if arg1:
-            assign(arguments[0], arg1, program_state, state)
-            arguments = arguments[1:]
-            if arg2: 
-                assign(arguments[0], arg2, program_state, state)
-                arguments = arguments[1:]
+            if len(inputs) > 1 and not inputs[-2]:
+                    inputs[-2] = arg1
+            else:
+                inputs.append(arg1)
 
-        elif arg2:
-            assign(arguments[1], arg2, program_state, state)
-            arguments = arguments[0] + arguments[2:]
+            if len(inputs) == self.noOfArgs:
+                return self.returnValue(inputs, program_state)
             
-        if arguments == []:
-            return self.returnValue(state, program_state)
+            if arg2:
+                inputs.append(arg2)
+                if len(inputs) == self.noOfArgs:
+                    return self.returnValue(inputs, program_state)
+                
+        elif arg2:
+            inputs.append(None)
+            inputs.append(arg2)
+
         
-        return Lambda(self.name, self.expr, arguments = arguments, 
-                      state = state)
+        return Lambda(self.name, self.expr, self.arguments, inputs)
 
     def __str__(self):
         string = '\\' + ' '.join(list(map(str, self.arguments)))
@@ -198,18 +197,17 @@ class Lambda(Func):
         return string
     
     def simplify(self, program_state):
-        if self.arguments == []:
-            return self.returnValue({}, program_state).simplify(program_state)
+        if self.noOfArgs == 0:
+            return self.returnValue([], program_state).simplify(program_state)
         return self
 
-    def returnValue(self, state, program_state):
+    def returnValue(self, inputs, program_state):
+        from Operator_Functions import assign
+        state = {}
+        for i in range(self.noOfArgs):
+            assign(self.arguments[i], inputs[i], program_state, state) 
         program_state.frameStack.append(state)
-        if self.expr:
-            value = self.expr.simplify(program_state)
-            #value = utils.replaceVariables(self.expr)
-        else:
-            value = None
+        value = self.expr.simplify(program_state)
         program_state.frameStack.pop(-1)
-        if program_state.return_value != None:
-            program_state.return_value = None
+        program_state.return_value = None
         return value

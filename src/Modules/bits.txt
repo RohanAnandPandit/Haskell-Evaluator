@@ -4,7 +4,7 @@ def setBit(int n, int i) = n ¦ (1 << i)
 
 def invert(int n) (
 	n' = 0
-	for i in 0..31 (
+	for i in (0..31) (
 		if (getBit(n, i) == 0) (
 			n' = setBit(n', i)
 		)
@@ -12,9 +12,11 @@ def invert(int n) (
 	return n'
 )
 
-def bitstring(int n) (
+def bitstring(int n) = bitstring(n, 32)
+
+def bitstring (int n, int bits) = (
 	string str = ""
-	for i in 31..0 (
+	for i in ((bits - 1)..0) (
 		str = str ++ show(getBit(n, i))
 	)
 	return str

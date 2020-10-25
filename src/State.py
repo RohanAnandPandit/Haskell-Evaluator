@@ -13,15 +13,18 @@ from Lexer import Lexer
 
 class State:
     def __init__(self):
+        self.reset()
+    
+    def reset(self):
         self.operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', 
-            '>=', '&&', '||', '(', ')', ',', '[', ']', ':',  '++', '...', 
+            '>=', '&&', '||', '(', ')', ',', '[', ']', ':',  '+', '...', 
             '/=', '!!', '`', '$', ';', '>>', '>>=', '=', '->', '--', '\\', 
             ' where ', '|', '@',  '<-', '<<', '&', '}', '¦', ' then ',
-            ' else ', '\t', '{','=>', '~', ',,', '\n', '.', ' inherits ',
+            ' else ', '\t', '{','=>', '~', ',,', '\n', '.', ' extends ',
             ' implements ', '!=', ' in ', '+=', '-=', '*=',
             '/=', '^=', '//', '%', '::'] 
     
-        self.keywords = ['class', 'def', 'struct', 'interface', 'inherits',
+        self.keywords = ['class', 'def', 'struct', 'interface', 'extends',
             'implements', 'while', 'for', 'switch', 'default', 'if', 'else',
             'then', 'enum', 'oper', 'break', 'continue', 'in', 'True', 
             'False', 'let', 'import', 'return', 'int', 'float', 'bool',
@@ -32,7 +35,7 @@ class State:
         self.builtInState = {}
         self.frameStack = [self.builtInState]
         self.functionNames = []
-        self.in_class = False
+        self.in_class = 0
         self.breakLoop = 0
         self.continueLoop = 0
         self.return_value = None
@@ -40,25 +43,24 @@ class State:
 
         
     def initialiseFunctions(self):
-        from Types import Type
-        self.builtInState['printLn'] = HFunction(8, Associativity.LEFT,
-                                     Prelude.printLn, 1, 'printLn')
-        
+        from Types import Type       
         self.builtInState['println'] = HFunction(8, Associativity.LEFT,
                                          Prelude.printLn, 1, 'println')
         
         self.builtInState['print'] = HFunction(8, Associativity.LEFT, 
-                                     Prelude.printHaskell, 1, 'print')
+                                     Prelude.print_, 1, 'print')
         
         self.builtInState['show'] = HFunction(8, Associativity.LEFT, 
                                      Prelude.show, 1, 'show')
         
+        self.builtInState['tostr'] = HFunction(8, Associativity.LEFT, 
+                                     op_func.toString, 1, 'tostr')
+        
         self.builtInState['input'] = HFunction(8, Associativity.LEFT,
-                                     Prelude.inputHaskell, 1, 'input')
+                                     Prelude.input_, 1, 'input')
     
-        self.builtInState['eval'] = HFunction(8, Associativity.LEFT, 
-                                 lambda exp: self.evaluate(str(exp)), 1,
-                                 'eval')
+        self.builtInState['eval'] = HFunction(8, Associativity.LEFT,  
+                                             op_func.eval_, 1, 'eval')
         
         self.builtInState['for'] = HFunction(8, Associativity.LEFT,
                                  op_func.forLoop, 2, 'for', lazy = True)
@@ -135,7 +137,7 @@ class State:
         self.builtInState['string'] = Type('string', program_state = self)
         self.builtInState['Object'] = Type('Object', program_state = self) 
         self.builtInState['Func'] = Type('Func', program_state = self) 
-        self.builtInState['Type'] = Type('Type', program_state = self)
+        self.builtInState['Type'] = Type('Type', program_state = self) 
         
         self.builtInState['type'] = HFunction(8, Associativity.LEFT,
                                  op_func.type_synonym, 2, 'type', lazy = True)
@@ -161,7 +163,7 @@ class State:
         self.evaluate('import Prelude')
 
     
-    def evaluate(self, source):
+    def evaluate(self, source, reset_state = False):
         value = None
         if "#STATIC-MODE#\n" in source:
             self.static_mode = True
@@ -179,11 +181,14 @@ class State:
             value = expr.simplify(self)
             #except Exception as error:
                 #print(' '.join(error.args))
+        if reset_state:
+            self.reset()
         return value
 
     def isPrimitive(self, expr):
         from Types import Int, Float, Bool, Char, String, EnumValue, Null
-        return type(expr) in [Int, Float, Bool, Char, String, EnumValue, Null]
+        return isinstance(expr, (Int, Float, Bool, Char, String, EnumValue,
+                                 Null))
     
     def null(self, expr):
         from Types import Null
@@ -205,4 +210,28 @@ class State:
             for interface in expr.class_.interfaces:
                 if interface.name == 'List':
                     return True
-        return False        
+        return False   
+
+    def getData(self, exp):
+        from Types import Bool, Null, Variable, Int, Float 
+        
+        if self.isPrimitive(exp): 
+            return exp
+    
+        if '.' in str(exp):
+            if int(float(exp)) == float(exp):
+                return Int(int(float(exp)))
+            return Float(round(float(exp), 10)) 
+        try: 
+            return Int(int(exp))
+        except:
+            pass
+    
+        if exp == 'True':
+            return Bool(True) 
+        elif exp == 'False':
+            return Bool(False) 
+        if exp in '?':
+            return Null() 
+        
+        return Variable(exp)     

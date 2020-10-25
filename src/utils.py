@@ -8,74 +8,9 @@ import IO
 import Prelude
 from Types import (Variable, Int, Float, Bool, EnumValue, Object, Structure,
                    Char, Type, Class, Struct, String, Null)
-from List import Nil, Cons, head, tail, Range, Array, List
+from List import Nil, Cons, head, tail, Array, List
 from Tuple import functionNamesTuple, Tuple
 from HFunction import Func
-'''
-global builtInState, static_mode, functional_mode, frameStack, enumNames
-global typeNames, structNames, operators, keywords, continueLoop, breakLoop 
-global return_value, functionNames
-'''
-builtInState = {}
-static_mode = False
-functional_mode = False
-frameStack = [builtInState]
-enumNames = []
-typeNames = ['int', 'float', 'char', 'bool', 'var', 'Num', 'global', 'local',
-             'hidden', 'Func', 'Object', 'Type', 'string']
-structNames = []
-operators = [' ', '/', '*', '+', '-', '^', '==', '<', '<=', '>', '>=', '&&', 
-             '||', '(', ')', ',', '[', ']', ':', '++', 'None', '/=', '!!', '`',
-             '$', ';', '>>', '>>=', '=', '->', '--', '\\',  ' where ', '|',
-             '@', '<-', '<<', '&', '}', '¦', ' then ', ' else ', '\t', '{',
-             '=>', '~', ',,', '\n', '.', ' inherits ', ' implements ', '!=',
-             ' in ', '+=', '-=', '*=', '/=', '^=', '//', '%', '::', '...'] 
-
-keywords = ['class', 'def', 'struct', 'interface', 'inherits', 'where',
-            'implements', 'while', 'for', 'switch', 'default', 'if', 'else',
-            'then', 'enum', 'oper', 'break', 'continue', 'in', 'True', 
-            'False', 'let', 'import', 'return', 'int', 'float', 'bool',
-            'char', 'var', 'do', '?', 'Num', 'from', 'type', 'union', 
-            'stop', 'skip', 'global', 'local', 'hidden', 'Func'] 
-
-continueLoop = 0
-breakLoop = 0
-return_value = None
-functionNames = []
-in_class = False
-functionNames += IO.functionNamesIO
-
-functionNames += ['eval', 'read', 'range', 'toInt', 'toBool', 'toChar',
-                  'toFloat', 'match']
-
-lazy_eval = ('=', '->', 'where', '|', '.', '\n', ';', '+=', '-=', '*=', '/=',
-             '^=', '=>', ':', '::',  'while', 'for', 'struct', 'enum', 'oper', 
-             'class', 'interface', 'def', 'switch', 'if', 'let', 'import',
-             'do', 'int', 'float', 'char', 'bool', 'from', 'type', 'union',
-             'where', 'in', 'global', 'local', 'hidden', 'match', '||', '&&')
- 
-def getData(exp):
-    if isPrimitive(exp): 
-        return exp
-
-    if '.' in str(exp):
-        if int(float(exp)) == float(exp):
-            return Int(int(float(exp)))
-        return Float(round(float(exp), 10))
-    try: 
-        return Int(int(exp))
-    except:
-        pass
-
-    if exp == 'True':
-        return Bool(True) 
-    elif exp == 'False':
-        return Bool(False) 
-    if exp in '?':
-        return Null() 
-    
-    from Types import Variable
-    return Variable(exp)
 
 def isPrimitive(expr):
     return type(expr) in [Int, Float, Bool, Char, String, EnumValue, Null]
@@ -92,29 +27,15 @@ def isList(expr):
                 return True
     return False
 
-def evaluate(exp, program_state):  
-    from Lexer import Lexer
-    from Parser import Parser  
-    if isinstance(exp, Cons):
-        exp = str(exp)[1:-1]
-    lexer = Lexer(exp)
-    #print("tokens : ", end = '')
-    #lexer.printTokens() 
-    expr = Parser(lexer).expr
-    #expr = optimise(expr)
-    #print("expression : ", str(expr)) 
-    #print("result : ", end = '')
-    #try:
-    return expr.simplify(program_state)
-    #except Exception as error:
-        #print(' '.join(error.args))
-
 def patternMatch(expr1, expr2, program_state):
     from Operator_Functions import equals 
     from Expression import BinaryExpr
-    if expr1 == None:
-        return True
+
     expr2 = expr2.simplify(program_state)
+    
+    if isPrimitive(expr1) and isPrimitive(expr2):
+        return equals(expr1.simplify(program_state), expr2, program_state).value
+    
     if isinstance(expr1, Variable):
         if isinstance(expr1.simplify(program_state), Type):
             return (isinstance(expr2, (Type, Class, Struct)) and 
@@ -122,11 +43,8 @@ def patternMatch(expr1, expr2, program_state):
         return True
     
     if isinstance(expr1, BinaryExpr) and expr1.operator.name == '@':
-        return patternMatch(expr1.expr, expr2)
-    
-    if isPrimitive(expr1) and isPrimitive(expr2):
-        return equals(expr1, expr2, program_state).value
-    
+        return patternMatch(expr1.expr, expr2, program_state)
+        
     if isinstance(expr1, Nil) and isinstance(expr2, Nil):
         return True 
     
@@ -134,7 +52,7 @@ def patternMatch(expr1, expr2, program_state):
         if isinstance(expr2, Nil): 
             return False
         return (patternMatch(head(expr1), head(expr2).simplify(program_state), program_state) 
-                and patternMatch(tail(expr1), tail(expr2), program_state)) 
+                and patternMatch(tail(expr1), tail(expr2), program_state))  
 
     if (isinstance(expr1, BinaryExpr) and expr1.operator.name == ':' and 
         isList(expr2)):
@@ -161,21 +79,31 @@ def patternMatch(expr1, expr2, program_state):
               expr1.items[0].name == '...'):
             return True
         
-        return (patternMatch(expr1.items[0], expr2.items[0].simplify(program_state), program_state) and
-                patternMatch(Tuple(expr1.items[1:], program_state), Tuple(expr2.items[1:], program_state), program_state), program_state) 
+        return (patternMatch(expr1.items[0],
+                             expr2.items[0].simplify(program_state),
+                             program_state) and
+                patternMatch(Tuple(expr1.items[1:], program_state),
+                             Tuple(expr2.items[1:], program_state),
+                             program_state),
+                             program_state) 
 
-    if isinstance(expr1, BinaryExpr): 
+    if isinstance(expr1, BinaryExpr) and expr1.operator.name == " ": 
         if typeMatch(expr1.leftExpr, expr2, program_state):
             if isinstance(expr2, Structure):
-                return patternMatch(expr1.rightExpr, Tuple(expr2.values), program_state)
+                return patternMatch(expr1.rightExpr, Tuple(expr2.values),
+                                    program_state) 
             else:
                 return patternMatch(expr1.rightExpr, expr2, program_state)
+    else:
+        return equals(expr1.simplify(program_state), expr2, program_state).value
+
     return False 
 
 def typeMatch(type_, expr, program_state):
     from Types import Type, Union
-    if null(type_.simplify(program_state)) or null(expr.simplify(program_state)):
-        return True
+    if (null(type_.simplify(program_state)) or 
+        null(expr.simplify(program_state))):
+        return True 
     
     if isinstance(type_, Variable):
         if type_.name == 'var':
@@ -315,11 +243,6 @@ def replaceVariables(expr, program_state):
     if isinstance(expr, Variable):
         expr = expr.simplify(program_state)
     elif isinstance(expr, BinaryExpr):
-        if expr.operator.name == '.':
-            try:
-                return expr.simplify(program_state)
-            except:
-                pass
         left = expr.leftExpr
         if expr.operator.name not in ('=', 'where'):
             left = replaceVariables(expr.leftExpr, program_state)

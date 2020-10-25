@@ -95,7 +95,7 @@ right_curly = HFunction(8, Associativity.LEFT, None, 1, '}')
 else_clause = HFunction(2.5, Associativity.RIGHT, op_func.else_clause, 2, '|',
                         lazy = True)
 
-access = HFunction(9.1, Associativity.LEFT, op_func.access, 2, '.',
+access = HFunction(10, Associativity.LEFT, op_func.access, 2, '.',
                    lazy = True)
 
 comprehension = HFunction(11, Associativity.LEFT, op_func.comprehension, 2,
@@ -171,91 +171,9 @@ class Operator(Enum):
     RAISE_TO = raise_to
     DOUBLE_SLASH = int_div
     PERCENT = remainder
-    DOUBLE_COLON = HFunction(1, Associativity.LEFT, op_func.pass_arg, 2, '::')
+    DOUBLE_COLON = HFunction(1, Associativity.LEFT, op_func.pass_arg, 2, '::',
+                             lazy = True)
     
-def initialiseFunctions(state):
-    from Types import Type
-    state['printLn'] = HFunction(8, Associativity.LEFT,
-                                 Prelude.printLn, 1, 'printLn')
-    state['println'] = HFunction(8, Associativity.LEFT,
-                                     Prelude.printLn, 1, 'println')
-    state['print'] = HFunction(8, Associativity.LEFT, 
-                                 Prelude.printHaskell, 1, 'print')
-    state['show'] = HFunction(8, Associativity.LEFT, Prelude.show, 1, 'show')
-    state['input'] = HFunction(8, Associativity.LEFT,
-                                 Prelude.inputHaskell, 1, 'input')
-
-    state['eval'] = HFunction(8, Associativity.LEFT, 
-                             lambda exp: utils.evaluate(str(exp)), 1, 'eval')
-    state['read'] = HFunction(8, Associativity.LEFT,
-                             lambda exp: utils.getData(str(exp)), 1, 'read')
-    state['for'] = HFunction(8, Associativity.LEFT,
-                             op_func.forLoop, 2, 'for')
-    state['while'] = HFunction(8, Associativity.LEFT,
-                                 op_func.whileLoop, 2, 'while', lazy = True)
-    state['if'] = HFunction(8, Associativity.LEFT, 
-                             op_func.ifStatement, 2, 'if', lazy = True)
-    state['struct'] = HFunction(8, Associativity.LEFT, 
-                                 op_func.createStruct, 2, 'struct', lazy = True)
-    state['enum'] = HFunction(8, Associativity.LEFT,
-                             op_func.createEnum, 2, 'enum', lazy = True)
-    state['oper'] = HFunction(8, Associativity.LEFT, 
-                             op_func.createOperator, 4, 'oper', lazy = True)
-    state['class'] = HFunction(8, Associativity.LEFT, 
-                             op_func.createClass, 1, 'class', lazy = True)
-    state['interface'] = HFunction(8, Associativity.LEFT,
-                             op_func.createInterface, 2, 'interface')
-    state['def'] = HFunction(8, Associativity.LEFT, 
-                             op_func.definition, 3, 'def')
-    state['switch'] = HFunction(8, Associativity.LEFT, 
-                             op_func.switch, 2, 'switch')
-    state['continue'] = HFunction(8, Associativity.LEFT,
-                             op_func.continue_loop, 0, 'continue')
-    state['break'] = HFunction(8, Associativity.LEFT, 
-                             op_func.breakCurrentLoop, 0, 'break')
-    state['let'] = HFunction(8, Associativity.LEFT, 
-                             op_func.let, 2, 'let')
-    state['import'] = HFunction(8, Associativity.LEFT,
-                         op_func.import_module, 1, 'import')
-    state['from'] = HFunction(8, Associativity.LEFT, 
-                             op_func.from_import, 3, 'from')
-    state['return'] = HFunction(8, Associativity.LEFT,
-                             op_func.return_statement, 1, 'return')
-    state['toInt'] = HFunction(8, Associativity.LEFT, 
-                             op_func.toInt, 1, 'toInt')
-    state['toFloat'] = HFunction(8, Associativity.LEFT, 
-                             op_func.toFloat, 1, 'toFloat')
-    state['toBool'] = HFunction(8, Associativity.LEFT,
-                             op_func.toBool, 1, 'toBool')
-    state['toChar'] = HFunction(8, Associativity.LEFT, 
-                                 op_func.toChar, 1, 'toChar')
-    state['do'] = HFunction(8, Associativity.LEFT, 
-                             op_func.doLoop, 3, 'do') 
-    state['int'] = Type('int') 
-    state['float'] = Type('float') 
-    state['bool'] = Type('bool') 
-    state['char'] = Type('char') 
-    state['string'] = Type('string')
-    
-    state['type'] = HFunction(8, Associativity.LEFT,
-                             op_func.type_synonym, 2, 'type') 
-    state['union'] = HFunction(8, Associativity.LEFT,
-                                 op_func.types_union, 2, 'union') 
-    state['stop'] = HFunction(8, Associativity.LEFT,
-                                 op_func.breakout, 1, 'stop') 
-    state['skip'] = HFunction(8, Associativity.LEFT,
-                                 op_func.skipout, 1, 'skip') 
-    state['global'] = HFunction(8, Associativity.LEFT,
-                                 op_func.make_public, 1, 'global') 
-    state['local'] = HFunction(8, Associativity.LEFT,
-                                 op_func.make_private, 1, 'local') 
-    state['hidden'] = HFunction(8, Associativity.LEFT,
-                                 op_func.make_hidden, 1, 'hidden') 
-    state['match'] = HFunction(8, Associativity.LEFT,
-                                 op_func.match, 2, 'match') 
-    state['py'] = HFunction(8, Associativity.LEFT,
-                                 op_func.python_eval, 1, 'py') 
-    utils.evaluate('import Prelude')
     
 class Op:
     def __init__(self, hfunc):

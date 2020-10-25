@@ -4,14 +4,14 @@ Created on Sat Jun 27 16:19:04 2020
 
 @author: rohan
 """
-from utils import frameStack, functionNames, getData, enumNames, isPrimitive
+from utils import isPrimitive
 from utils import patternMatch
-from HFunction import HFunction, Composition, Function, Lambda
-from List import List, Nil, Cons, Iterator, head, tail, Array
+from HFunction import Composition, Function, Lambda, Func
+from List import Nil, Cons, Iterator, head, tail, Array
 from Tuple import Tuple
 from Types import (Int, Float, Bool, Variable, Alias, Enum, EnumValue, Struct,
                    Class, Interface, Char, Module, Object, String, Null, 
-                   Collection, Type)
+                   Collection)
 from Expression import BinaryExpr
 from math import *
 
@@ -23,8 +23,6 @@ def assign(a, b, program_state, state = None):
     if isinstance(var, Variable):
         if var.name == '_ ...': return var
 
-        if b == None:
-            print(0)
         value = b.simplify(program_state)
 
         if program_state.functional_mode:
@@ -76,7 +74,8 @@ def assign(a, b, program_state, state = None):
         if var.operator.name == '!!':
             array = var.leftExpr.simplify(program_state)
             value = value.simplify(program_state)
-            index = head(var.rightExpr).simplify(program_state).value
+            index = head(var.rightExpr, program_state)
+            index = index.simplify(program_state).value
             if len(array.items) == index:
                 array.items.append(value)
             else:
@@ -101,9 +100,7 @@ def assign(a, b, program_state, state = None):
                 arg = args.rightExpr 
                 arguments.insert(0, arg)
                 args = args.leftExpr
-                if (isinstance(args, Variable) or 
-                    program_state.isType(args) or 
-                    program_state.null(args)):
+                if not isinstance(args, BinaryExpr):
                     arguments.insert(0, args)
                     break 
                 
@@ -125,42 +122,38 @@ def assign(a, b, program_state, state = None):
                 
                 for i in range(len(arguments)):
                     if not (isinstance(arguments[i], BinaryExpr) and 
-                            arguments[i].operator.name in ' :'):
-                        arguments[i] = arguments[i].simplify(program_state)
+                            arguments[i].operator.name in '   :'):
+                        arguments[i] = arguments[i].simplify(program_state)  
                 
-                case = Lambda(name, arguments = arguments, expr = value)
-                if name:
-                    if program_state.in_class:
-                        if name in list(state.keys()):
-                            func = state[name]
-                            func.cases.append(case)
-                            return case 
-                        else:
-                            func = Function(name, [case])
-                            state[name] = func
-                            program_state.functionNames.append(name) 
+                
+                if program_state.in_class > 0:
+                    arguments.insert(0, Variable('this'))
+                    case = Lambda(name, arguments = arguments, expr = value) 
+                    if name in list(state.keys()): 
+                        func = state[name]
+                        func.cases.append(case)
+                        return case 
                     else:
-                        for state in program_state.frameStack[::-1]:
-                            if name in list(state.keys()):
-                                func = state[name]
-                                func.cases.append(case)
-                                return case 
                         func = Function(name, [case])
                         state[name] = func
                         program_state.functionNames.append(name) 
+                else:
+                    case = Lambda(name, arguments = arguments, expr = value)
+                    for state in program_state.frameStack[::-1]:
+                        if name in list(state.keys()):
+                            func = state[name] 
+                            func.cases.append(case)
+                            return case 
+                    func = Function(name, [case])
+                    state[name] = func
+                    program_state.functionNames.append(name) 
                 return case
 
     return value
     
 def application(func, arg, program_state):
-    #try:
-    if isinstance(func, Class) and isinstance(arg, Tuple):
-        #print(0)
-        pass
     value = func.apply(arg, program_state = program_state) 
     return value
-    #except:
-        #print(0)
 
 def compose(second, first, program_state):
     return Composition(second, first)
@@ -172,33 +165,48 @@ def index(a, b, program_state):
         if n < 0 or isinstance(a, Nil):
             return None
         if program_state.isList(a):
-            x, xs = head(a), tail(a) 
+            x, xs = head(a, program_state), tail(a, program_state) 
             if n == 0:
                 return x
-            return index(xs, Int(n - 1))
+            return index(xs, Int(n - 1), program_state)
         elif isinstance(a, Enum):
             return a.values[n]
         elif isinstance(a, (Tuple, Array)):
             return a.items[n]
         
     elif isinstance(b, Cons):
-        start, b = head(b).simplify(), tail(b)
+        start = head(b, program_state).simplify(program_state)
+        b = tail(b, program_state) 
         if isinstance(b, Nil):
-            return index(a, start)
+            return index(a, start, program_state)
         else:
-            end = head(b).simplify()
+            end = head(b, program_state).simplify(program_state)
             if isinstance(a, String):
+                if isinstance(end, Variable) and end.name == '...':
+                    return String(a.value[start.value : ])
                 return String(a.value[start.value : end.value])
-
+            
+            if isinstance(end, Variable) and end.name == '...':
+                return Array(a.items[start.value : ])
             return Array(a.items[start.value : end.value])
+        
+    elif isinstance(b, Array):
+        key = b.items[0].simplify(program_state)
+        for pair in a.items:
+            if equals(pair.items[0], key, program_state).value:
+                return pair.items[1]
+        return Null()
 
 def power(a, b, program_state):
     if isinstance(a, Object):
         if 'pow' in list(a.state.keys()):
             return a.state['pow'].apply(b, program_state = program_state) 
+    if isinstance(b, Object):
+        if 'raise' in list(b.state.keys()):
+            return b.state['raise'].apply(a, program_state = program_state) 
         
     a, b = a.value, b.value
-    return getData(a ** b)
+    return program_state.getData(a ** b)
 
 def divide(a, b, program_state):
     if isinstance(a, Object):
@@ -206,7 +214,7 @@ def divide(a, b, program_state):
             return a.state['div'].apply(b, program_state = program_state)
         
     (a, b) = (a.value, b.value)
-    return getData(a / b)
+    return program_state.getData(a / b)
 
 def multiply(a, b, program_state):
     if isinstance(a, Object):
@@ -217,9 +225,11 @@ def multiply(a, b, program_state):
             return b.state['mul'].apply(a, program_state = program_state)
         
     a, b = a.value, b.value
-    return getData(a * b)
+    return program_state.getData(a * b)
 
 def add(a, b, program_state):
+    if isinstance(a, String) and isinstance(b, String):
+        return String(a.value + b.value)
     if isinstance(a, Object):
         if 'add' in list(a.state.keys()):
             return a.state['add'].apply(b, program_state = program_state) 
@@ -228,7 +238,7 @@ def add(a, b, program_state):
             return b.state['add'].apply(a, program_state = program_state)
         
     a, b = a.value, b.value
-    return getData(a + b)
+    return program_state.getData(a + b)
 
 def subtract(a, b, program_state):
     if isinstance(a, Object):
@@ -237,9 +247,8 @@ def subtract(a, b, program_state):
     if isinstance(b, Object):
         if 'subfrom' in list(b.state.keys()):
             return b.state['subfrom'].apply(a, program_state = program_state)
-        
-    a, b = a.value, b.value
-    return getData(a - b)
+ 
+    return program_state.getData(a.value - b.value)
 
 def lessThan(a, b, program_state):
     if isinstance(a, Object):
@@ -277,19 +286,21 @@ def quot(a, b):
     return Int(a.value // b.value)
 
 def equals(a, b, program_state):
+    if a == b == None:
+        return Bool(True)
     if a == None or b == None:
         return Bool(False)
-    if (isinstance(a, (Variable, BinaryExpr)) 
-        or isinstance(b, (Variable, BinaryExpr))):
-        return Bool(False)
-    if issubclass(type(a), List) and issubclass(type(b), List):
+    
+    if program_state.isPrimitive(a) and program_state.isPrimitive(b): 
+        return Bool(a.value == b.value)
+    
+    if program_state.isList(a) and program_state.isList(b):
         if isinstance(a, Nil) and isinstance(b, Nil):
             return Bool(True)
-        if isinstance(a, Cons) and isinstance(b, Cons):
-            x, xs = head(a), tail(a)
-            y, ys = head(b), tail(b)
-            return equals(x, y) and equals(xs, ys)
-        return Bool(False)
+        x, xs = head(a, program_state), tail(a, program_state)
+        y, ys = head(b, program_state), tail(b, program_state)
+        return equals(x, y, program_state) and equals(xs, ys, program_state)
+    
     if isinstance(a, (Array, Tuple)) and isinstance(b, (Array, Tuple)):
         if len(a.items) != len(b.items):
             return Bool(False)
@@ -297,13 +308,16 @@ def equals(a, b, program_state):
             if not equals(a.items[i], b.items[i], program_state).value:
                 return Bool(False)
         return Bool(True)
-    if isPrimitive(a) and isPrimitive(b):
-        return Bool(a.value == b.value)
     
     if isinstance(a, Object):
         if 'equals' in list(a.state.keys()):
             return a.state['equals'].apply(b, program_state = program_state)
         return Bool(a == b)
+    
+    if issubclass(type(a), Func) and issubclass(type(b), Func):
+        if a.name == b.name:
+            return equals(Tuple(a.inputs, program_state),
+                          Tuple(b.inputs, program_state), program_state)
     
     return Bool(False)
 
@@ -320,13 +334,17 @@ def OR(a, b, program_state):
         return Bool(True)
     return b.simplify(program_state)
 
-def comma(a, b):
+def comma(a, b, program_state):
     if isinstance(a, Tuple):
-        return Tuple(a.items.append(b))
-    return Tuple([a, b])
+        return Tuple(a.items.append(b), program_state)
+    return Tuple([a, b], program_state)
 
 def cons(a, b, program_state):
     from utils import replaceVariables
+    if isinstance(b.simplify(program_state), Object):
+        b = b.simplify(program_state)
+        if 'cons' in list(b.state.keys()):
+            return b.state['cons'].apply(a, program_state = program_state)
     x, xs = a, b
     return Cons(replaceVariables(x, program_state),
                 xs.simplify(program_state), program_state)
@@ -382,37 +400,35 @@ def sequence(a, b, program_state):
         
     return Null()
     
-def chain(a, b):
-    return b.apply(a.simplify())
+def chain(a, b, program_state):
+    return b.apply(a.simplify(program_state), program_state = program_state)
 
 def createLambda(args, expr, program_state):
     arguments = []
     while True:
-        if isinstance(args, (Variable, HFunction)):
-            name = args.name
+        if not isinstance(args, BinaryExpr):
+            arguments.insert(0, args)
             break
         arguments.insert(0, args.rightExpr)
         args = args.leftExpr
-    case = Lambda(name, expr, arguments = arguments)
+    case = Lambda('\\', expr, arguments = arguments)
     return case
 
 def createEnum(name, values, program_state):
     state = program_state.frameStack[-1]
-    values = values.tup
-    names = list(map(str, values))
+    names = list(map(lambda var: var.name, values.items))
     name = name.name
     enum = Enum(name, names)
     state[name] = enum
     i = 0
-    for val in values:
-        enumNames.append(val.name)
-        assign(val, EnumValue(enum, val.name, i))
+    for val in values.items:
+        assign(val, EnumValue(enum, val.name, i), program_state)
         i += 1
     return enum
  
 def createStruct(name, fields, program_state):
     state = program_state.frameStack[-1]
-    fields = list(map(lambda var: var.name, fields.tup))
+    fields = list(map(lambda var: var.name, fields.items))
     name = name.name
     struct = Struct(name, fields)
     state[name] = struct
@@ -420,7 +436,6 @@ def createStruct(name, fields, program_state):
     return struct
 
 def createOperator(symbol, precedence, associativity, func, program_state):
-    from utils import operators
     from Operators import operatorsDict, Op, Associativity
     associativityMap = {'left' : Associativity.LEFT,
                         'right' : Associativity.LEFT,
@@ -428,7 +443,7 @@ def createOperator(symbol, precedence, associativity, func, program_state):
     
     precedence = precedence.value
     associativity = associativityMap[associativity.name]
-    symbol = str(symbol)
+    symbol = str(symbol)[1:-1]
     program_state.operators.append(symbol) 
     
     func = func.simplify(program_state).apply(program_state = program_state)
@@ -456,43 +471,45 @@ def createInterface(name, declarationsExpr, program_state):
         
 def where(expr1, expr2, program_state):
     program_state.frameStack.append({})
-    expr2.simplify()
-    value = expr1.simplify()
+    expr2.simplify(program_state)
+    value = expr1.simplify(program_state)
     program_state.frameStack.pop(-1)
     return value
 
 def alias(var, expr):
     return Alias(var, expr)
 
-def shiftLeft(num, n):
+def shiftLeft(num, n, program_state):
     return Int(num.value << n.value)
 
-def shiftRight(num, n):
+def shiftRight(num, n, program_state):
     return Int(num.value >> n.value)
 
-def bitwise_or(x, y):
+def bitwise_or(x, y, program_state):
     return Int(x.value | y.value)
 
-def bitwise_and(x, y):
+def bitwise_and(x, y, program_state):
     return Int(x.value & y.value)
 
 def access(obj, field, program_state):
     obj = obj.simplify(program_state)
     return obj.state[field.name].simplify(program_state)
 
-
 def forLoop(n, expr, program_state):
+    val = Null()
+    state = {}
     if isinstance(n, Tuple):
         generators = n.items
-        program_state.frameStack.append({})
+        program_state.frameStack.append(state)
         curr = generators[0].simplify(program_state) 
         var, collection = curr.var, curr.collection.simplify(program_state)
         while not isinstance(collection, Nil): 
-            assign(var, head(collection), program_state)
+            assign(var, head(collection, program_state), program_state) 
             if len(generators) == 1:
-                expr.simplify(program_state)
+                val = expr.simplify(program_state)
             else:
-                forLoop(Tuple(generators[1:]), expr, program_state)
+                val = forLoop(Tuple(generators[1:], program_state), expr,
+                              program_state)
             if program_state.breakLoop > 0 or program_state.return_value:
                 program_state.breakLoop -= 1
                 break
@@ -505,11 +522,10 @@ def forLoop(n, expr, program_state):
         if n.operator.name == ';':
             init, n = n.leftExpr, n.rightExpr
             cond, after = n.leftExpr, n.rightExpr
-            state = {}
             program_state.frameStack.append(state)
             init.simplify(program_state)
             while cond.simplify(program_state).value:
-                expr.simplify(program_state)
+                val = expr.simplify(program_state)
                 if program_state.continueLoop > 0:
                     program_state.continueLoop -= 1
                 if program_state.breakLoop > 0 or program_state.return_value:
@@ -520,12 +536,13 @@ def forLoop(n, expr, program_state):
             
         elif n.operator.name == 'in':
             n = n.simplify(program_state)
-            program_state.frameStack.append({})
+            program_state.frameStack.append(state)
             var, collection = n.var, n.collection.simplify(program_state)
             if program_state.isList(collection):
                 while not isinstance(collection, Nil):
-                    assign(var, head(collection)) 
-                    expr.simplify(program_state)
+                    assign(var, head(collection, program_state),
+                           program_state, state) 
+                    val = expr.simplify(program_state)
                     if (program_state.breakLoop > 0 or 
                         program_state.return_value):
                         program_state.breakLoop -= 1
@@ -536,38 +553,38 @@ def forLoop(n, expr, program_state):
                     
             elif isinstance(collection, (Tuple, Array)):
                 for item in collection.items:
-                    assign(var, item, program_state, ) 
-                    expr.simplify(program_state)
+                    assign(var, item, program_state, state) 
+                    val = expr.simplify(program_state)
                     if (program_state.breakLoop > 0 or 
                         program_state.return_value):
                         program_state.breakLoop -= 1
                         break
                     if program_state.continueLoop > 0:
                         program_state.continueLoop -= 1
-            frameStack.pop(-1)
+            program_state.frameStack.pop(-1)
             
         else:
             n = n.simplify(program_state)
             for i in range(n.value):
-                expr.simplify(program_state)
+                val = expr.simplify(program_state)
                 if program_state.continueLoop > 0:
                     program_state.continueLoop -= 1
                 if program_state.breakLoop > 0:
                     program_state.breakLoop -= 1
                     break
-                
     else:
         n = n.simplify(program_state)
         for i in range(n.value):
-            expr.simplify(program_state)
+            val = expr.simplify(program_state)
             if program_state.continueLoop > 0:
                 program_state.continueLoop -= 1
             if program_state.breakLoop > 0:
                 program_state.breakLoop -= 1
 
-    return Int(0)
+    return val
 
-def whileLoop(cond, expr, program_state):
+def whileLoop(cond, expr, program_state): 
+    value = Null()
     while cond.simplify(program_state).value:
         value = expr.simplify(program_state)
         if program_state.continueLoop > 0:
@@ -600,7 +617,7 @@ def ifStatement(cond, expr, program_state):
 
 def extends(subclass, superclass, program_state):
      subclass.state['super'] = superclass
-     for name in superclass.state.keys():
+     for name in list(superclass.state.keys()):
          subclass.state[name] = superclass.state[name]
      return subclass
 
@@ -611,15 +628,14 @@ def implements(class_, interface, program_state):
 def definition(name_var, args_tup, expr, program_state):
     name = name_var.name
     state = program_state.frameStack[-1]
-    case = Lambda(program_state, name, arguments = [args_tup], expr = expr)
-    if name != None:
-        if name in state.keys():
-            func = state[name]
-            func.cases.append(case)
-        else:
-            func = Function(name, 1, [case])
-            state[name] = func
-            functionNames.append(name) 
+    case = Lambda(name, arguments = [args_tup], expr = expr)
+    if name in state.keys():
+        func = state[name]
+        func.cases.append(case)
+    else:
+        func = Function(name, 1, [case])
+        state[name] = func
+        program_state.functionNames.append(name) 
     return case
         
 def switch(value, expr, program_state):
@@ -658,9 +674,9 @@ def import_module(nameVar, program_state):
     name = nameVar.name
     file = open('Modules/' + name + '.txt', 'r')
     code = file.read()
-    Module(name, code, program_state)
+    return Module(name, code, program_state)
     #assign(nameVar, Module(name, code, program_state), program_state)
-    return Int(0)
+    #return Int(0)
 
 def from_import(moduleVar, stat, names):
     if isinstance(names, Tuple):
@@ -685,10 +701,8 @@ def return_statement(value, program_state):
     return value
 
 def toInt(expr, program_state):
-    if isinstance(expr, (Int, Float)):
-        return Int(int(expr.value))
-    if isinstance(expr, Cons):
-        return toInt(getData(str(expr)))
+    if isinstance(expr, (Int, Float, String)):
+        return Int(int(float(expr.value)))
     if isinstance(expr, Bool):
         if expr.value:
             return Int(1)
@@ -698,10 +712,8 @@ def toInt(expr, program_state):
     return Int(0)
 
 def toFloat(expr, program_state):
-    if isinstance(expr, (Int, Float)):
+    if isinstance(expr, (Int, Float, String)):
         return Float(float(expr.value))
-    if isinstance(expr, Cons):
-        return toFloat(getData(str(expr)))
     if isinstance(expr, Bool):
         if expr.value:
             return Float(1.0)
@@ -724,16 +736,23 @@ def toChar(expr, program_state):
         return Char(chr(expr.value))
     return Char(chr(0))
 
+def toString(expr, program_state):
+    if isinstance(expr, Char):
+        return String(expr.value)
+    elif isinstance(expr, String):
+        return expr
+    return String(str(expr))
+
 def doLoop(expr, loop, cond, program_state):
     expr.simplify(program_state)
     if loop.name == 'while':
-        return whileLoop(cond, expr)
+        return whileLoop(cond, expr, program_state)
     if loop.name == 'for':
-        return forLoop(cond, expr)
+        return forLoop(cond, expr, program_state)
         
 def incrementBy(var, val, program_state): 
     value = var.simplify(program_state)
-    assign(var, add(val.simplify(program_state), value, program_state),
+    assign(var, add(value, val.simplify(program_state), program_state),
            program_state)
     return value
 
@@ -809,55 +828,55 @@ def types_union(var, types, program_state):
     assign(var, union, program_state)
     return union
 
-def then_clause(cond, expr): 
-    if cond.simplify().value:
-        return expr.simplify()
-    return Int(None)
+def then_clause(cond, expr, program_state): 
+    if cond.simplify(program_state).value:
+        return expr.simplify(program_state)
+    return Null()
 
 def else_clause(if_stat, expr, program_state):
     if if_stat.leftExpr.rightExpr.simplify(program_state).value:
         return if_stat.simplify(program_state)
     return expr.simplify(program_state)
 
-def read_as(var, struct):
+def read_as(var, struct, program_state):
     return Alias(var, struct)
 
-def create_iterator(var, xs):
-    return Iterator(var, xs)
+def create_iterator(var, xs, program_state):
+    return Iterator(var, xs, program_state)
 
-def make_public(var):
-    frameStack[-1]['this'].public.append(var.name)
+def make_public(var, program_state):
+    program_state.frameStack[-1]['this'].public.append(var.name)
     return var
 
-def make_private(var):
-    frameStack[-1]['this'].private.append(var.name)
+def make_private(var, program_state):
+    program_state.frameStack[-1]['this'].private.append(var.name)
     return var
 
-def make_hidden(var):
-    frameStack[-1]['this'].hidden.append(var.name)
+def make_hidden(var, program_state):
+    program_state.frameStack[-1]['this'].hidden.append(var.name)
     return var
 
-def pass_arg(arg, funcs):
-    if isinstance(funcs.simplify(), Tuple):
+def pass_arg(arg, funcs, program_state):
+    if isinstance(funcs.simplify(program_state), Tuple):
         items = []
-        for func in funcs.simplify().tup:
-            items.append(pass_arg(arg, func))
-        return Tuple(items)
+        for func in funcs.simplify(program_state).tup:
+            items.append(pass_arg(arg, func, program_state))
+        return Tuple(items, program_state)
     if not isinstance(arg, Variable):
-        arg = arg.simplify()
-    return application(funcs.simplify(), arg)
+        arg = arg.simplify(program_state)
+    return application(funcs.simplify(program_state), arg, program_state)
 
 def match(a, b, program_state):
     from utils import patternMatch
     return Bool(patternMatch(a, b, program_state))   
 
 def append(a, b):
-    if isinstance(a.simplify(), Object):
-        a.simplify().state['append'].apply(b)
-        return a.simplify()
     if isinstance(a, (Tuple, Array)):
         a.items.append(b)
     return a
 
 def python_eval(code, program_state):
-    return getData(str(eval(code.value)))
+    return program_state.getData(str(eval(code.value)))
+
+def eval_(code, program_state):
+    return program_state.evaluate(code.value)

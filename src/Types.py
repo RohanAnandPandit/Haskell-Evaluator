@@ -5,7 +5,7 @@ Created on Sat Jul 18 14:51:39 2020
 @author: rohan
 """
 from Tuple import Tuple
-from HFunction import Function, Lambda, Func
+from HFunction import Function, Func
 
 class Variable:
     def __init__(self, name):
@@ -17,7 +17,7 @@ class Variable:
         
         frameStack = program_state.frameStack
         for curr in frameStack[::-1]:
-            if self.name in curr.keys():
+            if self.name in list(curr.keys()):
                 return curr[self.name].simplify(program_state)
 
         #raise Exception('Variable', self.name, 'is not defined') 
@@ -109,7 +109,7 @@ class Char:
         return self
     
     def __str__(self):
-        return str(self.value)
+        return "'" + self.value + "'"
 
 class String:
     def __init__(self, value):
@@ -120,7 +120,7 @@ class String:
         return self
     
     def __str__(self):
-        return self.value
+        return '"' + str(self.value) + '"'
 
 class Alias:
     def __init__(self, var, expr):
@@ -130,7 +130,7 @@ class Alias:
     def __str__(self):
         return str(self.var) + '@' + str(self.expr)
     
-    def simplify(self, simplifyVariables = True):
+    def simplify(self, program_state):
         return self
 
 class Collection:
@@ -140,7 +140,8 @@ class Collection:
     
     def simplify(self, program_state):
         if self.operator.name == ',':
-            return Tuple(list(filter(lambda item: item != None, self.items)))
+            return Tuple(list(filter(lambda item: item != None, self.items)),
+                         program_state)
         
         if len(self.items) == 2:
             left = self.items[0] 
@@ -150,7 +151,7 @@ class Collection:
             return self.operator.apply(left, right, program_state)
         for i in range(len(self.items) - 1): 
             if (not self.operator.apply(self.items[i].simplify(program_state),
-                                        self.items[i + 1].simplify(program_state)).value, program_state):
+             self.items[i + 1].simplify(program_state), program_state).value):
                 return Bool(False)
         return Bool(True)
     
@@ -217,7 +218,7 @@ class Structure:
 class Class(Func):
     def __init__(self, name):
         self.name = 'class ' + name
-        self.state = {'this' : self}
+        self.state = {}
         self.parent_classes = []
         self.interfaces = []
         self.private = self.public = self.hidden = []
@@ -229,9 +230,9 @@ class Class(Func):
             self.isConstructor = True
             self.name = self.name.split(' ')[1]
             program_state.frameStack.append(self.state)
-            program_state.in_class = True
+            program_state.in_class += 1
             expr.simplify(program_state)
-            program_state.in_class = False
+            program_state.in_class -= 1
             program_state.frameStack.pop(-1)
             program_state.functionNames.append(self.name)
             return self
@@ -239,15 +240,12 @@ class Class(Func):
             values = expr
             obj = Object(self, program_state)
             for name in list(self.state.keys()):
-                if isinstance(self.state[name], (Function, Lambda)):
-                    obj.state[name] = Method(obj, self.state[name],
-                             program_state)
-                else:
-                    obj.state[name] = self.state[name]  
+                obj.state[name] = self.state[name]
+                if isinstance(self.state[name], Function):
+                    obj.state[name] = obj.state[name].clone()
+                    obj.state[name].inputs.append(obj)
                     
-            obj.state['this'] = obj 
-
-            if 'init' in list(self.state.keys()):
+            if 'init' in list(obj.state.keys()):
                 obj.state['init'].apply(values, program_state = program_state)
             
             return obj
@@ -267,19 +265,19 @@ class Method(Func):
         self.program_state = program_state
     
     def apply(self, arg1 = None, arg2 = None, program_state = None):
-        program_state.frameStack.append(self.obj.state)
+        program_state.frameStack.append({'this' : self.obj})
         value = self.func.apply(arg1, arg2, program_state = program_state)
         program_state.frameStack.pop(-1)
-        if issubclass(type(value), Func):
+        if issubclass(type(value), Func) and value.name == self.name:
             return Method(self.obj, value, program_state) 
         return value
 
     def simplify(self, program_state):
-        self.program_state.frameStack.append(self.obj.state)
+        self.program_state.frameStack.append({'this' : self.obj})
         value = self.func.simplify(program_state)
         self.program_state.frameStack.pop(-1) 
-        if issubclass(type(value), Func):
-            return Method(self.obj, value, program_state) 
+        if issubclass(type(value), Func) and value.name == self.name:
+            return Method(self.obj, value, program_state)
         return value
     
     def __str__(self):
@@ -296,9 +294,9 @@ class Object:
     
     def __str__(self):
         if 'toString' in list(self.state.keys()):
-            return str(self.state['toString'].simplify(self.program_state))
-        return self.class_.name + ' object' 
-    
+            string = self.state['toString'].simplify(self.program_state).value
+            return string
+        return self.class_.name + ' object'  
     
 class Interface:
     def __init__(self, name, declarationExpr, program_state):
@@ -306,9 +304,9 @@ class Interface:
         state = {}
         program_state.frameStack = program_state.frameStack
         program_state.frameStack.append(state)
-        program_state.in_class = True
+        program_state.in_class += 1
         declarationExpr.simplify(program_state)
-        program_state.in_class = False
+        program_state.in_class -= 1
         program_state.frameStack.pop(-1) 
         self.methods = state.keys()
     

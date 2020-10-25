@@ -19,24 +19,21 @@ os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (50, 50)
 
 state = State()
 def console():
-    while (True):
+    while True:
         string = input('Start> ')
-        if (string == ''):
+        if string == '':
             continue
-        elif (string == '$quit'):
+        elif string == '$quit':
             break
-        elif (string == '$stack'):
+        elif string == '$stack':
             print(utils.frameStack)
             continue
-        elif (string == '$edit'):
+        elif string == '$edit':
             Editor(state)
-        value = state.evaluate(string) 
-        print(value)
+        value = state.evaluate(string)
+        print(str(value))
 
-console()
-
-
-
+console() 
 
 
 
