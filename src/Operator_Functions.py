@@ -661,18 +661,21 @@ def switch(value, expr, program_state):
 
 def let(assign, expr, program_state):
     state = {}
-    frameStack.append(state)
+    program_state.frameStack.append(state)
     assign.simplify(program_state)
     variables = list(state.keys())
     expr.simplify(program_state)
     for var in variables:
         state.pop(var)
-    frameStack[-2].update(state)
-    frameStack.pop(-1)
+    program_state.frameStack[-2].update(state)
+    program_state.frameStack.pop(-1)
 
 def import_module(nameVar, program_state):
     name = nameVar.name
-    file = open('Modules/' + name + '.txt', 'r')
+    try:
+        file = open('Modules/' + name + '.txt', 'r')
+    except:
+        file = open('src/Modules/' + name + '.txt', 'r')
     code = file.read()
     return Module(name, code, program_state)
     #assign(nameVar, Module(name, code, program_state), program_state)
