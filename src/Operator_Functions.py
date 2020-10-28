@@ -13,6 +13,7 @@ from Types import (Int, Float, Bool, Variable, Alias, Enum, EnumValue, Struct,
                    Class, Interface, Char, Module, Object, String, Null, 
                    Collection)
 from Expression import BinaryExpr
+from Modules import *
 from math import *
 
 def assign(a, b, program_state, state = None):

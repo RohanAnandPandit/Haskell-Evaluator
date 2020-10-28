@@ -8,7 +8,7 @@ class Pair (
 )
 
 class Map (
-	def Map {} (this.pairs = [])
+	def Map () (this.pairs = [])
 	
 	def get key = (
 		for p in pairs (
@@ -17,7 +17,7 @@ class Map (
 		return ?
 	)
 
-	def put {key, value} = (
+	def put (key, value) = (
 		for p in pairs (
 			if (p.first == key) (
 				prev = p.second

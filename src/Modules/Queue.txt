@@ -1,5 +1,5 @@
 class Queue (
-	def Queue {} (this.list = [])
+	def init() (this.list = [])
 
 	def enqueue item = (this.list = list <- item)
 

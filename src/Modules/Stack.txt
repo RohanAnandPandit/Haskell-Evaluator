@@ -1,5 +1,5 @@
 class Stack (
-	def init = (
+	def init() = (
 		this.list = []
 	)
 

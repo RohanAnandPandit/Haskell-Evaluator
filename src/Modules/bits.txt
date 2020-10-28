@@ -4,7 +4,7 @@ def setBit(int n, int i) = n ¦ (1 << i)
 
 def invert(int n) (
 	n' = 0
-	for i in (0..31) (
+	for i in (0..32) (
 		if (getBit(n, i) == 0) (
 			n' = setBit(n', i)
 		)
