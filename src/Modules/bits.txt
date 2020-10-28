@@ -1,15 +1,15 @@
 def getBit(int n, int i) = (n & (1 << i)) >> i
 
-def setBit(int n, int i) = n ¦ (1 << i)
+def setBit(int n, int i) = n ||| (1 << i)
 
-def invert(int n) (
-	n' = 0
+def invert(int n) = (
+	int x = 0
 	for i in (0..32) (
 		if (getBit(n, i) == 0) (
-			n' = setBit(n', i)
+			x = setBit(x, i)
 		)
 	)
-	return n'
+	return x
 )
 
 def bitstring(int n) = bitstring(n, 32)

@@ -6,9 +6,7 @@ Created on Tue Jun 23 09:24:41 2020
 """
 from enum import Enum
 from HFunction import HFunction
-import Prelude
 import Operator_Functions as op_func
-import utils
 
 class Associativity(Enum):
     LEFT = 0
@@ -75,7 +73,7 @@ inheritance = HFunction(9, Associativity.LEFT, op_func.extends, 2, 'extends')
 implements = HFunction(9, Associativity.LEFT,
                        op_func.implements, 2, 'implements')
 
-bitwise_or = HFunction(5, Associativity.LEFT, op_func.bitwise_or, 2, '¦')
+bitwise_or = HFunction(5, Associativity.LEFT, op_func.bitwise_or, 2, '|||')
 
 bitwise_and = HFunction(1, Associativity.LEFT, op_func.bitwise_and, 2, '&')
 
@@ -215,7 +213,7 @@ operatorsDict = {'=' : Operator.EQUAL,
                  '$' : Operator.DOLLAR,
                  '\\': Operator.BACKSLASH,
                  '->': Operator.ARROW,
-                 '¦' : Operator.BROKEN_BAR,
+                 '|||' : Operator.BROKEN_BAR,
                  '>>=' : Operator.CHAIN,
                  ' where ' : Operator.WHERE,
                  '@' : Operator.AT,

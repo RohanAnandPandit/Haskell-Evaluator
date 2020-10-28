@@ -4,6 +4,8 @@ Created on Tue Jun 23 13:38:23 2020
 
 @author: rohan
 """
+from HFunction import Func 
+
 class BinaryExpr:
     def __init__(self, operator, left, right): 
         self.operator = operator
@@ -40,7 +42,8 @@ class BinaryExpr:
             if self.rightExpr:
                 rightExpr = self.rightExpr
                 if not (self.operator.lazy or
-                        self.operator.name == ' ' and leftExpr.lazy):
+                        self.operator.name == ' ' and 
+                        issubclass(type(leftExpr), Func) and leftExpr.lazy):
                         rightExpr = self.rightExpr.simplify(program_state)
                 operator = operator.apply(rightExpr,
                                           program_state = program_state)       
