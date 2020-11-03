@@ -84,8 +84,7 @@ def patternMatch(expr1, expr2, program_state):
                              program_state) and
                 patternMatch(Tuple(expr1.items[1:], program_state),
                              Tuple(expr2.items[1:], program_state),
-                             program_state),
-                             program_state) 
+                             program_state)) 
 
     if isinstance(expr1, BinaryExpr) and expr1.operator.name == " ": 
         if typeMatch(expr1.leftExpr, expr2, program_state):
@@ -105,9 +104,10 @@ def typeMatch(type_, expr, program_state):
         null(expr.simplify(program_state))):
         return True 
     
-    if isinstance(type_, Variable):
+    if isinstance(type_, Variable) or isinstance(type_, Type):
         if type_.name == 'var':
             return True
+        
         if type_.name == 'Type':
             return program_state.isType(expr)
 
@@ -117,8 +117,8 @@ def typeMatch(type_, expr, program_state):
         elif isinstance(expr, Object):
             return type_.simplify(program_state).name == expr.class_.name
         
-        elif issubclass(type(expr), Func):
-            return type_.name == 'Func'
+        elif type_.name == 'Func':
+            return issubclass(type(expr), Func)
         
         elif isinstance(type_.simplify(program_state), Type):
             if isPrimitive(expr):
