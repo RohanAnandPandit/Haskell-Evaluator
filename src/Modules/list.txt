@@ -15,7 +15,7 @@ class Take implements List (
     def init(int n, [] list) = (
         this.n = n
         this.list = list
-    )    
+    )
     
     def head = (
         if (this.n > 0) (
@@ -24,7 +24,7 @@ class Take implements List (
         )
         return ?
     )
-    
+
     def tail = (
         if (this.n == 1) (return [])
         _:xs = this.list
@@ -57,7 +57,7 @@ class Map implements List (
     def init(Func func, [] list) = (
         this.func = func
         this.list = list
-    )    
+    )
     
     def head = (
         x:_ = this.list
@@ -237,7 +237,7 @@ class ZipWith implements List (
             str += tostr (this.func x y)
             if (xs' != [] && ys' != []) (str += ", ")
         )
-        return (str ++ "]")
+        return (str + "]")
     )
     
 )
@@ -409,9 +409,6 @@ class Concatenation implements List (
 
 def concatenation ([] left) ([] right) = Concatenation(left, right)  
 def concatenation(string str1)(string str2) = str1 + str2
-        
-        
-        
         
         
         

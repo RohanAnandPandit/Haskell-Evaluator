@@ -1,0 +1,171 @@
+pi = 3.1415926535
+e = 2.71828182846
+
+phi = 1.618
+tau = 2pi
+
+def sin angle = py ("sin(" + tostr angle + ")")
+
+def cos angle = py ("cos(" + tostr angle + ")")
+
+sqrt = (^ 0.5)
+
+def abs (Num n) = (
+    if (n < 0) (
+        0-n
+    )
+    return n
+)
+
+class complex (
+    def init(Num real, Num imag) = (
+	print(real, imag)
+	this.real = real
+	this.imag = imag
+    )
+    
+    def init(Num real) = this.init(real, 0)
+    
+    def init("mod-arg", Num mod, Num arg) = (
+    	init(mod * py ("cos(" ++ tostr arg ++ ")"), mod * py ("sin(" ++ tostr arg ++ ")"))
+    )
+    
+    def toString = (
+    	if (this.real == this.imag == 0) (return "0")
+    	string str = ""
+		if (this.real != 0) (
+			str = tostr this.real
+			if (this.imag != 0) (
+    			str = "(" ++ str
+    			if (this.imag > 0) (
+    				str += "+"
+    			)
+			)
+		)
+		if (this.imag != 0) (
+    		if (this.imag != 1) (
+        		if (this.imag == (-1)) (
+            		str += "-"
+        		) else (
+            		str += tostr this.imag
+            	)
+        	)
+            str += "i"	 
+    	)
+		if (this.real != 0 && this.imag != 0) (
+			str += ")"
+		)
+		return str
+		
+	)
+
+	def add (complex num) = complex(this.real + num.real, this.imag + num.imag)
+	def add (Num num) = complex(this.real + num, this.imag)
+
+	def sub (complex num) = complex(real - num.real, imag - num.imag)
+	def sub (Num n) = complex(real - n, imag)
+
+	def subfrom (complex num) = complex(num.real - this.real, num.imag - this.imag)
+	def subfrom (Num n) = complex(n - this.real, 0-this.imag)
+	
+	def mul (complex c) = (
+		complex(this.real * c.real - this.imag * c.imag,
+			    this.real * c.imag + this.imag * c.real)
+	)
+
+	def mul (Num n) = complex(this.real * n, this.imag * n)
+	
+	def pow(int n) = (
+    	var c = 1
+    	for n (
+        	c = c * this
+        )
+        return c
+	)
+	
+	def pow(Num n) = (
+		var mod = this.modulus
+		var arg = this.argument
+		return (complex("mod-arg", mod ^ n, arg * n))
+	)
+
+	def pow(complex num) = (
+    	var a = this.real; var b = this.imag
+    	var c = num.real; var d = num.imag
+		var arg = this.argument
+		var r = e ^ (0.5c * ln(a ^ 2 + b ^ 2) - d * arg)
+		arg = c * arg + 0.5d * ln(a ^ 2 + b ^ 2)
+		return (complex(r * cos(arg), r * sin(arg)))
+	)
+
+    def raise(int n) = complex(n) ^ this
+    
+	def conjugate = complex (this.real, 0-this.imag)
+	
+	def equals(complex c) = c.real == this.real && c.imag == this.imag
+	def equals(Num n) = real == n && imag == 0
+	
+	def modulus = sqrt(real ^ 2 + imag ^ 2)
+	
+	def argument = (
+    	if (this.real == 0) (return (pi/2))
+    	return (py ("atan(" + tostr (this.imag/this.real) + ")"))
+	)
+	
+	def modargform = tostr this.modulus + "*e^(i(" + tostr this.argument + "))"
+	
+)
+
+var i = complex(0, 1)
+
+fibs = iterate2 (+) 0 1 
+
+def fib 0 = 0
+def fib n = y where (int x; int y = 1; for n ((x, y) = (y, x + y)))
+
+collatz = (takewhile (!=1))~(iterate (x -> switch (x%2) (0 => (x/2); 1 => (3x+1))))
+
+def ln e = 1
+def ln x = py ("log(" ++ tostr x ++ ")")
+
+def signum(Num n) = (
+    if (n < 0) (return (-1))
+    if (n > 0) (return 1)
+    return 0
+)
+
+class Infinity (
+    
+    def init(int sign) = (
+        this.sign = sign
+    )
+    
+    def add (Num _) = Infinity(1)
+    
+    def subfrom (Num _) = Infinity(0-this.sign)
+    
+    def greaterThan (Infinity inf) = this.sign > inf.sign
+    def greaterThan (Num _) = this.sign == 1
+    
+    def lessThan (Infinity inf) = this.sign < inf.sign
+    def lessThan (Num _) = this.sign == (-1)
+    
+    def mul 0 = ?
+    def mul (Num n) = Infinity(this.sign * signum(n))
+    
+    def mul _ = ?
+    
+    def equals(Infinity inf) = inf.sign == this.sign
+    def equals _ = False
+        
+    def toString = (
+        string str = tostr (tochar 8734)
+        if (this.sign == (-1)) (
+            str = "-" + str
+        )
+        return str
+    )
+)
+
+var INFINITY = Infinity(1)
+var infinity = INFINITY

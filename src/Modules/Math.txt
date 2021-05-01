@@ -18,20 +18,19 @@ def abs (Num n) = (
 )
 
 class complex (
-
-	def init(Num real, Num imag) = (
-		this.real = real
-		this.imag = imag
-	)
+    def init(Num real, Num imag) = (
+	print(real, imag)
+	this.real = real
+	this.imag = imag
+    )
     
     def init(Num real) = this.init(real, 0)
     
-	def init("mod-arg", Num mod, Num arg) = (
-    	init(mod * py ("cos(" ++ tostr arg ++ ")"),
-        	 mod * py ("sin(" ++ tostr arg ++ ")"))
-	)
+    def init("mod-arg", Num mod, Num arg) = (
+    	init(mod * py ("cos(" ++ tostr arg ++ ")"), mod * py ("sin(" ++ tostr arg ++ ")"))
+    )
     
-	def toString = (
+    def toString = (
     	if (this.real == this.imag == 0) (return "0")
     	string str = ""
 		if (this.real != 0) (

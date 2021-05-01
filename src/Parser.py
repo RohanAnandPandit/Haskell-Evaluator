@@ -6,88 +6,89 @@ Created on Tue Jun 23 09:35:26 2020
 """
 from Stack import Stack
 from HFunction import HFunction, Lambda, Function
-from Operators import Associativity, operatorFromString
+from Operators import Associativity, operator_from_string
 from Expression import BinaryExpr
 from List import Nil, Array
 from Tuple import Tuple
 from Types import Int, Collection
-    
+
+
 class Parser:
-    def __init__(self, lexer, program_state, infix = False):
+    def __init__(self, lexer, program_state, infix=False):
         self.lexer = lexer
         self.infix = infix
         self.operands = Stack()
         self.operators = Stack()
         self.program_state = program_state
         self.expr = self.parse()
-        
-    def createExpression(self):
+
+    def create_expression(self):
         operator = self.operators.pop()
         right, left = self.operands.pop(), self.operands.pop()
         expr = BinaryExpr(operator, left, right)
         self.operands.push(expr)
- 
-    def createCollection(self):
-        operator = self.operators.pop()    
+
+    def create_collection(self):
+        operator = self.operators.pop()
         right, left = self.operands.pop(), self.operands.pop()
-        if isinstance(left, Collection) and left.operator.name==operator.name:
+        if isinstance(left, Collection) and left.operator.name == operator.name:
             left.items.append(right)
             expr = left
         else:
-            if right == None and operator.name == ',':
+            if right is None and operator.name == ',':
                 expr = Collection([left], operator)
-            elif left == None and operator.name == ',':
+            elif left is None and operator.name == ',':
                 expr = Collection([right], operator)
-            else: 
+            else:
                 expr = Collection([left, right], operator)
-                
-        self.pushOperand(expr)
 
-    def addOperator(self, current):
-        topOperator = self.operators.peek()
+        self.push_operand(expr)
+
+    def add_operator(self, current):
+        top_operator = self.operators.peek()
         # Checks if a BinaryExpr should be created using the operator on the 
         # top of the stack
-        while topOperator != None:            
-            if (topOperator.precedence == current.precedence
-                  and current.associativity == topOperator.associativity == 
-                  Associativity.NONE):
-                self.createCollection()
-                
-            elif (topOperator.precedence > current.precedence
-                or topOperator.precedence == current.precedence 
-                    and topOperator.associativity == Associativity.LEFT):
-                self.createExpression()
-    
+        while top_operator is not None:
+            if (top_operator.precedence == current.precedence
+                    and current.associativity == top_operator.associativity ==
+                    Associativity.NONE):
+                self.create_collection()
+
+            elif (top_operator.precedence > current.precedence
+                  or top_operator.precedence == current.precedence
+                  and top_operator.associativity == Associativity.LEFT):
+                self.create_expression()
+
             else:
                 break
-            topOperator = self.operators.peek()
+            top_operator = self.operators.peek()
         self.operators.push(current)
 
-    def pushOperand(self, operand):
-            # If the top of the self.operands is None it will be replaced with
-            # the current value
-            if not self.operands.peek():
-                self.operands.pop()
-                
-            if (self.operators.peek() and self.operators.peek().name == '-' and 
+    def push_operand(self, operand):
+        # If the top of the self.operands is None it will be replaced with
+        # the current value
+        if not self.operands.peek():
+            self.operands.pop()
+
+        if (self.operators.peek() and self.operators.peek().name == '-' and
                 not self.operands.peek()):
-                self.operators.pop()
-                operand = BinaryExpr(operatorFromString('*'), Int(-1),operand)
-                
-            self.operands.push(operand)
-    
-            # If there are no self.operators means the current value is the left
-            # operand and the right one is undecided yet so None is added 
-            if not self.operators.peek():
-                self.operands.push(None)  
-            #print(self.operands.arr)
+            self.operators.pop()
+            operand = BinaryExpr(operator_from_string('*'), Int(-1), operand)
+
+        self.operands.push(operand)
+
+        # If there are no self.operators means the current value is the left
+        # operand and the right one is undecided yet so None is added
+        if not self.operators.peek():
+            self.operands.push(None)
+            # print(self.operands.arr)
 
     def parse(self):
         from utils import convertToList
         # Empty stacks will be created whenever the function is called again
         self.operands = Stack()
         self.operators = Stack()
-        token = self.lexer.nextToken()
+        token = self.lexer.next_token()
         while token:
             if isinstance(token, (HFunction, Lambda, Function)):
                 # If a bracket has been opened the expression within them is 
@@ -95,107 +96,108 @@ class Parser:
                 # recursively calling the function with the same self.lexer 
                 # object 
                 if token.name == '(':
-                    if (isinstance(self.lexer.peek(), HFunction) 
-                        and self.lexer.peek().name == ')'):
-                        self.lexer.nextToken()
-                        self.pushOperand(Tuple([], self.program_state))
+                    if (isinstance(self.lexer.peek(), HFunction)
+                            and self.lexer.peek().name == ')'):
+                        self.lexer.next_token()
+                        self.push_operand(Tuple([], self.program_state))
                     else:
                         expr = Parser(self.lexer, self.program_state).expr
-                        self.pushOperand(expr)
-                    
+                        self.push_operand(expr)
+
                 elif token.name == ')':
-                    self.remaining()
+                    self.add_remaining()
                     result = self.operands.pop()
-                    if (isinstance(result, Collection) and 
-                        result.operator.name == ','):
+                    if (isinstance(result, Collection) and
+                            result.operator.name == ','):
                         result = Tuple(result.items, self.program_state)
                     return result
-                
+
                 elif token.name == '[':
-                    if (isinstance(self.lexer.peek(), HFunction) 
-                        and self.lexer.peek().name == ']'):
-                        self.lexer.nextToken()
-                        self.pushOperand(Nil())
+                    if (isinstance(self.lexer.peek(), HFunction)
+                            and self.lexer.peek().name == ']'):
+                        self.lexer.next_token()
+                        self.push_operand(Nil())
                     else:
                         expr = Parser(self.lexer, self.program_state).expr
-                        self.pushOperand(expr)
-    
+                        self.push_operand(expr)
+
                 elif token.name == ']':
-                    self.remaining()
+                    self.add_remaining()
                     result = self.operands.pop()
-                    if (isinstance(result, Collection) and 
-                        result.operator.name == ','):
+                    if (isinstance(result, Collection) and
+                            result.operator.name == ','):
                         result = convertToList(result.items, self.program_state)
                     else:
                         result = convertToList([result], self.program_state)
                     return result
-    
+
                 elif token.name == '{':
-                    if (isinstance(self.lexer.peek(), HFunction) 
-                        and self.lexer.peek().name == '}'):
-                        self.lexer.nextToken()
-                        self.pushOperand(Array())
+                    if (isinstance(self.lexer.peek(), HFunction)
+                            and self.lexer.peek().name == '}'):
+                        self.lexer.next_token()
+                        self.push_operand(Array())
                     else:
                         expr = Parser(self.lexer, self.program_state).expr
-                        self.pushOperand(expr)
-    
+                        self.push_operand(expr)
+
                 elif token.name == '}':
-                    self.remaining()
+                    self.add_remaining()
                     result = self.operands.pop()
-                    if (isinstance(result, Collection) and 
-                        result.operator.name == ','):
+                    if (isinstance(result, Collection) and
+                            result.operator.name == ','):
                         result = Array(result.items)
                     else:
                         result = Array([result])
+
                     return result
-    
+
                 elif token.name == '`':
-                        if self.infix:
-                            break
-                        else:
-                            func = Parser(self.lexer, self.program_state, 
-                                          infix = True)
-                            self.operands.pop() == None
-                            expr = BinaryExpr(operatorFromString(' '), func,
-                                              self.operands.pop())
-                            self.pushOperand(expr)
-                            self.operators.push(operatorFromString(' '))
+                    if self.infix:
+                        break
+                    else:
+                        func = Parser(self.lexer, self.program_state,
+                                      infix=True)
+                        self.operands.pop() == None
+                        expr = BinaryExpr(operator_from_string(' '), func,
+                                          self.operands.pop())
+                        self.push_operand(expr)
+                        self.operators.push(operator_from_string(' '))
                 else:
                     # Compares the current operator with the self.operators on the
                     # stack
-                    self.addOperator(token)
+                    self.add_operator(token)
             else:
-                self.pushOperand(token)
+                self.push_operand(token)
             # Gets next token
-            token = self.lexer.nextToken()
-        
-        self.remaining()
+            token = self.lexer.next_token()
+
+        self.add_remaining()
         return self.operands.pop()
 
-    def remaining(self):            
+    def add_remaining(self):
         # Dealing with any remaining self.operators
-        while self.operators.peek() != None:
+        while self.operators.peek() is not None:
             if self.operators.peek().associativity == Associativity.NONE:
-                self.createCollection()
+                self.create_collection()
             else:
-                self.createExpression()
-        
-        if self.operands.peek() == None:
-            self.operands.pop()  
-            
-    def printState(self):
+                self.create_expression()
+
+        if self.operands.peek() is None:
+            self.operands.pop()
+
+    def print_state(self):
         print("=================")
         print("self.operands")
         for operand in self.operands.arr:
-            if operand == None:
-                print('None')
+            if operand is None:
+                print('Parser print_state:', 'None')
                 continue
             print(operand)
         print("=================")
         print("self.operators")
         for op in self.self.operators.arr:
-            if op == None:
-                print('None')
+            if op is None:
+                print('Parser print_state:', 'None')
                 continue
             print("'" + str(op) + "'")
         print("=================")

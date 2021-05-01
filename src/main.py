@@ -7,7 +7,7 @@ Created on Mon Jun 22 10:24:50 2020
 
 import utils
 import ctypes
-import os 
+import os
 from Editor import Editor
 from State import State
 
@@ -15,10 +15,11 @@ try:
     ctypes.windll.shcore.SetProcessDpiAwareness(1)
 except:
     pass
-os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (50, 50) 
+os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (50, 50)
 
-state = State()
+
 def console():
+    state = State()
     while True:
         string = input('Start> ')
         if string == '':
@@ -30,12 +31,12 @@ def console():
             continue
         elif string == '$edit':
             Editor(state)
+        #try:
         value = state.evaluate(string)
         print(str(value))
-
-console() 
-
-
+        #except:
+            #print("ERROR!")
 
 
-
+console()
+#wait = input()

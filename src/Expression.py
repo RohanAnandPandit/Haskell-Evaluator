@@ -4,57 +4,59 @@ Created on Tue Jun 23 13:38:23 2020
 
 @author: rohan
 """
-from HFunction import Func 
+from HFunction import Func
+from Class import Class
+
 
 class BinaryExpr:
-    def __init__(self, operator, left, right): 
+    def __init__(self, operator, left, right):
         self.operator = operator
-        self.leftExpr = left
-        self.rightExpr = right
-        
-    def __str__(self):        
+        self.left_expr = left
+        self.right_expr = right
+
+    def __str__(self):
         buf = '('
-        if not self.leftExpr:
+        if not self.left_expr:
             buf += '?'
         else:
             try:
-                buf += str(self.leftExpr)
+                buf += str(self.left_expr)
             except:
-                print(self.leftExpr)
+                print(self.left_expr)
         string = self.operator.name
         buf += ' ' + string
         if string != ' ':
             buf += ' '
-        if not self.rightExpr:
+        if not self.right_expr:
             buf += '?'
         else:
-            buf += str(self.rightExpr)
+            buf += str(self.right_expr)
         buf += ')'
         return buf
 
     def simplify(self, program_state):
         operator = self.operator
-        if self.leftExpr:
-            leftExpr = self.leftExpr
-            if not self.operator.lazy:  
-                leftExpr = leftExpr.simplify(program_state)
-            operator = operator.apply(leftExpr, program_state = program_state)
-            if self.rightExpr:
-                rightExpr = self.rightExpr
-                if not (self.operator.lazy or
-                        self.operator.name == ' ' and 
-                        issubclass(type(leftExpr), Func) and leftExpr.lazy):
-                        rightExpr = self.rightExpr.simplify(program_state)
-                operator = operator.apply(rightExpr,
-                                          program_state = program_state)       
-                return operator
-            
-        if self.rightExpr:
-            rightExpr = self.rightExpr
+        if self.left_expr:
+            left_expr = self.left_expr
             if not self.operator.lazy:
-                rightExpr = rightExpr.simplify(program_state)
-            operator = operator.apply(None, rightExpr, program_state) 
-            
+                left_expr = left_expr.simplify(program_state)
+            operator = operator.apply(left_expr, program_state=program_state)
+            if self.right_expr:
+                right_expr = self.right_expr
+
+                if not (self.operator.lazy or
+                        self.operator.name == ' ' and
+                        (issubclass(type(left_expr), Func) or type(left_expr) == Class)
+                        and left_expr.lazy):
+                    right_expr = self.right_expr.simplify(program_state)
+                operator = operator.apply(right_expr,
+                                          program_state=program_state)
+                return operator
+
+        if self.right_expr:
+            right_expr = self.right_expr
+            if not self.operator.lazy:
+                right_expr = right_expr.simplify(program_state)
+            operator = operator.apply(None, right_expr, program_state)
+
         return operator
-    
-    

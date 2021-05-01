@@ -1,0 +1,12 @@
+class Queue (
+	def init() (this.list = [])
+
+	def enqueue item = (this.list = list <- item)
+
+	def dequeue = (
+		if (list == []) (return ?)
+		item = head list	
+		this.list = tail list
+		return item
+	)
+)

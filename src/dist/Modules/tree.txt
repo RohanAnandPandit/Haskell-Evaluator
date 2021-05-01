@@ -1,0 +1,141 @@
+class BST (
+    
+    def init() = (
+        this.root = ?
+    ) 
+    
+    def add(Node node, ? data) = (
+        if (data == node.data) (return False)
+        if (data < node.data) (
+            if (null node.left) (
+                node.left = Node(data, ?, ?, node) 
+                return True
+            )
+            return (add(node.left, data))
+        )
+        if (data > node.data) (
+            if (null node.right) (
+                node.right = Node(data, ?, ?, node)
+                return True
+            )
+            return (add(node.right, data))
+        )
+    )
+
+    def add(? data) = (
+        if (null root) (
+            root = Node(data, ?, ?, ?)
+            return True
+        ) 
+        return (add(root, data))
+    )
+    
+    def toString = this.root.toString 1
+    
+    def contains (Node node, ? data) = (
+        if (null node)         (return False)
+        if (data == node.data) (return True)
+        if (data < node.data)  (return (contains(node.left, data)))
+        return (contains(node.right, data))
+    )
+    
+    def contains(? data) = (
+        if (null root) (return False) 
+        return (contains(root, data))
+    )
+    
+    def remove(? data) = (
+        Node node = find(data)
+        if (null node) (return False)
+        if (node == node.parent.left) (
+            if (null node.left && null node.right) (
+                node.parent.left = ?
+            )
+            if (null node.right) (
+                node.parent.left = node.left
+            )
+            if (null node.left) (
+                node.parent.left = node.right
+            )
+            return True
+        )
+        if (node == node.parent.right) (
+            if (null node.left && null node.right) (
+                node.parent.right = ?
+            )
+            if (null node.right) (
+                node.parent.right = node.left
+            )
+            if (null node.left) (
+                node.parent.right = node.right
+            )
+            return True
+        )
+    )
+
+    def find(? node, ? data) = (
+        if (null node) (return ?)
+        if (data == node.data) (return node)
+        if (data < node.data) (return (find(node.left, data)))
+        return (find(node.right, data))
+    )
+    
+    def find(? data) = (
+        if (root == ?) (return ?)
+        return (find(root, data))
+    )
+    
+    def min() = (
+        if (null root) (return ?) 
+        return (min(root))
+    )
+    
+    def min(Node node) = (
+        while (not (null node.left)) (
+            node = node.left
+        )
+        return node.data
+    )
+
+    def max() = (
+        if (null root) (return ?) 
+        return (max(root))
+    )
+        
+    def max(Node node) = (
+        while (not (null node.right)) (
+            node = node.right
+        )
+        return node.data
+    )
+    
+    class Node (
+    
+        def init(? data, Node left, Node right, ? parent) = (
+            this.data = data
+            this.left = left
+            this.right = right
+            this.parent = parent
+        )   
+        
+        def toString(int depth) = (
+            var str = show data ++ "\n"
+            
+            for depth (str = str ++ "    ")
+            if (not (null left)) (
+                str = str ++ (left.toString(depth + 1))
+            ) else (
+                str = str ++ show ? ++ "\n"
+            )
+            
+            for depth (str = str ++ "    ")  
+            if (not (null right)) (
+                str = str ++ (right.toString(depth + 1))
+            ) else (
+                str = str ++ show ? ++ "\n"
+            )
+            
+            return str
+        ) 
+    )
+)

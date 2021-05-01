@@ -1,0 +1,4 @@
+interface Generator (
+	def next = _
+	def toString _
+)

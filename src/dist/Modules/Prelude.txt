@@ -1,0 +1,49 @@
+import function
+union Num (int, float)
+
+import tuple
+import list
+import array
+
+oper "++" 5 left concatenation
+oper ".." 10 left range
+oper "^^" 5 left (x y -> z where (var z = x; for y (z = x ^ z)))
+#EVAL#
+
+def id x = x
+def succ = (+1)
+def pred = (+(-1))
+def flip (Func func) = (x y -> func y x)
+def const x _ = x
+def uncurry (Func func) = ((x, y) -> func x y)
+def curry (Func func) = (x y -> func (x, y))
+Func null = (== ?)
+
+def empty ([] xs) = xs == []
+def empty ({} xs) = xs == {}
+def empty (() xs) = xs == ()
+
+def not True = False
+def not False = True
+
+def max x y = (
+    if (x < y) (
+        y
+    ) else (
+        x    
+    )
+)
+
+def min x y = (
+    if (x < y) (
+        x
+    ) else (
+        y    
+    )
+)
+
+def head (Object obj) = obj.head
+def tail (Object obj) = obj.tail
+
+
+
