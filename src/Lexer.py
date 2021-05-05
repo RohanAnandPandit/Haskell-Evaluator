@@ -53,7 +53,7 @@ class Lexer:
                     oper.precedence += 50
                 self.tokens.append(oper)
 
-    def addString(self):
+    def add_string(self):
         start = self.curr
         escape = False
         while not (self.string[self.curr] == '"' and not escape):
@@ -62,6 +62,7 @@ class Lexer:
                 escape = True
 
             self.curr += 1
+
         string = self.string[start: self.curr].replace('\\n', '\n')
         string = string.replace('\\"', '"')
         string = string.replace('\\t', '\t')
@@ -84,6 +85,7 @@ class Lexer:
             if len(self.tokens) > 0:
                 if (isinstance(self.tokens[-1], Variable) or
                         self.tokens[-1].name == ')'):
+                    # function call
                     high_precedence = False
                     self.add_space(high_precedence=high_precedence)
 
@@ -121,6 +123,7 @@ class Lexer:
                 self.curr += 1
                 continue
 
+            # Skip over comment
             if self.string[self.curr] == '#':
                 self.curr += 1
                 while self.string[self.curr] not in '#\n':
@@ -130,11 +133,13 @@ class Lexer:
                 self.curr += 1
                 continue
 
+            # Get string
             if self.string[self.curr] == '"':
                 self.curr += 1
-                self.addString()
+                self.add_string()
                 continue
 
+            # Get character
             elif self.string[self.curr] == "'":
                 if self.curr + 1 < len(self.string):
                     char = self.string[self.curr + 1]
@@ -160,6 +165,7 @@ class Lexer:
                         self.curr += 2
                     continue
 
+            # Find longest operator
             if self.string[self.curr] in self.program_state.operators:
                 end = self.curr + 1
                 while (end < len(self.string) and
@@ -173,12 +179,17 @@ class Lexer:
                 continue
 
             else:
+                # Find longest variable or number
                 end = self.curr + 1
+                start_char = self.string[self.curr]
+
                 while (end < len(self.string) and
                        (self.string[end] not in self.program_state.operators
                         or (self.string[end] in '._' and
-                            '0' <= self.string[end - 1] <= '9'))):
+                            '0' <= self.string[end - 1] <= '9' and
+                            '0' <= start_char <= '9'))):
                     end += 1
+
                 self.add_data(self.string[self.curr: end])
                 self.curr = end
                 continue
@@ -188,6 +199,7 @@ class Lexer:
         if len(self.tokens) > 0:
             del self.tokens[-1]
 
+    # Determine type of data
     def get_data(self, exp):
         if is_primitive(exp):
             return exp

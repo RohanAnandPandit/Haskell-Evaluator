@@ -103,6 +103,7 @@ def assign(a, b, program_state, state=None):
             if (isinstance(arguments[0], Variable) and
                     isinstance(arguments[0].simplify(program_state), Struct) and
                     isinstance(arguments[1], Tuple)):
+                value = value.simplify(program_state)
                 assign(arguments[1], Tuple(value.values, program_state),
                        program_state, state)
                 return value

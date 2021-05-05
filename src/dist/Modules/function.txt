@@ -1,3 +1,0 @@
-interface function (
-    def apply = _
-)

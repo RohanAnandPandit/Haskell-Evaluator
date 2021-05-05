@@ -99,7 +99,7 @@ def pattern_match(expr1, expr2, program_state):
     if isinstance(expr1, BinaryExpr) and expr1.operator.name == " ":
         if type_match(expr1.left_expr, expr2, program_state):
             if isinstance(expr2, Structure):
-                return pattern_match(expr1.right_expr, Tuple(expr2.values),
+                return pattern_match(expr1.right_expr, Tuple(expr2.values, program_state),
                                      program_state)
             else:
                 return pattern_match(expr1.right_expr, expr2, program_state)
@@ -115,7 +115,7 @@ def type_match(type_, expr, program_state):
             null(expr.simplify(program_state))):
         return True
 
-    if isinstance(type_, Variable) or isinstance(type_, Type):
+    if isinstance(type_, (Variable, Struct)) or isinstance(type_, Type):
         if type_.name == 'var':
             return True
 
@@ -146,9 +146,8 @@ def type_match(type_, expr, program_state):
                 if type_match(t, expr, program_state):
                     return True
 
-        elif isinstance(expr, Structure):
+        elif isinstance(expr, (Structure, Struct)):
             return type_.name == expr.type.name
-
 
     elif isinstance(type_, Nil) and is_list(expr):
         return True
@@ -180,6 +179,7 @@ def type_match(type_, expr, program_state):
                     return False
             else:
                 return False
+
         return (type_match(type_.items[0], expr.items[0], program_state) and
                 type_match(Tuple(type_.items[1:], program_state),
                            Tuple(expr.items[1:], program_state)))
@@ -195,61 +195,61 @@ def optimise(expr):
         expr.right_expr = optimise(expr.right_expr)
         if expr.operator.name in ('+', '||'):
             if equals(expr.left_expr, Int(0)).value:
-                if expr.right_expr != None:
+                if expr.right_expr is not None:
                     return expr.right_expr
             elif equals(expr.right_expr, Int(0)).value:
-                if expr.left_expr != None:
+                if expr.left_expr is not None:
                     return expr.left_expr
         elif expr.operator.name == '-':
             if equals(expr.right_expr, Int(0)).value:
-                if (expr.left_expr != None):
+                if expr.left_expr is not None:
                     return expr.left_expr
         elif expr.operator.name == '*':
             if equals(expr.left_expr, Int(0)).value:
-                if expr.right_expr != None:
+                if expr.right_expr is not None:
                     return Int(0)
             elif equals(expr.right_expr, Int(0)).value:
-                if expr.left_expr != None:
+                if expr.left_expr is not None:
                     return Int(0)
             elif equals(expr.left_expr, Int(1)).value:
-                if expr.right_expr != None:
+                if expr.right_expr is not None:
                     return expr.right_expr
             elif equals(expr.right_expr, Int(1)).value:
-                if expr.left_expr != None:
+                if expr.left_expr is not None:
                     return expr.left_expr
         elif expr.operator.name == '&&':
             if equals(expr.left_expr, Int(0)).value:
-                if expr.right_expr != None:
+                if expr.right_expr is not None:
                     return Bool(False)
             elif equals(expr.right_expr, Int(0)).value:
-                if expr.left_expr != None:
+                if expr.left_expr is not None:
                     return Bool(False)
         elif expr.operator.name == '/':
             if equals(expr.left_expr, Int(0)).value:
-                if expr.right_expr != None:
+                if expr.right_expr is not None:
                     return Int(0)
             elif equals(expr.right_expr, Int(1)).value:
-                if expr.left_expr != None:
+                if expr.left_expr is not None:
                     return expr.left_expr
         elif expr.operator.name == '^':
             if equals(expr.left_expr, Int(1)).value:
-                if expr.right_expr != None:
+                if expr.right_expr is not None:
                     return Int(1)
             elif equals(expr.left_expr, Int(0)).value:
-                if expr.right_expr != None:
+                if expr.right_expr is not None:
                     return Int(0)
             elif equals(expr.right_expr, Int(1)).value:
-                if expr.left_expr != None:
+                if expr.left_expr is not None:
                     return expr.left_expr
             elif equals(expr.right_expr, Int(0)).value:
-                if expr.left_expr != None:
+                if expr.left_expr is not None:
                     return Int(1)
         elif expr.operator.name == '++':
             if isinstance(expr.left_expr, Nil):
-                if expr.right_expr != None:
+                if expr.right_expr is not None:
                     return expr.right_expr
             elif isinstance(expr.right_expr, Nil):
-                if expr.left_expr != None:
+                if expr.left_expr is not None:
                     return expr.left_expr
 
     return expr
