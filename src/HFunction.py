@@ -111,7 +111,9 @@ class Function(Func):
         self.lazy = False
 
     def clone(self):
-        return Function(self.name, self.cases.copy(), self.inputs.copy())
+        return Function(self.name,
+                        list(map(lambda case:case.clone(), self.cases)),
+                        self.inputs.copy())
 
     def simplify(self, program_state):
         value = self.check_cases(self.inputs, program_state)
@@ -172,14 +174,22 @@ class Function(Func):
 
 class Lambda(Func):
     def __init__(self, name, expr, arguments=[], inputs=[],
-                 returnType=None):
+                 return_type=None, initial_state=None):
         self.name = name
         self.arguments = arguments
         self.expr = expr
         self.inputs = inputs
         self.no_of_args = len(arguments)
         self.lazy = False
-        self.returnType = returnType
+        self.return_type = return_type
+        self.state = initial_state
+        if initial_state is None:
+            self.state = {}
+
+    def clone(self):
+        state = self.state.copy()
+        return Lambda(self.name, self.expr, self.arguments, self.inputs,
+                      self.return_type, state)
 
     def apply(self, arg1=None, arg2=None, program_state=None):
         inputs = self.inputs.copy()
@@ -218,7 +228,7 @@ class Lambda(Func):
 
     def return_value(self, inputs, program_state):
         from Operator_Functions import assign
-        state = {}
+        state = self.state
 
         for i in range(self.no_of_args):
             assign(self.arguments[i], inputs[i], program_state, state)

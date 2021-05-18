@@ -1,4 +1,5 @@
 from HFunction import Func, Function
+from Types import Variable
 
 
 class Class(Func):
@@ -7,7 +8,9 @@ class Class(Func):
         self.state = {}
         self.parent_classes = []
         self.interfaces = []
-        self.private = self.public = self.hidden = []
+        self.private = []
+        self.public = []
+        self.hidden = []
         self.is_constructor = False
         self.lazy = True
 
@@ -28,10 +31,14 @@ class Class(Func):
             for name in list(self.state.keys()):
                 obj.state[name] = self.state[name]
                 if type(self.state[name]).__name__ == 'Function':
-                    obj.state[name] = obj.state[name].clone()
-                    obj.state[name].inputs.append(obj)
+                    func = obj.state[name]
+                    func = func.clone()
+                    obj.state[name] = func
+                    for case in func.cases:
+                        case.state['this'] = obj
 
             if 'init' in list(obj.state.keys()):
+                # print('init')
                 obj.state['init'].apply(values, program_state=program_state)
 
             return obj

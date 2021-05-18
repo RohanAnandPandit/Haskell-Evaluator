@@ -137,9 +137,8 @@ def assign(a, b, program_state, state=None):
 
             # Convert function to method
             if program_state.in_class > 0:
-                arguments.insert(0, Variable('this'))
                 case = Lambda(name, arguments=arguments, expr=value,
-                              returnType=return_type)
+                              return_type=return_type)
 
                 if name in list(state.keys()):
                     func = state[name]
@@ -303,7 +302,8 @@ def lessThan(a, b, program_state):
         if 'greaterThan' in list(b.state.keys()):
             return b.state['greaterThan'].apply(a, program_state=program_state)
         return Bool(False)
-
+    a, b = a.simplify(program_state), b.simplify(program_state)
+    print(a.)
     return Bool(a.value < b.value)
 
 
@@ -551,7 +551,7 @@ def access(obj, field, program_state):
         return obj.state[field.name].simplify(program_state)
     except:
         print('operator_functions > access(...):', obj, field)
-        print(program_state.frame_stack)
+        # print(program_state.frame_stack)
 
 
 def for_loop(n, expr, program_state):
@@ -721,7 +721,7 @@ def definition(name_var, args_tup, expr, program_state):
         func = state[name]
         func.cases.append(case)
     else:
-        func = Function(name, 1, [case])
+        func = Function(name, cases=[case])
         state[name] = func
         program_state.function_names.append(name)
     return case

@@ -12,19 +12,33 @@ sqrt = (^ 0.5)
 
 def abs (Num n) = (
     if (n < 0) (
-        0-n
+        return (0-n)
     )
     return n
 )
 
 class complex (
     def init(Num real, Num imag) = (
-	print(real, imag)
-	this.real = real
-	this.imag = imag
+        this.real = real
+        this.imag = imag
     )
+
+    def init(int real, int imag) = (
+        this.real = real
+        this.imag = imag
+    )
+
+    def init(float real, float imag) (
+        print(real, imag)
+        this.real = real
+        this.imag = imag
+    )
+
     
     def init(Num real) = this.init(real, 0)
+    def init(int real) = this.init(real, 0)
+    def init(float real) = this.init(real, 0)
+
     
     def init("mod-arg", Num mod, Num arg) = (
     	init(mod * py ("cos(" ++ tostr arg ++ ")"), mod * py ("sin(" ++ tostr arg ++ ")"))

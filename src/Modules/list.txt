@@ -373,7 +373,7 @@ def range(start, end,  step) = (
 
 def range (first, second) (end) = range(first, end, second - first)
  
-def range (start) (end) = (
+def range (int start) (int end) = (
     if (start < end) (return (takewhile (< end) (iterate (+1) start)))
     return (takewhile (>= end) (iterate (+(-1)) (start - 1)))
 )
