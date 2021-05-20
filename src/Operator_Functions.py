@@ -399,10 +399,15 @@ def comma(a, b, program_state):
 
 def cons(a, b, program_state):
     from utils import replace_variables
-    if isinstance(b.simplify(program_state), Object):
+    b = b.simplify(program_state)
+    if isinstance(b, Object):
         b = b.simplify(program_state)
-        if 'cons' in list(b.state.keys()):
+        if 'cons' in b.state.keys():
             return b.state['cons'].apply(a, program_state=program_state)
+
+    elif isinstance(b, Array):
+        b.items.insert(0, a)
+        return b
 
     x, xs = a, b
 

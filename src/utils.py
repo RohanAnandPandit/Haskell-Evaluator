@@ -155,6 +155,10 @@ def type_match(type_, expr, program_state):
     elif isinstance(type_, Nil) and is_list(expr):
         return True
 
+    elif (isinstance(type_, (Tuple, Array)) and len(type_.items) == 0
+          and type(type_) in (Tuple, Array)):
+        return True
+
     elif isinstance(type_, Cons) and is_list(expr):
         return (type_match(head(type_, program_state),
                            head(expr, program_state),
