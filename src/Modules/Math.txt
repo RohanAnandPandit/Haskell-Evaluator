@@ -29,7 +29,6 @@ class complex (
     )
 
     def init(float real, float imag) (
-        print(real, imag)
         this.real = real
         this.imag = imag
     )

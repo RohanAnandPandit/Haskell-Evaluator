@@ -27,5 +27,5 @@ def binarysearch (? item) ({} list) = (
             start = mid + 1
         )
     )
-    return (-1)
+    return (0-1)
 )

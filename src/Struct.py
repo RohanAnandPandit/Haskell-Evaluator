@@ -1,4 +1,4 @@
-from HFunction import Func
+from Function import Func
 from Tuple import Tuple
 
 

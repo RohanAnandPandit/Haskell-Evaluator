@@ -7,7 +7,7 @@ Created on Mon Jun 22 10:20:56 2020
 from utils import is_primitive
 from Types import Variable, Char, String
 from Operators import operator_from_string
-from HFunction import HFunction, Function, Lambda
+from Function import HFunction, Function, Lambda
 from Types import Int, Float, Bool, Null
 
 

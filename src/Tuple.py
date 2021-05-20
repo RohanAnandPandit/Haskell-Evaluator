@@ -5,7 +5,7 @@ Created on Mon Jun 29 10:19:03 2020
 @author: rohan
 """
 
-functionNamesTuple = ['fst', 'snd', 'swap']
+function_names_tuple = ['fst', 'snd', 'swap']
 
 
 class Tuple:
@@ -15,8 +15,8 @@ class Tuple:
         self.program_state = program_state
 
     def simplify(self, program_state):
-        from utils import replaceVariables
-        tup = Tuple(list(map(lambda expr: replaceVariables(expr, program_state),
+        from utils import replace_variables
+        tup = Tuple(list(map(lambda expr: replace_variables(expr, program_state),
                              self.tup)), program_state)
         return tup
 

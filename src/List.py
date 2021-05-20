@@ -68,21 +68,22 @@ class Array:
 
 
 def head(a, program_state):
-    if isinstance(a.simplify(program_state), Object):
-        a = a.simplify(program_state)
-        func = a.class_.state['head'].apply(a, program_state=program_state)
-        return func.simplify(program_state)
+    a = a.simplify(program_state)
+    if isinstance(a, Object):
+        return a.state['head'].simplify(program_state)
+
     if isinstance(a, Nil):
         return Null()
+
     if isinstance(a, Cons):
         return a.item
 
 
 def tail(a, program_state):
-    if isinstance(a.simplify(program_state), Object):
+    a = a.simplify(program_state)
+    if isinstance(a, Object):
         a = a.simplify(program_state)
-        func = a.class_.state['tail'].apply(a, program_state=program_state)
-        return func.simplify(program_state)
+        return a.state['tail'].simplify(program_state)
     if isinstance(a, Nil):
         return Null()
     if isinstance(a, Cons):

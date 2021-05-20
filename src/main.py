@@ -27,16 +27,16 @@ def console():
         elif string == '$quit':
             break
         elif string == '$stack':
-            print(utils.frameStack)
+            print(state.frame_stack)
             continue
         elif string == '$edit':
             Editor(state)
-        #try:
+        # try:
         value = state.evaluate(string)
         print(str(value))
-        #except:
-            #print("ERROR!")
+        # except:
+        # print("ERROR!")
 
 
 console()
-#wait = input()
+# wait = input()

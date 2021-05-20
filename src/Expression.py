@@ -4,11 +4,15 @@ Created on Tue Jun 23 13:38:23 2020
 
 @author: rohan
 """
-from HFunction import Func
+from Function import Func
 from Class import Class
 
 
-class BinaryExpr:
+class Expression:
+    pass
+
+
+class BinaryExpression(Expression):
     def __init__(self, operator, left, right):
         self.operator = operator
         self.left_expr = left

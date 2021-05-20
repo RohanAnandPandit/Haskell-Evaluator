@@ -3,10 +3,6 @@ interface List (
     def tail = _
 )
 
-def head [] = ?
-def head (x:_) = x
-def tail (_:xs) = xs
-
 def len [] = 0
 def len (x:xs) = 1 + len xs 
 
@@ -355,9 +351,9 @@ class Cycle implements List (
 	)
 	
 	def tail = (
-    	_:xs = curr
+    	_:xs = this.curr
     	if (xs == []) (return (cycle this.list))
-    	return (Cycle(list, xs))
+    	return (Cycle(this.list, xs))
 	)
 	
 	def toString = "cycle " + tostr this.list
@@ -367,7 +363,7 @@ def cycle ([] xs) = Cycle(xs)
 
 
 def range(start, end,  step) = (
-    if (start > end) (return (takewhile (>= end) (iterate (+(-step)) start)))
+    if (start > end) (return (takewhile (>= end) (iterate (+(0-step)) start)))
     return (takewhile (< end) (iterate (+step) start))
 )
 
@@ -375,7 +371,7 @@ def range (first, second) (end) = range(first, end, second - first)
  
 def range (int start) (int end) = (
     if (start < end) (return (takewhile (< end) (iterate (+1) start)))
-    return (takewhile (>= end) (iterate (+(-1)) (start - 1)))
+    return (takewhile (>= end) (iterate (+(0-1)) (start - 1)))
 )
 
 class Concatenation implements List (

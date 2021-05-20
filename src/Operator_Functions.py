@@ -6,15 +6,17 @@ Created on Sat Jun 27 16:19:04 2020
 """
 from utils import is_primitive
 from utils import pattern_match
-from HFunction import Composition, Function, Lambda, Func
+from Function import Composition, Function, Lambda, Func
 from List import Nil, Cons, Iterator, head, tail, Array
 from Tuple import Tuple
-from Types import (Int, Float, Bool, Variable, Alias, Char, Module, String, Null,
-                   Collection)
+from Types import (Int, Float, Bool, Variable, Char, String, Null)
+from Alias import Alias
+from Collection import Collection
+from Module import Module
 from Class import Class, Object, Interface
 from Struct import Struct
 from Enum import EnumValue, Enum
-from Expression import BinaryExpr
+from Expression import BinaryExpression
 from Modules import *
 from math import *
 
@@ -59,7 +61,7 @@ def assign(a, b, program_state, state=None):
         assign(tail(var), tail(value), program_state, state)
         return value
 
-    elif isinstance(var, BinaryExpr):
+    elif isinstance(var, BinaryExpression):
         if var.operator.name == '@':
             assign(var.left_expr, value, program_state, state)
             assign(var.right_expr, value, program_state, state)
@@ -92,7 +94,7 @@ def assign(a, b, program_state, state=None):
         elif var.operator.name == ' ':
             arguments = []
             args = var
-            while isinstance(args, BinaryExpr):
+            while isinstance(args, BinaryExpression):
                 arg = args.right_expr
                 arguments.insert(0, arg)
                 args = args.left_expr
@@ -131,7 +133,7 @@ def assign(a, b, program_state, state=None):
                 value = value.items[0]
 
             for i in range(len(arguments)):
-                if not (isinstance(arguments[i], BinaryExpr) and
+                if not (isinstance(arguments[i], BinaryExpression) and
                         arguments[i].operator.name in '   :'):
                     arguments[i] = arguments[i].simplify(program_state)
 
@@ -293,37 +295,37 @@ def subtract(a, b, program_state):
     return program_state.get_data(a.value - b.value)
 
 
-def lessThan(a, b, program_state):
+def less_than(a, b, program_state):
     if isinstance(a, Object):
-        if 'lessThan' in list(a.state.keys()):
+        if 'lessThan' in a.state.keys():
             return a.state['lessThan'].apply(b, program_state=program_state)
         return Bool(False)
     elif isinstance(b, Object):
-        if 'greaterThan' in list(b.state.keys()):
+        if 'greaterThan' in b.state.keys():
             return b.state['greaterThan'].apply(a, program_state=program_state)
         return Bool(False)
     a, b = a.simplify(program_state), b.simplify(program_state)
-    print(a.)
+    # print(a, b)
     return Bool(a.value < b.value)
 
 
-def lessThanOrEqual(a, b, program_state):
-    return Bool(lessThan(a, b, program_state).value or
+def less_than_or_equal(a, b, program_state):
+    return Bool(less_than(a, b, program_state).value or
                 equals(a, b, program_state).value)
 
 
-def greaterThan(a, b, program_state):
+def greater_than(a, b, program_state):
     if isinstance(a, Object):
         if 'greaterThan' in list(a.state.keys()):
             return a.state['greaterThan'].apply(b,
                                                 program_state=program_state)
         return Bool(False)
 
-    return Bool(not lessThanOrEqual(a, b, program_state).value)
+    return Bool(not less_than_or_equal(a, b, program_state).value)
 
 
-def greaterThanOrEqual(a, b, program_state):
-    return Bool(greaterThan(a, b, program_state).value or
+def greater_than_or_equal(a, b, program_state):
+    return Bool(greater_than(a, b, program_state).value or
                 equals(a, b, program_state).value)
 
 
@@ -396,7 +398,7 @@ def comma(a, b, program_state):
 
 
 def cons(a, b, program_state):
-    from utils import replaceVariables
+    from utils import replace_variables
     if isinstance(b.simplify(program_state), Object):
         b = b.simplify(program_state)
         if 'cons' in list(b.state.keys()):
@@ -404,7 +406,7 @@ def cons(a, b, program_state):
 
     x, xs = a, b
 
-    return Cons(replaceVariables(x, program_state),
+    return Cons(replace_variables(x, program_state),
                 xs.simplify(program_state), program_state)
 
 
@@ -448,7 +450,7 @@ def chain(a, b, program_state):
 
 def create_lambda(args, expr, program_state):
     arguments = []
-    while isinstance(args, BinaryExpr):
+    while isinstance(args, BinaryExpression):
         arguments.insert(0, args.right_expr)
         args = args.left_expr
     arguments.insert(0, args)
@@ -583,7 +585,7 @@ def for_loop(n, expr, program_state):
 
         program_state.frame_stack.pop(-1)
 
-    elif isinstance(n, BinaryExpr):
+    elif isinstance(n, BinaryExpression):
         # Traditional for-lop
         if n.operator.name == ';':
             init, n = n.left_expr, n.right_expr
@@ -729,7 +731,7 @@ def definition(name_var, args_tup, expr, program_state):
 
 def switch(value, expr, program_state):
     cases = []
-    while isinstance(expr, BinaryExpr) and expr.operator.name == ';':
+    while isinstance(expr, BinaryExpression) and expr.operator.name == ';':
         cases.append(expr.left_expr)
         expr = expr.right_expr
 
@@ -775,23 +777,28 @@ def import_module(nameVar, program_state):
     return Module(name, code, program_state)
 
 
-def from_import(moduleVar, stat, names):
+def from_import(module_name, stat, names):
     if isinstance(names, Tuple):
         names = list(map(str, names.tup))
     elif isinstance(names, Variable):
         names = [names.name]
 
-    module_name = moduleVar.name
-    file = open('Modules/' + module_name + '.txt', 'r')
+    from utils import LIBRARY_PATH
+
+    module_name = module_name.name
+    file = open(LIBRARY_PATH + module_name + '.txt', 'r')
     code = file.read()
     module = Module(module_name, code)
     state = module.state
     module.state = module.state.copy()
-    keys = list(state.keys())
+    keys = state.keys()
+
     for name in keys:
         if name not in names:
             state.pop(name)
-    assign(moduleVar, module)
+
+    assign(module_name, module)
+
     return Int(0)
 
 
@@ -935,7 +942,7 @@ def type_synonym(typeVar, typeExpr, program_state):
 
 
 def types_union(var, types, program_state):
-    from Types import Union
+    from Union import Union
 
     for i in range(len(types.items)):
         types.items[i] = types.items[i].simplify(program_state)

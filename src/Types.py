@@ -4,8 +4,7 @@ Created on Sat Jul 18 14:51:39 2020
 
 @author: rohan
 """
-from Tuple import Tuple
-from HFunction import Func
+from Function import Func
 
 
 class Variable:
@@ -16,9 +15,9 @@ class Variable:
         if self.name == '_ ...':
             return self
 
-        frameStack = program_state.frame_stack
-        for curr in frameStack[::-1]:
-            if self.name in list(curr.keys()):
+        frame_stack = program_state.frame_stack
+        for curr in frame_stack[::-1]:
+            if self.name in curr.keys():
                 try:
                     return curr[self.name].simplify(program_state)
                 except:
@@ -132,78 +131,3 @@ class String:
         return '"' + str(self.value) + '"'
 
 
-class Alias:
-    def __init__(self, var, expr):
-        self.var = var
-        self.expr = expr
-
-    def __str__(self):
-        return str(self.var) + '@' + str(self.expr)
-
-    def simplify(self, program_state):
-        return self
-
-
-class Collection:
-    def __init__(self, items=[], operator=None):
-        self.items = items
-        self.operator = operator
-
-    def simplify(self, program_state):
-        if self.operator.name == ',':
-            return Tuple(list(filter(lambda item: item is not None, self.items)),
-                         program_state)
-
-        if len(self.items) == 2:
-            left = self.items[0]
-            if left: left = left.simplify(program_state)
-            right = self.items[1]
-            if right:
-                right = right.simplify(program_state)
-            return self.operator.apply(left, right, program_state)
-
-        for i in range(len(self.items) - 1):
-            if (not self.operator.apply(self.items[i].simplify(program_state),
-                                        self.items[i + 1].simplify(program_state),
-                                        program_state).value):
-                return Bool(False)
-
-        return Bool(True)
-
-    def __str__(self):
-        string = list(map(str, self.items))
-        return '(' + (' ' + self.operator.name + ' ').join(string) + ')'
-
-
-class Module:
-    def __init__(self, name, code, program_state):
-        self.name = name
-        self.state = {}
-        program_state.frame_stack.append(self.state)
-        program_state.evaluate(code)
-        program_state.frame_stack.pop(-1)
-        program_state.frame_stack[-1].update(self.state)
-
-    def simplify(self, program_state):
-        return self
-
-    def __str__(self):
-        return self.name
-
-
-class Union:
-    def __init__(self, name, types):
-        self.name = name
-        self.types = types.items
-
-    def __str__(self):
-        tup = []
-        for type_ in self.types:
-            tup.append(str(type_))
-
-        string = ' | '.join(tup)
-
-        return '(' + string + ')'
-
-    def simplify(self, program_state):
-        return self

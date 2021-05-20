@@ -8,5 +8,5 @@ from Types import Bool
 from List import *
 from Tuple import *
 from Char import *
-from IO import *
+from Io import *
 

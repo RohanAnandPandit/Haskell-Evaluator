@@ -4,12 +4,13 @@ Created on Mon Sep  7 09:32:31 2020
 
 @author: rohan
 """
-from HFunction import HFunction
+from Function import HFunction
 from Operators import Associativity
 import Operator_Functions as op_func
 import Prelude
 from Parser import Parser
 from Lexer import Lexer
+import List
 
 
 class State:
@@ -163,7 +164,11 @@ class State:
                                                  op_func.match, 2, 'match', lazy=True)
         self.built_in_state['py'] = HFunction(8, Associativity.LEFT,
                                               op_func.python_eval, 1, 'py')
-        self.evaluate('import Prelude')
+        self.built_in_state['head'] = HFunction(8, Associativity.LEFT,
+                                                List.head, 1, 'head')
+        self.built_in_state['tail'] = HFunction(8, Associativity.LEFT,
+                                                List.tail, 1, 'tail')
+        self.evaluate('import prelude')
 
     def evaluate(self, source, reset_state=False):
         value = None
@@ -197,7 +202,8 @@ class State:
 
     def is_type(self, expr):
         from List import Nil, Array
-        from Types import Type, Null, Union
+        from Types import Type, Null
+        from Union import Union
         from Class import Class
         from Struct import Struct
         from Tuple import Tuple

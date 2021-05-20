@@ -1,4 +1,4 @@
-from HFunction import Func, Function
+from Function import Func, Function
 from Types import Variable
 
 

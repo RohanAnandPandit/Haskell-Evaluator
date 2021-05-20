@@ -5,12 +5,13 @@ Created on Tue Jun 23 09:35:26 2020
 @author: rohan
 """
 from Stack import Stack
-from HFunction import HFunction, Lambda, Function
+from Function import HFunction, Lambda, Function
 from Operators import Associativity, operator_from_string
-from Expression import BinaryExpr
+from Expression import BinaryExpression
 from List import Nil, Array
 from Tuple import Tuple
-from Types import Int, Collection
+from Types import Int
+from Collection import Collection
 
 
 class Parser:
@@ -25,7 +26,7 @@ class Parser:
     def create_expression(self):
         operator = self.operators.pop()
         right, left = self.operands.pop(), self.operands.pop()
-        expr = BinaryExpr(operator, left, right)
+        expr = BinaryExpression(operator, left, right)
         self.operands.push(expr)
 
     def create_collection(self):
@@ -73,7 +74,7 @@ class Parser:
         if (self.operators.peek() and self.operators.peek().name == '-' and
                 not self.operands.peek()):
             self.operators.pop()
-            operand = BinaryExpr(operator_from_string('*'), Int(-1), operand)
+            operand = BinaryExpression(operator_from_string('*'), Int(-1), operand)
 
         self.operands.push(operand)
 
@@ -158,8 +159,8 @@ class Parser:
                         func = Parser(self.lexer, self.program_state,
                                       infix=True)
                         self.operands.pop() == None
-                        expr = BinaryExpr(operator_from_string(' '), func,
-                                          self.operands.pop())
+                        expr = BinaryExpression(operator_from_string(' '), func,
+                                                self.operands.pop())
                         self.push_operand(expr)
                         self.operators.push(operator_from_string(' '))
                 else:

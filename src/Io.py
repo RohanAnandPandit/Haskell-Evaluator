@@ -6,7 +6,7 @@ Created on Mon Jun 29 11:20:51 2020
 """
 from Types import String
 
-functionNamesIO = ['input', 'printLn', 'print']
+function_names_io = ['input', 'printLn', 'print']
 
 
 def print_ln(a, program_state):

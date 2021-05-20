@@ -4,15 +4,17 @@ Created on Mon Jun 22 11:24:28 2020
 
 @author: rohan
 """
-import IO
+import Io
 import Prelude
 from Types import (Variable, Int, Float, Bool, Char, Type, String, Null)
 from Class import Class, Object
 from Struct import Struct, Structure
 from Enum import EnumValue
 from List import Nil, Cons, head, tail, Array, List
-from Tuple import functionNamesTuple, Tuple
-from HFunction import Func
+from Tuple import function_names_tuple, Tuple
+from Function import Func
+
+LIBRARY_PATH = 'Modules/'
 
 
 def is_primitive(expr):
@@ -35,7 +37,7 @@ def is_list(expr):
 
 def pattern_match(expr1, expr2, program_state):
     from Operator_Functions import equals
-    from Expression import BinaryExpr
+    from Expression import BinaryExpression
 
     expr2 = expr2.simplify(program_state)
 
@@ -48,7 +50,7 @@ def pattern_match(expr1, expr2, program_state):
                     expr1.simplify(program_state).name == expr2.name)
         return True
 
-    if isinstance(expr1, BinaryExpr) and expr1.operator.name == '@':
+    if isinstance(expr1, BinaryExpression) and expr1.operator.name == '@':
         return pattern_match(expr1.right_expr, expr2, program_state)
 
     if isinstance(expr1, Nil) and isinstance(expr2, Nil):
@@ -60,7 +62,7 @@ def pattern_match(expr1, expr2, program_state):
         return (pattern_match(head(expr1), head(expr2).simplify(program_state), program_state)
                 and pattern_match(tail(expr1), tail(expr2), program_state))
 
-    if (isinstance(expr1, BinaryExpr) and
+    if (isinstance(expr1, BinaryExpression) and
             expr1.operator.name == ':' and
             is_list(expr2)):
         if isinstance(expr2, Nil):
@@ -96,7 +98,7 @@ def pattern_match(expr1, expr2, program_state):
                               Tuple(expr2.items[1:], program_state),
                               program_state))
 
-    if isinstance(expr1, BinaryExpr) and expr1.operator.name == " ":
+    if isinstance(expr1, BinaryExpression) and expr1.operator.name == " ":
         if type_match(expr1.left_expr, expr2, program_state):
             if isinstance(expr2, Structure):
                 return pattern_match(expr1.right_expr, Tuple(expr2.values, program_state),
@@ -110,7 +112,8 @@ def pattern_match(expr1, expr2, program_state):
 
 
 def type_match(type_, expr, program_state):
-    from Types import Type, Union
+    from Types import Type
+    from Union import Union
     if (null(type_.simplify(program_state)) or
             null(expr.simplify(program_state))):
         return True
@@ -188,9 +191,9 @@ def type_match(type_, expr, program_state):
 
 
 def optimise(expr):
-    from Expression import BinaryExpr
+    from Expression import BinaryExpression
     from Operator_Functions import equals
-    if isinstance(expr, BinaryExpr):
+    if isinstance(expr, BinaryExpression):
         expr.left_expr = optimise(expr.left_expr)
         expr.right_expr = optimise(expr.right_expr)
         if expr.operator.name in ('+', '||'):
@@ -255,25 +258,25 @@ def optimise(expr):
     return expr
 
 
-def replaceVariables(expr, program_state):
-    from Expression import BinaryExpr
-    from Types import Collection
+def replace_variables(expr, program_state):
+    from Expression import BinaryExpression
+    from Collection import Collection
     if isinstance(expr, Variable):
         expr = expr.simplify(program_state)
-    elif isinstance(expr, BinaryExpr):
+    elif isinstance(expr, BinaryExpression):
         left = expr.left_expr
         if expr.operator.name not in ('=', 'where'):
-            left = replaceVariables(expr.left_expr, program_state)
-        right = replaceVariables(expr.right_expr, program_state)
-        expr = BinaryExpr(expr.operator, left, right)
+            left = replace_variables(expr.left_expr, program_state)
+        right = replace_variables(expr.right_expr, program_state)
+        expr = BinaryExpression(expr.operator, left, right)
     elif isinstance(expr, Cons):
-        expr = Cons(replaceVariables(expr.item, program_state),
-                    replaceVariables(expr.tail, program_state), program_state)
+        expr = Cons(replace_variables(expr.item, program_state),
+                    replace_variables(expr.tail, program_state), program_state)
     elif isinstance(expr, Tuple):
-        expr = Tuple(list(map(lambda exp: replaceVariables(exp, program_state),
+        expr = Tuple(list(map(lambda exp: replace_variables(exp, program_state),
                               expr.tup)), program_state)
     elif isinstance(expr, Collection):
-        expr = Collection(list(map(lambda exp: replaceVariables(exp, program_state),
+        expr = Collection(list(map(lambda exp: replace_variables(exp, program_state),
                                    expr.items)), expr.operator)
     return expr
 

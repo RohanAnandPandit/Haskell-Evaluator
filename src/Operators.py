@@ -5,7 +5,7 @@ Created on Tue Jun 23 09:24:41 2020
 @author: rohan
 """
 from enum import Enum
-from HFunction import HFunction
+from Function import HFunction
 import Operator_Functions as op_func
 
 
@@ -15,13 +15,13 @@ class Associativity(Enum):
     NONE = 2
 
 
-greater_than = HFunction(4, Associativity.NONE, op_func.greaterThan, 2, '>')
+greater_than = HFunction(4, Associativity.NONE, op_func.greater_than, 2, '>')
 
 less_than_or_equal = HFunction(4, Associativity.NONE,
-                               op_func.lessThanOrEqual, 2, '<=')
+                               op_func.less_than_or_equal, 2, '<=')
 
 greater_than_or_equal = HFunction(4, Associativity.NONE,
-                                  op_func.greaterThanOrEqual,
+                                  op_func.greater_than_or_equal,
                                   2, '>=')
 
 int_div = HFunction(4, Associativity.NONE, op_func.quot, 2, '//')
@@ -122,7 +122,7 @@ class Operator(Enum):
     MINUS = HFunction(6, Associativity.LEFT, op_func.subtract, 2, '-')
     CARET = HFunction(8, Associativity.RIGHT, op_func.power, 2, '^')
     DOUBLE_EQUAL = HFunction(4, Associativity.NONE, op_func.equals, 2, '==')
-    LESS_THAN = HFunction(4, Associativity.NONE, op_func.lessThan, 2, '<')
+    LESS_THAN = HFunction(4, Associativity.NONE, op_func.less_than, 2, '<')
     LESS_THAN_OR_EQUAL = less_than_or_equal
     GREATER_THAN = greater_than
     GREATER_THAN_OR_EQUAL = greater_than_or_equal
