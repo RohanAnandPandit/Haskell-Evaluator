@@ -1,0 +1,6 @@
+src/*.zip
+src/beaver/
+src/build/
+src/dist/
+src/main.spec
+src/__pycache__/
