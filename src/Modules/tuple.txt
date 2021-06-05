@@ -7,3 +7,5 @@ def len (() tup) = (
     for _ in tup (length += 1)
     return length
 )
+
+def tup(x) = (x,)
