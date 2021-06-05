@@ -4,6 +4,8 @@ Created on Sat Jun 27 16:19:04 2020
 
 @author: rohan
 """
+import os
+
 from utils import is_primitive
 from utils import pattern_match
 from Function import Composition, Function, Lambda, Func
@@ -19,7 +21,7 @@ from Enum import EnumValue, Enum
 from Expression import BinaryExpression
 from Modules import *
 from math import *
-
+import sys
 
 def assign(a, b, program_state, state=None):
     var, value = a, b
@@ -771,12 +773,19 @@ def let(assign_stat, expr, program_state):
     program_state.frame_stack.pop(-1)
 
 
-def import_module(nameVar, program_state):
-    name = nameVar.name
+def import_module(name_var, program_state):
+    name = name_var.name
+    '''
     try:
-        file = open('Modules/' + name + '.txt', 'r')
-    except:
-        file = open('src/Modules/' + name + '.txt', 'r')
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    file = open(os.path.join(base_path, 'Modules/' + name + '.txt'), 'r')
+    '''
+    from utils import DIR_PATH, LIB_PATH
+    file = open(DIR_PATH + LIB_PATH + name + '.txt', 'r')
 
     code = file.read()
     return Module(name, code, program_state)
@@ -788,10 +797,10 @@ def from_import(module_name, stat, names):
     elif isinstance(names, Variable):
         names = [names.name]
 
-    from utils import LIBRARY_PATH
+    from utils import LIB_PATH
 
     module_name = module_name.name
-    file = open(LIBRARY_PATH + module_name + '.txt', 'r')
+    file = open(LIB_PATH + module_name + '.txt', 'r')
     code = file.read()
     module = Module(module_name, code)
     state = module.state
