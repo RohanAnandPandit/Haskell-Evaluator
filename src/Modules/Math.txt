@@ -4,6 +4,9 @@ e = 2.71828182846
 phi = 1.618
 tau = 2pi
 
+struct degree (x,)
+
+def sin (degree (angle,)) = sin (angle * (pi/180))
 def sin angle = py ("sin(" + tostr angle + ")")
 
 def cos angle = py ("cos(" + tostr angle + ")")
