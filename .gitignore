@@ -4,3 +4,4 @@ src/build/
 src/dist/
 src/main.spec
 src/__pycache__/
+src/compile.py
