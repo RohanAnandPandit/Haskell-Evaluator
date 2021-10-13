@@ -8,8 +8,8 @@ Created on Mon Jun 22 10:24:50 2020
 import utils
 import ctypes
 import os
-from Editor import Editor
-from State import State
+from editor import Editor
+from state import State
 
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(1)

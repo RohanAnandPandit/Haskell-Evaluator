@@ -105,7 +105,7 @@ class Function(Func):
         self.name = name
         self.cases = cases
         self.inputs = inputs
-        from Operators import Associativity
+        from operators import Associativity
         self.associativity = Associativity.LEFT
         self.precedence = 8
         self.lazy = False
@@ -227,7 +227,7 @@ class Lambda(Func):
         return self
 
     def return_value(self, inputs, program_state):
-        from Operator_Functions import assign
+        from operator_functions import assign
         state = self.state
 
         for i in range(self.no_of_args):

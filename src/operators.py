@@ -5,8 +5,8 @@ Created on Tue Jun 23 09:24:41 2020
 @author: rohan
 """
 from enum import Enum
-from Function import HFunction
-import Operator_Functions as op_func
+from function import HFunction
+import operator_functions as op_func
 
 
 class Associativity(Enum):

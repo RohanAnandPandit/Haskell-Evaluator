@@ -5,10 +5,10 @@ Created on Mon Jun 22 10:20:56 2020
 @author: rohan
 """
 from utils import is_primitive
-from Types import Variable, Char, String
-from Operators import operator_from_string
-from Function import HFunction, Function, Lambda
-from Types import Int, Float, Bool, Null
+from types import Variable, Char, String
+from operators import operator_from_string
+from function import HFunction, Function, Lambda
+from types import Int, Float, Bool, Null
 
 
 class Lexer:
@@ -220,5 +220,5 @@ class Lexer:
         if exp == '?':
             return Null()
 
-        from Types import Variable
+        from types import Variable
         return Variable(exp)

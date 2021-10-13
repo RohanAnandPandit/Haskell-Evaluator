@@ -8,17 +8,17 @@ import os
 
 from utils import is_primitive
 from utils import pattern_match
-from Function import Composition, Function, Lambda, Func
-from List import Nil, Cons, Iterator, head, tail, Array
-from Tuple import Tuple
-from Types import (Int, Float, Bool, Variable, Char, String, Null)
+from function import Composition, Function, Lambda, Func
+from list import Nil, Cons, Iterator, head, tail, Array
+from tuple import Tuple
+from types import (Int, Float, Bool, Variable, Char, String, Null)
 from alias import Alias
-from Collection import Collection
-from Module import Module
+from collection import Collection
+from module import Module
 from Class import Class, Object, Interface
-from Struct import Struct
-from Enum import EnumValue, Enum
-from Expression import BinaryExpression
+from struct import Struct
+from enum import EnumValue, Enum
+from expression import BinaryExpression
 from Modules import *
 from math import *
 import sys
@@ -193,7 +193,7 @@ def compose(second, first, program_state):
 
 
 def index(a, b, program_state):
-    from List import head, tail
+    from list import head, tail
     # specific index
     if isinstance(b, Int):
         n = b.value
@@ -418,7 +418,7 @@ def cons(a, b, program_state):
 
 
 def concatenate(a, b, program_state):
-    from List import head, tail
+    from list import head, tail
     left, right = a, b
     if isinstance(left, String):
         return String(left.value + right.value)
@@ -490,7 +490,7 @@ def create_struct(name, fields, program_state):
 
 
 def create_operator(symbol, precedence, associativity, func, program_state):
-    from Operators import operatorsDict, Op, Associativity
+    from operators import operatorsDict, Op, Associativity
     associativity_map = {'left': Associativity.LEFT,
                          'right': Associativity.LEFT,
                          'none': Associativity.NONE}
@@ -949,14 +949,14 @@ def default_char(var, program_state):
 
 
 def type_synonym(typeVar, typeExpr, program_state):
-    from Types import Type
+    from types import Type
     type_ = Type(typeVar.name, typeExpr)
     assign(typeVar, type_, program_state)
     return type_
 
 
 def types_union(var, types, program_state):
-    from Union import Union
+    from union import Union
 
     for i in range(len(types.items)):
         types.items[i] = types.items[i].simplify(program_state)

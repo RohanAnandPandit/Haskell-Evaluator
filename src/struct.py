@@ -1,5 +1,5 @@
-from Function import Func
-from Tuple import Tuple
+from function import Func
+from tuple import Tuple
 
 
 class Struct(Func):

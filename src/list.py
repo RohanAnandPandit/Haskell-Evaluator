@@ -4,7 +4,7 @@ Created on Tue Jun 23 20:381 2020
 
 @author: rohan
 """
-from Types import Null
+from types import Null
 from Class import Object
 
 

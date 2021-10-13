@@ -1,5 +1,5 @@
-from Tuple import Tuple
-from Types import Bool
+from tuple import Tuple
+from types import Bool
 
 
 class Collection:

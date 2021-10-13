@@ -4,15 +4,15 @@ Created on Mon Jun 22 11:24:28 2020
 
 @author: rohan
 """
-import Io
-import Prelude
-from Types import (Variable, Int, Float, Bool, Char, Type, String, Null)
+import io
+import prelude
+from types import (Variable, Int, Float, Bool, Char, Type, String, Null)
 from Class import Class, Object
-from Struct import Struct, Structure
-from Enum import EnumValue
-from List import Nil, Cons, head, tail, Array, List
-from Tuple import function_names_tuple, Tuple
-from Function import Func
+from struct import Struct, Structure
+from enum import EnumValue
+from list import Nil, Cons, head, tail, Array, List
+from tuple import function_names_tuple, Tuple
+from function import Func
 
 NAME = 'Beaver'
 DIR_PATH = 'C:/Program Files/' + NAME + '/'
@@ -39,8 +39,8 @@ def is_list(expr):
 
 
 def pattern_match(expr1, expr2, program_state):
-    from Operator_Functions import equals
-    from Expression import BinaryExpression
+    from operator_functions import equals
+    from expression import BinaryExpression
 
     expr2 = expr2.simplify(program_state)
 
@@ -115,8 +115,8 @@ def pattern_match(expr1, expr2, program_state):
 
 
 def type_match(type_, expr, program_state):
-    from Types import Type
-    from Union import Union
+    from types import Type
+    from union import Union
     if (null(type_.simplify(program_state)) or
             null(expr.simplify(program_state))):
         return True
@@ -198,8 +198,8 @@ def type_match(type_, expr, program_state):
 
 
 def optimise(expr):
-    from Expression import BinaryExpression
-    from Operator_Functions import equals
+    from expression import BinaryExpression
+    from operator_functions import equals
     if isinstance(expr, BinaryExpression):
         expr.left_expr = optimise(expr.left_expr)
         expr.right_expr = optimise(expr.right_expr)
@@ -266,8 +266,8 @@ def optimise(expr):
 
 
 def replace_variables(expr, program_state):
-    from Expression import BinaryExpression
-    from Collection import Collection
+    from expression import BinaryExpression
+    from collection import Collection
     if isinstance(expr, Variable):
         expr = expr.simplify(program_state)
     elif isinstance(expr, BinaryExpression):

@@ -4,7 +4,7 @@ Created on Mon Jun 29 11:20:51 2020
 
 @author: rohan
 """
-from Types import String
+from types import String
 
 function_names_io = ['input', 'printLn', 'print']
 

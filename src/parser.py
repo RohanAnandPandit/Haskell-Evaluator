@@ -4,14 +4,14 @@ Created on Tue Jun 23 09:35:26 2020
 
 @author: rohan
 """
-from Stack import Stack
-from Function import HFunction, Lambda, Function
-from Operators import Associativity, operator_from_string
-from Expression import BinaryExpression
-from List import Nil, Array
-from Tuple import Tuple
-from Types import Int
-from Collection import Collection
+from stack import Stack
+from function import HFunction, Lambda, Function
+from operators import Associativity, operator_from_string
+from expression import BinaryExpression
+from list import Nil, Array
+from tuple import Tuple
+from types import Int
+from collection import Collection
 
 
 class Parser:

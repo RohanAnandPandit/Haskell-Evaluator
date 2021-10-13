@@ -4,13 +4,13 @@ Created on Mon Sep  7 09:32:31 2020
 
 @author: rohan
 """
-from Function import HFunction
-from Operators import Associativity
-import Operator_Functions as op_func
-import Prelude
-from Parser import Parser
-from Lexer import Lexer
-import List
+from function import HFunction
+from operators import Associativity
+import operator_functions as op_func
+import prelude
+from parser import Parser
+from lexer import Lexer
+import list
 
 
 class State:
@@ -47,21 +47,21 @@ class State:
         # self.evaluate('import Prelude')
 
     def initialise_functions(self):
-        from Types import Type
+        from types import Type
         self.built_in_state['println'] = HFunction(8, Associativity.LEFT,
-                                                   Prelude.print_ln, 1, 'println')
+                                                   prelude.print_ln, 1, 'println')
 
         self.built_in_state['print'] = HFunction(8, Associativity.LEFT,
-                                                 Prelude.print_, 1, 'print')
+                                                 prelude.print_, 1, 'print')
 
         self.built_in_state['show'] = HFunction(8, Associativity.LEFT,
-                                                Prelude.show, 1, 'show')
+                                                prelude.show, 1, 'show')
 
         self.built_in_state['tostr'] = HFunction(8, Associativity.LEFT,
                                                  op_func.to_string, 1, 'tostr')
 
         self.built_in_state['input'] = HFunction(8, Associativity.LEFT,
-                                                 Prelude.input_, 1, 'input')
+                                                 prelude.input_, 1, 'input')
 
         self.built_in_state['eval'] = HFunction(8, Associativity.LEFT,
                                                 op_func.eval_, 1, 'eval')
@@ -165,9 +165,9 @@ class State:
         self.built_in_state['py'] = HFunction(8, Associativity.LEFT,
                                               op_func.python_eval, 1, 'py')
         self.built_in_state['head'] = HFunction(8, Associativity.LEFT,
-                                                List.head, 1, 'head')
+                                                list.head, 1, 'head')
         self.built_in_state['tail'] = HFunction(8, Associativity.LEFT,
-                                                List.tail, 1, 'tail')
+                                                list.tail, 1, 'tail')
         self.evaluate('import prelude')
 
     def evaluate(self, source, reset_state=False):
@@ -191,27 +191,27 @@ class State:
         return value
 
     def is_primitive(self, expr):
-        from Types import Int, Float, Bool, Char, String, Null
-        from Enum import EnumValue
+        from types import Int, Float, Bool, Char, String, Null
+        from enum import EnumValue
         return isinstance(expr, (Int, Float, Bool, Char, String, EnumValue,
                                  Null))
 
     def null(self, expr):
-        from Types import Null
+        from types import Null
         return isinstance(expr, Null)
 
     def is_type(self, expr):
-        from List import Nil, Array
-        from Types import Type, Null
-        from Union import Union
+        from list import Nil, Array
+        from types import Type, Null
+        from union import Union
         from Class import Class
-        from Struct import Struct
-        from Tuple import Tuple
+        from struct import Struct
+        from tuple import Tuple
         return isinstance(expr, (Nil, Null, Type, Class, Struct, Tuple,
                                  Array, Union))
 
     def is_list(self, expr):
-        from List import List
+        from list import List
         from Class import Object
         if issubclass(type(expr), List):
             return True
@@ -222,7 +222,7 @@ class State:
         return False
 
     def get_data(self, exp):
-        from Types import Bool, Null, Variable, Int, Float
+        from types import Bool, Null, Variable, Int, Float
 
         if self.is_primitive(exp):
             return exp

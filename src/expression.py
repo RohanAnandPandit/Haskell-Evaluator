@@ -4,7 +4,7 @@ Created on Tue Jun 23 13:38:23 2020
 
 @author: rohan
 """
-from Function import Func
+from function import Func
 from Class import Class
 
 

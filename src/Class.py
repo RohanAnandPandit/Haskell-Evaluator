@@ -1,5 +1,5 @@
-from Function import Func, Function
-from Types import Variable
+from function import Func, Function
+from types import Variable
 
 
 class Class(Func):

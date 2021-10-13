@@ -4,7 +4,7 @@ Created on Sat Jul 18 14:51:39 2020
 
 @author: rohan
 """
-from Function import Func
+from function import Func
 
 
 class Variable:
@@ -42,7 +42,7 @@ class Type(Func):
         return self
 
     def apply(self, var, program_state=None):
-        from Operator_Functions import (default_int, default_float, default_bool,
+        from operator_functions import (default_int, default_float, default_bool,
                                         default_char)
         if self.name == 'int':
             return default_int(var, self.program_state)
