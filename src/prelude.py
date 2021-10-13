@@ -4,9 +4,9 @@ Created on Mon Nov 18 15:43:13 2019
 
 @author: rohan
 """
-from types import Bool
-from list import *
-from tuple import *
+from beaver_types import Bool
+from beaver_list import *
+from beaver_tuple import *
 from char import *
-from io import *
+from beaver_io import *
 

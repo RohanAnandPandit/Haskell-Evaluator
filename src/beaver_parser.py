@@ -8,9 +8,9 @@ from stack import Stack
 from function import HFunction, Lambda, Function
 from operators import Associativity, operator_from_string
 from expression import BinaryExpression
-from list import Nil, Array
-from tuple import Tuple
-from types import Int
+from beaver_list import Nil, Array
+from beaver_tuple import Tuple
+from beaver_types import Int
 from collection import Collection
 
 

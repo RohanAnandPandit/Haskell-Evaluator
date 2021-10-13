@@ -6,12 +6,12 @@ Created on Mon Jun 22 11:24:28 2020
 """
 import io
 import prelude
-from types import (Variable, Int, Float, Bool, Char, Type, String, Null)
-from Class import Class, Object
-from struct import Struct, Structure
-from enum import EnumValue
-from list import Nil, Cons, head, tail, Array, List
-from tuple import function_names_tuple, Tuple
+from beaver_types import (Variable, Int, Float, Bool, Char, Type, String, Null)
+from beaver_class import Class, Object
+from beaver_struct import Struct, Structure
+from beaver_enum import EnumValue
+from beaver_list import Nil, Cons, head, tail, Array, List
+from beaver_tuple import function_names_tuple, Tuple
 from function import Func
 
 NAME = 'Beaver'
@@ -115,7 +115,7 @@ def pattern_match(expr1, expr2, program_state):
 
 
 def type_match(type_, expr, program_state):
-    from types import Type
+    from beaver_types import Type
     from union import Union
     if (null(type_.simplify(program_state)) or
             null(expr.simplify(program_state))):

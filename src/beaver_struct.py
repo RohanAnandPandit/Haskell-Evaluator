@@ -1,5 +1,5 @@
 from function import Func
-from tuple import Tuple
+from beaver_tuple import Tuple
 
 
 class Struct(Func):

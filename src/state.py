@@ -8,13 +8,23 @@ from function import HFunction
 from operators import Associativity
 import operator_functions as op_func
 import prelude
-from parser import Parser
+from beaver_parser import Parser
 from lexer import Lexer
-import list
+import beaver_list
 
 
 class State:
     def __init__(self):
+        self.operators = []
+        self.keywords = []
+        self.functional_mode = self.static_mode = False
+        self.built_in_state = {}
+        self.frame_stack = [self.built_in_state]
+        self.in_class = 0
+        self.break_loop = 0
+        self.continue_loop = 0
+        self.return_value = None
+        self.function_names = []
         self.reset()
 
     def reset(self):
@@ -41,13 +51,14 @@ class State:
         self.break_loop = 0
         self.continue_loop = 0
         self.return_value = None
+        print(self.built_in_state)
         self.function_names = list(self.built_in_state.keys())
         self.initialise_functions()
 
         # self.evaluate('import Prelude')
 
     def initialise_functions(self):
-        from types import Type
+        from beaver_types import Type
         self.built_in_state['println'] = HFunction(8, Associativity.LEFT,
                                                    prelude.print_ln, 1, 'println')
 
@@ -165,9 +176,9 @@ class State:
         self.built_in_state['py'] = HFunction(8, Associativity.LEFT,
                                               op_func.python_eval, 1, 'py')
         self.built_in_state['head'] = HFunction(8, Associativity.LEFT,
-                                                list.head, 1, 'head')
+                                                beaver_list.head, 1, 'head')
         self.built_in_state['tail'] = HFunction(8, Associativity.LEFT,
-                                                list.tail, 1, 'tail')
+                                                beaver_list.tail, 1, 'tail')
         self.evaluate('import prelude')
 
     def evaluate(self, source, reset_state=False):
@@ -191,28 +202,28 @@ class State:
         return value
 
     def is_primitive(self, expr):
-        from types import Int, Float, Bool, Char, String, Null
-        from enum import EnumValue
+        from beaver_types import Int, Float, Bool, Char, String, Null
+        from beaver_enum import EnumValue
         return isinstance(expr, (Int, Float, Bool, Char, String, EnumValue,
                                  Null))
 
     def null(self, expr):
-        from types import Null
+        from beaver_types import Null
         return isinstance(expr, Null)
 
     def is_type(self, expr):
-        from list import Nil, Array
-        from types import Type, Null
+        from beaver_list import Nil, Array
+        from beaver_types import Type, Null
         from union import Union
-        from Class import Class
-        from struct import Struct
-        from tuple import Tuple
+        from beaver_class import Class
+        from beaver_struct import Struct
+        from beaver_tuple import Tuple
         return isinstance(expr, (Nil, Null, Type, Class, Struct, Tuple,
                                  Array, Union))
 
     def is_list(self, expr):
-        from list import List
-        from Class import Object
+        from beaver_list import List
+        from beaver_class import Object
         if issubclass(type(expr), List):
             return True
         if isinstance(expr, Object):
@@ -222,7 +233,7 @@ class State:
         return False
 
     def get_data(self, exp):
-        from types import Bool, Null, Variable, Int, Float
+        from beaver_types import Bool, Null, Variable, Int, Float
 
         if self.is_primitive(exp):
             return exp

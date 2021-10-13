@@ -9,15 +9,15 @@ import os
 from utils import is_primitive
 from utils import pattern_match
 from function import Composition, Function, Lambda, Func
-from list import Nil, Cons, Iterator, head, tail, Array
-from tuple import Tuple
-from types import (Int, Float, Bool, Variable, Char, String, Null)
+from beaver_list import Nil, Cons, Iterator, head, tail, Array
+from beaver_tuple import Tuple
+from beaver_types import (Int, Float, Bool, Variable, Char, String, Null)
 from alias import Alias
 from collection import Collection
 from module import Module
-from Class import Class, Object, Interface
-from struct import Struct
-from enum import EnumValue, Enum
+from beaver_class import Class, Object, Interface
+from beaver_struct import Struct
+from beaver_enum import EnumValue, Enum
 from expression import BinaryExpression
 from Modules import *
 from math import *
@@ -193,7 +193,7 @@ def compose(second, first, program_state):
 
 
 def index(a, b, program_state):
-    from list import head, tail
+    from beaver_list import head, tail
     # specific index
     if isinstance(b, Int):
         n = b.value
@@ -418,7 +418,7 @@ def cons(a, b, program_state):
 
 
 def concatenate(a, b, program_state):
-    from list import head, tail
+    from beaver_list import head, tail
     left, right = a, b
     if isinstance(left, String):
         return String(left.value + right.value)

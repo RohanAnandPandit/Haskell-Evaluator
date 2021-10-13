@@ -4,8 +4,8 @@ Created on Tue Jun 23 20:381 2020
 
 @author: rohan
 """
-from types import Null
-from Class import Object
+from beaver_types import Null
+from beaver_class import Object
 
 
 class List:

@@ -5,7 +5,7 @@ Created on Tue Jun 23 13:38:23 2020
 @author: rohan
 """
 from function import Func
-from Class import Class
+from beaver_class import Class
 
 
 class Expression:

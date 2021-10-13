@@ -1,5 +1,5 @@
-from tuple import Tuple
-from types import Bool
+from beaver_tuple import Tuple
+from beaver_types import Bool
 
 
 class Collection:

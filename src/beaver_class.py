@@ -1,5 +1,5 @@
 from function import Func, Function
-from types import Variable
+from beaver_types import Variable
 
 
 class Class(Func):
