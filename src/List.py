@@ -82,7 +82,6 @@ def head(a, program_state):
 def tail(a, program_state):
     a = a.simplify(program_state)
     if isinstance(a, Object):
-        a = a.simplify(program_state)
         return a.state['tail'].simplify(program_state)
     if isinstance(a, Nil):
         return Null()
