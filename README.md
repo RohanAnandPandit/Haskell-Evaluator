@@ -1,2 +1,2 @@
-# haskellevaluator
-Evaluates basic haskell expressions in Python.
+# Beaver
+A multi-paradigm interpreted programming language prototype
