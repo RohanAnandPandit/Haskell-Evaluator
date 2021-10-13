@@ -81,7 +81,7 @@ class Editor:
     def analyse(self, event):
         self.auto_complete_pair(event)
         self.highlight_operators()
-        # self.highlight_keywords()
+        self.highlight_keywords()
         self.highlight_functions()
         self.highlight_comments()
         self.highlight_strings()
@@ -175,7 +175,7 @@ class Editor:
     def highlight_operators(self):
         self.text.tag_remove('operator', '1.0', tk.END)
         for operator in self.program_state.operators:
-            if operator in '(){}[]':
+            if operator in '(){}[] in':
                 continue
             start = 1.0
             while 1:
