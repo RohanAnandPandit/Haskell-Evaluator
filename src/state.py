@@ -51,7 +51,6 @@ class State:
         self.break_loop = 0
         self.continue_loop = 0
         self.return_value = None
-        print(self.built_in_state)
         self.function_names = list(self.built_in_state.keys())
         self.initialise_functions()
 
