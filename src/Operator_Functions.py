@@ -12,7 +12,7 @@ from Function import Composition, Function, Lambda, Func
 from List import Nil, Cons, Iterator, head, tail, Array
 from Tuple import Tuple
 from Types import (Int, Float, Bool, Variable, Char, String, Null)
-from Alias import Alias
+from alias import Alias
 from Collection import Collection
 from Module import Module
 from Class import Class, Object, Interface
