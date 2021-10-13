@@ -14,9 +14,10 @@ from List import Nil, Cons, head, tail, Array, List
 from Tuple import function_names_tuple, Tuple
 from Function import Func
 
-
-DIR_PATH = 'C:/Program Files/beaver/'
-LIB_PATH = 'Modules/'
+NAME = 'Beaver'
+DIR_PATH = 'C:/Program Files/' + NAME + '/'
+LIB_NAME = 'Modules'
+LIB_PATH = LIB_NAME + '/'
 
 
 def is_primitive(expr):
