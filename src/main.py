@@ -39,4 +39,3 @@ def console():
 
 
 console()
-# wait = input()
